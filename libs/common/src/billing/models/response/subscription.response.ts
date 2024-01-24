@@ -1,5 +1,4 @@
 import { BaseResponse } from "../../../models/response/base.response";
-import { BitwardenProductType } from "../../enums";
 
 export class SubscriptionResponse extends BaseResponse {
   storageName: string;
@@ -9,7 +8,6 @@ export class SubscriptionResponse extends BaseResponse {
   upcomingInvoice: BillingSubscriptionUpcomingInvoiceResponse;
   license: any;
   expiration: string;
-  usingInAppPurchase: boolean;
 
   constructor(response: any) {
     super(response);
@@ -18,7 +16,6 @@ export class SubscriptionResponse extends BaseResponse {
     this.maxStorageGb = this.getResponseProperty("MaxStorageGb");
     this.license = this.getResponseProperty("License");
     this.expiration = this.getResponseProperty("Expiration");
-    this.usingInAppPurchase = this.getResponseProperty("UsingInAppPurchase");
     const subscription = this.getResponseProperty("Subscription");
     const upcomingInvoice = this.getResponseProperty("UpcomingInvoice");
     this.subscription = subscription == null ? null : new BillingSubscriptionResponse(subscription);
@@ -64,7 +61,7 @@ export class BillingSubscriptionItemResponse extends BaseResponse {
   interval: string;
   sponsoredSubscriptionItem: boolean;
   addonSubscriptionItem: boolean;
-  bitwardenProduct: BitwardenProductType;
+  productName: string;
 
   constructor(response: any) {
     super(response);
@@ -74,7 +71,6 @@ export class BillingSubscriptionItemResponse extends BaseResponse {
     this.interval = this.getResponseProperty("Interval");
     this.sponsoredSubscriptionItem = this.getResponseProperty("SponsoredSubscriptionItem");
     this.addonSubscriptionItem = this.getResponseProperty("AddonSubscriptionItem");
-    this.bitwardenProduct = this.getResponseProperty("BitwardenProduct");
   }
 }
 

@@ -8,7 +8,7 @@ import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.se
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ValidationService } from "@bitwarden/common/platform/abstractions/validation.service";
-import { ProviderKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { ProviderKey } from "@bitwarden/common/types/key";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 
 @Component({
@@ -35,7 +35,7 @@ export class SetupComponent implements OnInit {
     private cryptoService: CryptoService,
     private apiService: ApiService,
     private syncService: SyncService,
-    private validationService: ValidationService
+    private validationService: ValidationService,
   ) {}
 
   ngOnInit() {
@@ -49,7 +49,7 @@ export class SetupComponent implements OnInit {
           "error",
           null,
           this.i18nService.t("emergencyInviteAcceptFailed"),
-          { timeout: 10000 }
+          { timeout: 10000 },
         );
         this.router.navigate(["/"]);
         return;

@@ -2,7 +2,7 @@ import { Component, EventEmitter, HostBinding, HostListener, Input, Output } fro
 import { ActivatedRoute, Router } from "@angular/router";
 
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
+import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
 
@@ -26,6 +26,7 @@ export class VaultCipherRowComponent {
   @Input() cloneable: boolean;
   @Input() organizations: Organization[];
   @Input() collections: CollectionView[];
+  @Input() viewingOrgVault: boolean;
 
   @Output() onEvent = new EventEmitter<VaultItemEvent>();
 
@@ -34,7 +35,10 @@ export class VaultCipherRowComponent {
 
   protected CipherType = CipherType;
 
-  constructor(private router: Router, private activatedRoute: ActivatedRoute) {}
+  constructor(
+    private router: Router,
+    private activatedRoute: ActivatedRoute,
+  ) {}
 
   @HostBinding("class")
   get classes() {
@@ -55,7 +59,7 @@ export class VaultCipherRowComponent {
   @HostListener("click")
   protected click() {
     this.router.navigate([], {
-      queryParams: { cipherId: this.cipher.id },
+      queryParams: { itemId: this.cipher.id },
       queryParamsHandling: "merge",
     });
   }

@@ -29,6 +29,7 @@ export interface SecretOperation {
   operation: OperationType;
   projectId?: string;
   secretId?: string;
+  organizationEnabled: boolean;
 }
 
 @Component({
@@ -40,7 +41,7 @@ export class SecretDialogComponent implements OnInit {
       validators: [Validators.required, Validators.maxLength(500), BitValidators.trimValidator],
       updateOn: "submit",
     }),
-    value: new FormControl("", [Validators.required, Validators.maxLength(3500)]),
+    value: new FormControl("", [Validators.required, Validators.maxLength(25000)]),
     notes: new FormControl("", {
       validators: [Validators.maxLength(7000), BitValidators.trimValidator],
       updateOn: "submit",
@@ -66,7 +67,7 @@ export class SecretDialogComponent implements OnInit {
     private platformUtilsService: PlatformUtilsService,
     private projectService: ProjectService,
     private dialogService: DialogService,
-    private organizationService: OrganizationService
+    private organizationService: OrganizationService,
   ) {}
 
   async ngOnInit() {
@@ -163,6 +164,11 @@ export class SecretDialogComponent implements OnInit {
   }
 
   submit = async () => {
+    if (!this.data.organizationEnabled) {
+      this.platformUtilsService.showToast("error", null, this.i18nService.t("secretsCannotCreate"));
+      return;
+    }
+
     this.formGroup.markAllAsTouched();
 
     if (this.formGroup.invalid) {
@@ -202,12 +208,12 @@ export class SecretDialogComponent implements OnInit {
         data: {
           secrets: secretListView,
         },
-      }
+      },
     );
 
     // If the secret is deleted, chain close this dialog after the delete dialog
     lastValueFrom(dialogRef.closed).then(
-      (closeData) => closeData !== undefined && this.dialogRef.close()
+      (closeData) => closeData !== undefined && this.dialogRef.close(),
     );
   }
 

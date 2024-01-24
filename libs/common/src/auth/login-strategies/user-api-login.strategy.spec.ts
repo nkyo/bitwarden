@@ -9,21 +9,18 @@ import { MessagingService } from "../../platform/abstractions/messaging.service"
 import { PlatformUtilsService } from "../../platform/abstractions/platform-utils.service";
 import { StateService } from "../../platform/abstractions/state.service";
 import { Utils } from "../../platform/misc/utils";
-import {
-  MasterKey,
-  SymmetricCryptoKey,
-  UserKey,
-} from "../../platform/models/domain/symmetric-crypto-key";
+import { SymmetricCryptoKey } from "../../platform/models/domain/symmetric-crypto-key";
 import { CsprngArray } from "../../types/csprng";
+import { UserKey, MasterKey } from "../../types/key";
 import { KeyConnectorService } from "../abstractions/key-connector.service";
 import { TokenService } from "../abstractions/token.service";
 import { TwoFactorService } from "../abstractions/two-factor.service";
-import { UserApiLogInCredentials } from "../models/domain/log-in-credentials";
+import { UserApiLoginCredentials } from "../models/domain/login-credentials";
 
 import { identityTokenResponseFactory } from "./login.strategy.spec";
-import { UserApiLogInStrategy } from "./user-api-login.strategy";
+import { UserApiLoginStrategy } from "./user-api-login.strategy";
 
-describe("UserApiLogInStrategy", () => {
+describe("UserApiLoginStrategy", () => {
   let cryptoService: MockProxy<CryptoService>;
   let apiService: MockProxy<ApiService>;
   let tokenService: MockProxy<TokenService>;
@@ -36,8 +33,8 @@ describe("UserApiLogInStrategy", () => {
   let keyConnectorService: MockProxy<KeyConnectorService>;
   let environmentService: MockProxy<EnvironmentService>;
 
-  let apiLogInStrategy: UserApiLogInStrategy;
-  let credentials: UserApiLogInCredentials;
+  let apiLogInStrategy: UserApiLoginStrategy;
+  let credentials: UserApiLoginCredentials;
 
   const deviceId = Utils.newGuid();
   const keyConnectorUrl = "KEY_CONNECTOR_URL";
@@ -61,7 +58,7 @@ describe("UserApiLogInStrategy", () => {
     tokenService.getTwoFactorToken.mockResolvedValue(null);
     tokenService.decodeToken.mockResolvedValue({});
 
-    apiLogInStrategy = new UserApiLogInStrategy(
+    apiLogInStrategy = new UserApiLoginStrategy(
       cryptoService,
       apiService,
       tokenService,
@@ -72,10 +69,10 @@ describe("UserApiLogInStrategy", () => {
       stateService,
       twoFactorService,
       environmentService,
-      keyConnectorService
+      keyConnectorService,
     );
 
-    credentials = new UserApiLogInCredentials(apiClientId, apiClientSecret);
+    credentials = new UserApiLoginCredentials(apiClientId, apiClientSecret);
   });
 
   it("sends api key credentials to the server", async () => {
@@ -93,7 +90,7 @@ describe("UserApiLogInStrategy", () => {
           provider: null,
           token: null,
         }),
-      })
+      }),
     );
   });
 

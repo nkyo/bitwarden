@@ -7,19 +7,25 @@ import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { CollectionRequest } from "@bitwarden/common/vault/models/request/collection.request";
 import {
   CollectionAccessDetailsResponse,
+  CollectionDetailsResponse,
   CollectionResponse,
 } from "@bitwarden/common/vault/models/response/collection.response";
 
+import { CollectionAccessSelectionView } from "../../admin-console/organizations/core";
+
+import { BulkCollectionAccessRequest } from "./bulk-collection-access.request";
 import { CollectionAdminView } from "./views/collection-admin.view";
 
 @Injectable()
 export class CollectionAdminService {
-  constructor(private apiService: ApiService, private cryptoService: CryptoService) {}
+  constructor(
+    private apiService: ApiService,
+    private cryptoService: CryptoService,
+  ) {}
 
   async getAll(organizationId: string): Promise<CollectionAdminView[]> {
-    const collectionResponse = await this.apiService.getManyCollectionsWithAccessDetails(
-      organizationId
-    );
+    const collectionResponse =
+      await this.apiService.getManyCollectionsWithAccessDetails(organizationId);
 
     if (collectionResponse?.data == null || collectionResponse.data.length === 0) {
       return [];
@@ -30,11 +36,11 @@ export class CollectionAdminService {
 
   async get(
     organizationId: string,
-    collectionId: string
+    collectionId: string,
   ): Promise<CollectionAdminView | undefined> {
     const collectionResponse = await this.apiService.getCollectionAccessDetails(
       organizationId,
-      collectionId
+      collectionId,
     );
 
     if (collectionResponse == null) {
@@ -46,10 +52,10 @@ export class CollectionAdminService {
     return view;
   }
 
-  async save(collection: CollectionAdminView): Promise<CollectionResponse> {
+  async save(collection: CollectionAdminView): Promise<CollectionDetailsResponse> {
     const request = await this.encrypt(collection);
 
-    let response: CollectionResponse;
+    let response: CollectionDetailsResponse;
     if (collection.id == null) {
       response = await this.apiService.postCollection(collection.organizationId, request);
       collection.id = response.id;
@@ -57,7 +63,7 @@ export class CollectionAdminService {
       response = await this.apiService.putCollection(
         collection.organizationId,
         collection.id,
-        request
+        request,
       );
     }
 
@@ -68,9 +74,33 @@ export class CollectionAdminService {
     await this.apiService.deleteCollection(organizationId, collectionId);
   }
 
+  async bulkAssignAccess(
+    organizationId: string,
+    collectionIds: string[],
+    users: CollectionAccessSelectionView[],
+    groups: CollectionAccessSelectionView[],
+  ): Promise<void> {
+    const request = new BulkCollectionAccessRequest();
+    request.collectionIds = collectionIds;
+    request.users = users.map(
+      (u) => new SelectionReadOnlyRequest(u.id, u.readOnly, u.hidePasswords, u.manage),
+    );
+    request.groups = groups.map(
+      (g) => new SelectionReadOnlyRequest(g.id, g.readOnly, g.hidePasswords, g.manage),
+    );
+
+    await this.apiService.send(
+      "POST",
+      `organizations/${organizationId}/collections/bulk-access`,
+      request,
+      true,
+      false,
+    );
+  }
+
   private async decryptMany(
     organizationId: string,
-    collections: CollectionResponse[] | CollectionAccessDetailsResponse[]
+    collections: CollectionResponse[] | CollectionAccessDetailsResponse[],
   ): Promise<CollectionAdminView[]> {
     const orgKey = await this.cryptoService.getOrgKey(organizationId);
 
@@ -105,17 +135,19 @@ export class CollectionAdminService {
     collection.externalId = model.externalId;
     collection.name = (await this.cryptoService.encrypt(model.name, key)).encryptedString;
     collection.groups = model.groups.map(
-      (group) => new SelectionReadOnlyRequest(group.id, group.readOnly, group.hidePasswords)
+      (group) =>
+        new SelectionReadOnlyRequest(group.id, group.readOnly, group.hidePasswords, group.manage),
     );
     collection.users = model.users.map(
-      (user) => new SelectionReadOnlyRequest(user.id, user.readOnly, user.hidePasswords)
+      (user) =>
+        new SelectionReadOnlyRequest(user.id, user.readOnly, user.hidePasswords, user.manage),
     );
     return collection;
   }
 }
 
 function isCollectionAccessDetailsResponse(
-  response: CollectionResponse | CollectionAccessDetailsResponse
+  response: CollectionResponse | CollectionAccessDetailsResponse,
 ): response is CollectionAccessDetailsResponse {
   const anyResponse = response as any;
 

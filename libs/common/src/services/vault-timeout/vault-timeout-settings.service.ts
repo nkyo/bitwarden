@@ -4,7 +4,6 @@ import { VaultTimeoutSettingsService as VaultTimeoutSettingsServiceAbstraction }
 import { PolicyService } from "../../admin-console/abstractions/policy/policy.service.abstraction";
 import { PolicyType } from "../../admin-console/enums";
 import { TokenService } from "../../auth/abstractions/token.service";
-import { UserVerificationService } from "../../auth/abstractions/user-verification/user-verification.service.abstraction";
 import { VaultTimeoutAction } from "../../enums/vault-timeout-action.enum";
 import { CryptoService } from "../../platform/abstractions/crypto.service";
 import { StateService } from "../../platform/abstractions/state.service";
@@ -22,18 +21,17 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     private tokenService: TokenService,
     private policyService: PolicyService,
     private stateService: StateService,
-    private userVerificationService: UserVerificationService
   ) {}
 
   async setVaultTimeoutOptions(timeout: number, action: VaultTimeoutAction): Promise<void> {
-    await this.stateService.setVaultTimeout(timeout);
-
     // We swap these tokens from being on disk for lock actions, and in memory for logout actions
     // Get them here to set them to their new location after changing the timeout action and clearing if needed
     const token = await this.tokenService.getToken();
     const refreshToken = await this.tokenService.getRefreshToken();
     const clientId = await this.tokenService.getClientId();
     const clientSecret = await this.tokenService.getClientSecret();
+
+    await this.stateService.setVaultTimeout(timeout);
 
     const currentAction = await this.stateService.getVaultTimeoutAction();
     if (
@@ -134,7 +132,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
 
     if (vaultTimeoutAction == null) {
       // Depends on whether or not the user has a master password
-      const defaultValue = (await this.userVerificationService.hasMasterPassword())
+      const defaultValue = (await this.userHasMasterPassword(userId))
         ? VaultTimeoutAction.Lock
         : VaultTimeoutAction.LogOut;
       // We really shouldn't need to set the value here, but multiple services relies on this value being correct.
@@ -151,7 +149,7 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
     const availableActions = [VaultTimeoutAction.LogOut];
 
     const canLock =
-      (await this.userVerificationService.hasMasterPassword(userId)) ||
+      (await this.userHasMasterPassword(userId)) ||
       (await this.isPinLockSet(userId)) !== "DISABLED" ||
       (await this.isBiometricLockSet(userId));
 
@@ -165,5 +163,15 @@ export class VaultTimeoutSettingsService implements VaultTimeoutSettingsServiceA
   async clear(userId?: string): Promise<void> {
     await this.stateService.setEverBeenUnlocked(false, { userId: userId });
     await this.cryptoService.clearPinKeys(userId);
+  }
+
+  private async userHasMasterPassword(userId: string): Promise<boolean> {
+    const acctDecryptionOpts = await this.stateService.getAccountDecryptionOptions({
+      userId: userId,
+    });
+
+    if (acctDecryptionOpts?.hasMasterPassword != undefined) {
+      return acctDecryptionOpts.hasMasterPassword;
+    }
   }
 }

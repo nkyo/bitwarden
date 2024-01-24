@@ -9,6 +9,7 @@ import { OrganizationTaxInfoUpdateRequest } from "../../../billing/models/reques
 import { PaymentRequest } from "../../../billing/models/request/payment.request";
 import { SecretsManagerSubscribeRequest } from "../../../billing/models/request/sm-subscribe.request";
 import { BillingResponse } from "../../../billing/models/response/billing.response";
+import { OrganizationRisksSubscriptionFailureResponse } from "../../../billing/models/response/organization-risks-subscription-failure.response";
 import { OrganizationSubscriptionResponse } from "../../../billing/models/response/organization-subscription.response";
 import { PaymentResponse } from "../../../billing/models/response/payment.response";
 import { TaxInfoResponse } from "../../../billing/models/response/tax-info.response";
@@ -18,6 +19,7 @@ import { StorageRequest } from "../../../models/request/storage.request";
 import { VerifyBankRequest } from "../../../models/request/verify-bank.request";
 import { ListResponse } from "../../../models/response/list.response";
 import { OrganizationApiKeyType } from "../../enums";
+import { OrganizationCollectionManagementUpdateRequest } from "../../models/request/organization-collection-management-update.request";
 import { OrganizationCreateRequest } from "../../models/request/organization-create.request";
 import { OrganizationKeysRequest } from "../../models/request/organization-keys.request";
 import { OrganizationUpdateRequest } from "../../models/request/organization-update.request";
@@ -41,11 +43,11 @@ export class OrganizationApiServiceAbstraction {
   upgrade: (id: string, request: OrganizationUpgradeRequest) => Promise<PaymentResponse>;
   updatePasswordManagerSeats: (
     id: string,
-    request: OrganizationSubscriptionUpdateRequest
+    request: OrganizationSubscriptionUpdateRequest,
   ) => Promise<void>;
   updateSecretsManagerSubscription: (
     id: string,
-    request: OrganizationSmSubscriptionUpdateRequest
+    request: OrganizationSmSubscriptionUpdateRequest,
   ) => Promise<void>;
   updateSeats: (id: string, request: SeatRequest) => Promise<PaymentResponse>;
   updateStorage: (id: string, request: StorageRequest) => Promise<PaymentResponse>;
@@ -59,7 +61,7 @@ export class OrganizationApiServiceAbstraction {
   getOrCreateApiKey: (id: string, request: OrganizationApiKeyRequest) => Promise<ApiKeyResponse>;
   getApiKeyInformation: (
     id: string,
-    organizationApiKeyType?: OrganizationApiKeyType
+    organizationApiKeyType?: OrganizationApiKeyType,
   ) => Promise<ListResponse<OrganizationApiKeyInformationResponse>>;
   rotateApiKey: (id: string, request: OrganizationApiKeyRequest) => Promise<ApiKeyResponse>;
   getTaxInfo: (id: string) => Promise<TaxInfoResponse>;
@@ -71,6 +73,11 @@ export class OrganizationApiServiceAbstraction {
   selfHostedSyncLicense: (id: string) => Promise<void>;
   subscribeToSecretsManager: (
     id: string,
-    request: SecretsManagerSubscribeRequest
+    request: SecretsManagerSubscribeRequest,
   ) => Promise<ProfileOrganizationResponse>;
+  updateCollectionManagement: (
+    id: string,
+    request: OrganizationCollectionManagementUpdateRequest,
+  ) => Promise<OrganizationResponse>;
+  risksSubscriptionFailure: (id: string) => Promise<OrganizationRisksSubscriptionFailureResponse>;
 }

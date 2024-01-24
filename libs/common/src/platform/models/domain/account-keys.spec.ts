@@ -1,9 +1,10 @@
 import { makeStaticByteArray } from "../../../../spec";
 import { CsprngArray } from "../../../types/csprng";
+import { DeviceKey } from "../../../types/key";
 import { Utils } from "../../misc/utils";
 
 import { AccountKeys, EncryptionPair } from "./account";
-import { DeviceKey, SymmetricCryptoKey } from "./symmetric-crypto-key";
+import { SymmetricCryptoKey } from "./symmetric-crypto-key";
 
 describe("AccountKeys", () => {
   describe("toJSON", () => {
@@ -31,7 +32,7 @@ describe("AccountKeys", () => {
       const accountKeys = new AccountKeys();
       const deviceKeyBytesLength = 64;
       accountKeys.deviceKey = new SymmetricCryptoKey(
-        new Uint8Array(deviceKeyBytesLength).buffer as CsprngArray
+        new Uint8Array(deviceKeyBytesLength).buffer as CsprngArray,
       ) as DeviceKey;
 
       // Act
