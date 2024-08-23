@@ -1489,6 +1489,8 @@ export default class AutofillService implements AutofillServiceInterface {
         return false;
       });
     });
+    // @TODO if expectedDateFormat is still null, and there is a `pattern` attribute, cycle
+    // through generated formatted values, checking against the provided regex pattern
 
     return [expectedDateFormat, dateFormatPatterns];
   }
