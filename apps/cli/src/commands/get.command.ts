@@ -1,9 +1,13 @@
+import { firstValueFrom, map } from "rxjs";
+
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions/account/billing-account-profile-state.service";
 import { EventType } from "@bitwarden/common/enums";
 import { CardExport } from "@bitwarden/common/models/export/card.export";
 import { CipherExport } from "@bitwarden/common/models/export/cipher.export";
@@ -20,6 +24,7 @@ import { StateService } from "@bitwarden/common/platform/abstractions/state.serv
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
+import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
@@ -57,6 +62,8 @@ export class GetCommand extends DownloadCommand {
     private apiService: ApiService,
     private organizationService: OrganizationService,
     private eventCollectionService: EventCollectionService,
+    private accountProfileService: BillingAccountProfileStateService,
+    private accountService: AccountService,
   ) {
     super(cryptoService);
   }
@@ -105,9 +112,12 @@ export class GetCommand extends DownloadCommand {
     let decCipher: CipherView = null;
     if (Utils.isGuid(id)) {
       const cipher = await this.cipherService.get(id);
+      const activeUserId = await firstValueFrom(
+        this.accountService.activeAccount$.pipe(map((a) => a?.id)),
+      );
       if (cipher != null) {
         decCipher = await cipher.decrypt(
-          await this.cipherService.getKeyForCipherKeyDecryption(cipher),
+          await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
         );
       }
     } else if (id.trim() !== "") {
@@ -141,6 +151,8 @@ export class GetCommand extends DownloadCommand {
       }
     }
 
+    // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+    // eslint-disable-next-line @typescript-eslint/no-floating-promises
     this.eventCollectionService.collect(
       EventType.Cipher_ClientViewed,
       id,
@@ -249,7 +261,9 @@ export class GetCommand extends DownloadCommand {
       return Response.error("Couldn't generate TOTP code.");
     }
 
-    const canAccessPremium = await this.stateService.getCanAccessPremium();
+    const canAccessPremium = await firstValueFrom(
+      this.accountProfileService.hasPremiumFromAnySource$,
+    );
     if (!canAccessPremium) {
       const originalCipher = await this.cipherService.get(cipher.id);
       if (
@@ -332,7 +346,10 @@ export class GetCommand extends DownloadCommand {
       return Response.multipleResults(attachments.map((a) => a.id));
     }
 
-    if (!(await this.stateService.getCanAccessPremium())) {
+    const canAccessPremium = await firstValueFrom(
+      this.accountProfileService.hasPremiumFromAnySource$,
+    );
+    if (!canAccessPremium) {
       const originalCipher = await this.cipherService.get(cipher.id);
       if (originalCipher == null || originalCipher.organizationId == null) {
         return Response.error("Premium status is required to use this feature.");
@@ -393,7 +410,10 @@ export class GetCommand extends DownloadCommand {
     if (Utils.isGuid(id)) {
       const collection = await this.collectionService.get(id);
       if (collection != null) {
-        decCollection = await collection.decrypt();
+        const orgKeys = await firstValueFrom(this.cryptoService.activeUserOrgKeys$);
+        decCollection = await collection.decrypt(
+          orgKeys[collection.organizationId as OrganizationId],
+        );
       }
     } else if (id.trim() !== "") {
       let collections = await this.collectionService.getAllDecrypted();
@@ -441,7 +461,13 @@ export class GetCommand extends DownloadCommand {
           : response.groups.map(
               (g) => new SelectionReadOnly(g.id, g.readOnly, g.hidePasswords, g.manage),
             );
-      const res = new OrganizationCollectionResponse(decCollection, groups);
+      const users =
+        response.users == null
+          ? null
+          : response.users.map(
+              (g) => new SelectionReadOnly(g.id, g.readOnly, g.hidePasswords, g.manage),
+            );
+      const res = new OrganizationCollectionResponse(decCollection, groups, users);
       return Response.success(res);
     } catch (e) {
       return Response.error(e);
@@ -453,7 +479,7 @@ export class GetCommand extends DownloadCommand {
     if (Utils.isGuid(id)) {
       org = await this.organizationService.getFromState(id);
     } else if (id.trim() !== "") {
-      let orgs = await this.organizationService.getAll();
+      let orgs = await firstValueFrom(this.organizationService.organizations$);
       orgs = CliUtils.searchOrganizations(orgs, id);
       if (orgs.length > 1) {
         return Response.multipleResults(orgs.map((c) => c.id));

@@ -14,6 +14,10 @@ export function getNestedCollectionTree(collections: CollectionView[]): TreeNode
 export function getNestedCollectionTree(
   collections: (CollectionView | CollectionAdminView)[],
 ): TreeNode<CollectionView | CollectionAdminView>[] {
+  if (!collections) {
+    return [];
+  }
+
   // Collections need to be cloned because ServiceUtils.nestedTraverse actively
   // modifies the names of collections.
   // These changes risk affecting collections store in StateService.
@@ -44,6 +48,7 @@ function cloneCollection(
     cloned.groups = [...collection.groups];
     cloned.users = [...collection.users];
     cloned.assigned = collection.assigned;
+    cloned.unmanaged = collection.unmanaged;
   } else {
     cloned = new CollectionView();
   }

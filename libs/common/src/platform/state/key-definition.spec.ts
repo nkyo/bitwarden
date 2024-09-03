@@ -1,8 +1,6 @@
 import { Opaque } from "type-fest";
 
-import { UserId } from "../../types/guid";
-
-import { KeyDefinition } from "./key-definition";
+import { DebugOptions, KeyDefinition } from "./key-definition";
 import { StateDefinition } from "./state-definition";
 
 const fakeStateDefinition = new StateDefinition("fake", "disk");
@@ -18,6 +16,97 @@ describe("KeyDefinition", () => {
         });
       });
     });
+
+    it("normalizes debug options set to undefined", () => {
+      const keyDefinition = new KeyDefinition(fakeStateDefinition, "fake", {
+        deserializer: (v) => v,
+        debug: undefined,
+      });
+
+      expect(keyDefinition.debug.enableUpdateLogging).toBe(false);
+    });
+
+    it("normalizes no debug options", () => {
+      const keyDefinition = new KeyDefinition(fakeStateDefinition, "fake", {
+        deserializer: (v) => v,
+      });
+
+      expect(keyDefinition.debug.enableUpdateLogging).toBe(false);
+    });
+
+    const cases: {
+      debug: DebugOptions | undefined;
+      expectedEnableUpdateLogging: boolean;
+      expectedEnableRetrievalLogging: boolean;
+    }[] = [
+      {
+        debug: undefined,
+        expectedEnableUpdateLogging: false,
+        expectedEnableRetrievalLogging: false,
+      },
+      {
+        debug: {},
+        expectedEnableUpdateLogging: false,
+        expectedEnableRetrievalLogging: false,
+      },
+      {
+        debug: {
+          enableUpdateLogging: false,
+        },
+        expectedEnableUpdateLogging: false,
+        expectedEnableRetrievalLogging: false,
+      },
+      {
+        debug: {
+          enableRetrievalLogging: false,
+        },
+        expectedEnableUpdateLogging: false,
+        expectedEnableRetrievalLogging: false,
+      },
+      {
+        debug: {
+          enableUpdateLogging: true,
+        },
+        expectedEnableUpdateLogging: true,
+        expectedEnableRetrievalLogging: false,
+      },
+      {
+        debug: {
+          enableRetrievalLogging: true,
+        },
+        expectedEnableUpdateLogging: false,
+        expectedEnableRetrievalLogging: true,
+      },
+      {
+        debug: {
+          enableRetrievalLogging: false,
+          enableUpdateLogging: false,
+        },
+        expectedEnableUpdateLogging: false,
+        expectedEnableRetrievalLogging: false,
+      },
+      {
+        debug: {
+          enableRetrievalLogging: true,
+          enableUpdateLogging: true,
+        },
+        expectedEnableUpdateLogging: true,
+        expectedEnableRetrievalLogging: true,
+      },
+    ];
+
+    it.each(cases)(
+      "normalizes debug options to correct values when given $debug",
+      ({ debug, expectedEnableUpdateLogging, expectedEnableRetrievalLogging }) => {
+        const keyDefinition = new KeyDefinition(fakeStateDefinition, "fake", {
+          deserializer: (v) => v,
+          debug: debug,
+        });
+
+        expect(keyDefinition.debug.enableUpdateLogging).toBe(expectedEnableUpdateLogging);
+        expect(keyDefinition.debug.enableRetrievalLogging).toBe(expectedEnableRetrievalLogging);
+      },
+    );
   });
 
   describe("cleanupDelayMs", () => {
@@ -40,12 +129,12 @@ describe("KeyDefinition", () => {
       expect(keyDefinition.cleanupDelayMs).toBe(500);
     });
 
-    it.each([0, -1])("throws on 0 or negative (%s)", (testValue: number) => {
+    it("throws on negative", () => {
       expect(
         () =>
           new KeyDefinition<boolean>(fakeStateDefinition, "fake", {
             deserializer: (value) => value,
-            cleanupDelayMs: testValue,
+            cleanupDelayMs: -1,
           }),
       ).toThrow();
     });
@@ -109,26 +198,6 @@ describe("KeyDefinition", () => {
       expect(deserializedValue).toHaveLength(2);
       expect(deserializedValue[0]).toBeTruthy();
       expect(deserializedValue[1]).toBeFalsy();
-    });
-  });
-
-  describe("buildCacheKey", () => {
-    const keyDefinition = new KeyDefinition(fakeStateDefinition, "fake", {
-      deserializer: (s) => s,
-    });
-
-    it("builds unique cache key for each user", () => {
-      const cacheKeys: string[] = [];
-
-      // single user keys
-      cacheKeys.push(keyDefinition.buildCacheKey("user", "1" as UserId));
-      cacheKeys.push(keyDefinition.buildCacheKey("user", "2" as UserId));
-
-      expect(new Set(cacheKeys).size).toBe(cacheKeys.length);
-    });
-
-    it("throws with bad usage", () => {
-      expect(() => keyDefinition.buildCacheKey("user", null)).toThrow();
     });
   });
 });

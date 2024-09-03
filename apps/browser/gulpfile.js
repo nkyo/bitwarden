@@ -8,6 +8,8 @@ const jeditor = require("gulp-json-editor");
 const replace = require("gulp-replace");
 
 const manifest = require("./src/manifest.json");
+const manifestVersion = parseInt(process.env.MANIFEST_VERSION || manifest.version);
+const betaBuild = process.env.BETA_BUILD === "1";
 
 const paths = {
   build: "./build/",
@@ -30,10 +32,26 @@ const filters = {
   safari: ["!build/safari/**/*"],
 };
 
+/**
+ * Converts a number to a tuple containing two Uint16's
+ * @param num {number} This number is expected to be a integer style number with no decimals
+ *
+ * @returns {number[]} A tuple containing two elements that are both numbers.
+ */
+function numToUint16s(num) {
+  var arr = new ArrayBuffer(4);
+  var view = new DataView(arr);
+  view.setUint32(0, num, false);
+  return [view.getUint16(0), view.getUint16(2)];
+}
+
 function buildString() {
   var build = "";
   if (process.env.MANIFEST_VERSION) {
     build = `-mv${process.env.MANIFEST_VERSION}`;
+  }
+  if (betaBuild) {
+    build += "-beta";
   }
   if (process.env.BUILD_NUMBER && process.env.BUILD_NUMBER !== "") {
     build = `-${process.env.BUILD_NUMBER}`;
@@ -60,11 +78,19 @@ async function dist(browserName, manifest) {
 
 function distFirefox() {
   return dist("firefox", (manifest) => {
+    if (manifestVersion === 3) {
+      const backgroundScript = manifest.background.service_worker;
+      delete manifest.background.service_worker;
+      manifest.background.scripts = [backgroundScript];
+    }
     delete manifest.storage;
     delete manifest.sandbox;
     manifest.optional_permissions = manifest.optional_permissions.filter(
       (permission) => permission !== "privacy",
     );
+    if (betaBuild) {
+      manifest = applyBetaLabels(manifest);
+    }
     return manifest;
   });
 }
@@ -72,6 +98,18 @@ function distFirefox() {
 function distOpera() {
   return dist("opera", (manifest) => {
     delete manifest.applications;
+
+    // Mv3 on Opera does seem to have sidebar support, however it is not working as expected.
+    // On install, the extension will crash the browser entirely if the sidebar_action key is set.
+    // We will remove the sidebar_action key for now until opera implements a fix.
+    if (manifestVersion === 3) {
+      delete manifest.sidebar_action;
+      delete manifest.commands._execute_sidebar_action;
+    }
+
+    if (betaBuild) {
+      manifest = applyBetaLabels(manifest);
+    }
     return manifest;
   });
 }
@@ -81,6 +119,9 @@ function distChrome() {
     delete manifest.applications;
     delete manifest.sidebar_action;
     delete manifest.commands._execute_sidebar_action;
+    if (betaBuild) {
+      manifest = applyBetaLabels(manifest);
+    }
     return manifest;
   });
 }
@@ -90,6 +131,9 @@ function distEdge() {
     delete manifest.applications;
     delete manifest.sidebar_action;
     delete manifest.commands._execute_sidebar_action;
+    if (betaBuild) {
+      manifest = applyBetaLabels(manifest);
+    }
     return manifest;
   });
 }
@@ -128,7 +172,7 @@ function distSafariApp(cb, subBuildPath) {
       "--sign",
       subBuildPath === "mas"
         ? "3rd Party Mac Developer Application: Bitwarden Inc"
-        : "E661AB6249AEB60B0F47ABBD7326B2877D2575B0",
+        : "E7C9978F6FBCE0553429185C405E61F5380BE8EB",
       "--entitlements",
       entitlementsPath,
     ];
@@ -206,10 +250,18 @@ async function safariCopyBuild(source, dest) {
         gulpif(
           "manifest.json",
           jeditor((manifest) => {
+            if (manifestVersion === 3) {
+              const backgroundScript = manifest.background.service_worker;
+              delete manifest.background.service_worker;
+              manifest.background.scripts = [backgroundScript];
+            }
             delete manifest.sidebar_action;
             delete manifest.commands._execute_sidebar_action;
             delete manifest.optional_permissions;
             manifest.permissions.push("nativeMessaging");
+            if (betaBuild) {
+              manifest = applyBetaLabels(manifest);
+            }
             return manifest;
           }),
         ),
@@ -233,6 +285,30 @@ async function ciCoverage(cb) {
     .pipe(filter(["**", "!coverage/coverage*.zip"]))
     .pipe(zip(`coverage${buildString()}.zip`))
     .pipe(gulp.dest(paths.coverage));
+}
+
+function applyBetaLabels(manifest) {
+  manifest.name = "Bitwarden Password Manager BETA";
+  manifest.short_name = "Bitwarden BETA";
+  manifest.description = "THIS EXTENSION IS FOR BETA TESTING BITWARDEN.";
+  if (process.env.GITHUB_RUN_ID) {
+    const existingVersionParts = manifest.version.split("."); // 3 parts expected 2024.4.0
+
+    // GITHUB_RUN_ID is a number like: 8853654662
+    // which will convert to [ 4024, 3206 ]
+    // and a single incremented id of 8853654663 will become  [ 4024, 3207 ]
+    const runIdParts = numToUint16s(parseInt(process.env.GITHUB_RUN_ID));
+
+    // Only use the first 2 parts from the given version number and base the other 2 numbers from the GITHUB_RUN_ID
+    // Example: 2024.4.4024.3206
+    const betaVersion = `${existingVersionParts[0]}.${existingVersionParts[1]}.${runIdParts[0]}.${runIdParts[1]}`;
+
+    manifest.version_name = `${betaVersion} beta - ${process.env.GITHUB_SHA.slice(0, 8)}`;
+    manifest.version = betaVersion;
+  } else {
+    manifest.version = `${manifest.version}.0`;
+  }
+  return manifest;
 }
 
 exports["dist:firefox"] = distFirefox;

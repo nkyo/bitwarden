@@ -1,5 +1,6 @@
 import { Injectable } from "@angular/core";
 
+import { UserKeyRotationDataProvider } from "@bitwarden/auth/common";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
@@ -7,19 +8,27 @@ import {
   OrganizationUserResetPasswordRequest,
   OrganizationUserResetPasswordWithIdRequest,
 } from "@bitwarden/common/admin-console/abstractions/organization-user/requests";
-import { KdfConfig } from "@bitwarden/common/auth/models/domain/kdf-config";
+import {
+  Argon2KdfConfig,
+  KdfConfig,
+  PBKDF2KdfConfig,
+} from "@bitwarden/common/auth/models/domain/kdf-config";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { KdfType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { EncryptedString, EncString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
+import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
 
 @Injectable({
   providedIn: "root",
 })
-export class OrganizationUserResetPasswordService {
+export class OrganizationUserResetPasswordService
+  implements UserKeyRotationDataProvider<OrganizationUserResetPasswordWithIdRequest>
+{
   constructor(
     private cryptoService: CryptoService,
     private encryptService: EncryptService,
@@ -90,12 +99,17 @@ export class OrganizationUserResetPasswordService {
     const decValue = await this.cryptoService.rsaDecrypt(response.resetPasswordKey, decPrivateKey);
     const existingUserKey = new SymmetricCryptoKey(decValue) as UserKey;
 
+    // determine Kdf Algorithm
+    const kdfConfig: KdfConfig =
+      response.kdf === KdfType.PBKDF2_SHA256
+        ? new PBKDF2KdfConfig(response.kdfIterations)
+        : new Argon2KdfConfig(response.kdfIterations, response.kdfMemory, response.kdfParallelism);
+
     // Create new master key and hash new password
     const newMasterKey = await this.cryptoService.makeMasterKey(
       newMasterPassword,
       email.trim().toLowerCase(),
-      response.kdf,
-      new KdfConfig(response.kdfIterations, response.kdfMemory, response.kdfParallelism),
+      kdfConfig,
     );
     const newMasterKeyHash = await this.cryptoService.hashMasterKey(
       newMasterPassword,
@@ -119,11 +133,16 @@ export class OrganizationUserResetPasswordService {
 
   /**
    * Returns existing account recovery keys re-encrypted with the new user key.
+   * @param originalUserKey the original user key
    * @param newUserKey the new user key
+   * @param userId the user id
    * @throws Error if new user key is null
+   * @returns a list of account recovery keys that have been re-encrypted with the new user key
    */
-  async getRotatedKeys(
+  async getRotatedData(
+    originalUserKey: UserKey,
     newUserKey: UserKey,
+    userId: UserId,
   ): Promise<OrganizationUserResetPasswordWithIdRequest[] | null> {
     if (newUserKey == null) {
       throw new Error("New user key is required for rotation.");
@@ -154,24 +173,5 @@ export class OrganizationUserResetPasswordService {
       requests.push(request);
     }
     return requests;
-  }
-
-  /**
-   * @deprecated Nov 6, 2023: Use new Key Rotation Service for posting rotated data.
-   */
-  async postLegacyRotation(
-    userId: string,
-    requests: OrganizationUserResetPasswordWithIdRequest[],
-  ): Promise<void> {
-    if (requests == null) {
-      return;
-    }
-    for (const request of requests) {
-      await this.organizationUserService.putOrganizationUserResetPasswordEnrollment(
-        request.organizationId,
-        userId,
-        request,
-      );
-    }
   }
 }

@@ -1,3 +1,5 @@
+// eslint-disable-next-line import/no-restricted-paths -- Needed to provide client type to migrations
+import { ClientType } from "../enums";
 // eslint-disable-next-line import/no-restricted-paths -- Needed to print log messages
 import { LogService } from "../platform/abstractions/log.service";
 // eslint-disable-next-line import/no-restricted-paths -- Needed to interface with storage locations
@@ -9,12 +11,30 @@ export type KeyDefinitionLike = {
   key: string;
 };
 
+export type MigrationHelperType = "general" | "web-disk-local";
+
 export class MigrationHelper {
   constructor(
     public currentVersion: number,
     private storageService: AbstractStorageService,
     public logService: LogService,
-  ) {}
+    type: MigrationHelperType,
+    public clientType: ClientType,
+  ) {
+    this.type = type;
+  }
+
+  /**
+   * On some clients, migrations are ran multiple times without direct action from the migration writer.
+   *
+   * All clients will run through migrations at least once, this run is referred to as `"general"`. If a migration is
+   * ran more than that single time, they will get a unique name if that the write can make conditional logic based on which
+   * migration run this is.
+   *
+   * @remarks The preferrable way of writing migrations is ALWAYS to be defensive and reflect on the data you are given back. This
+   * should really only be used when reflecting on the data given isn't enough.
+   */
+  type: MigrationHelperType;
 
   /**
    * Gets a value from the storage service at the given key.
@@ -41,6 +61,18 @@ export class MigrationHelper {
   }
 
   /**
+   * Remove a value in the storage service at the given key.
+   *
+   * This is a brute force method to just remove a value in the storage service. If you can use {@link removeFromGlobal} or {@link removeFromUser}, you should.
+   * @param key location
+   * @returns void
+   */
+  remove(key: string): Promise<void> {
+    this.logService.info(`Removing ${key}`);
+    return this.storageService.remove(key);
+  }
+
+  /**
    * Gets a globally scoped value from a location derived through the key definition
    *
    * This is for use with the state providers framework, DO NOT use for values stored with {@link StateService},
@@ -63,6 +95,18 @@ export class MigrationHelper {
    */
   setToGlobal<T>(keyDefinition: KeyDefinitionLike, value: T): Promise<void> {
     return this.set(this.getGlobalKey(keyDefinition), value);
+  }
+
+  /**
+   * Remove a globally scoped location derived through the key definition
+   *
+   * This is for use with the state providers framework, DO NOT use for values stored with {@link StateService},
+   * use {@link remove} for those.
+   * @param keyDefinition unique key definition
+   * @returns void
+   */
+  removeFromGlobal(keyDefinition: KeyDefinitionLike): Promise<void> {
+    return this.remove(this.getGlobalKey(keyDefinition));
   }
 
   /**
@@ -92,6 +136,18 @@ export class MigrationHelper {
     return this.set(this.getUserKey(userId, keyDefinition), value);
   }
 
+  /**
+   * Remove a user scoped location derived through the key definition
+   *
+   * This is for use with the state providers framework, DO NOT use for values stored with {@link StateService},
+   * use {@link remove} for those.
+   * @param keyDefinition unique key definition
+   * @returns void
+   */
+  removeFromUser(userId: string, keyDefinition: KeyDefinitionLike): Promise<void> {
+    return this.remove(this.getUserKey(userId, keyDefinition));
+  }
+
   info(message: string): void {
     this.logService.info(message);
   }
@@ -101,18 +157,29 @@ export class MigrationHelper {
    *
    * This is useful from creating migrations off of this paradigm, but should not be used once a value is migrated to a state provider.
    *
-   * @returns a list of all accounts that have been authenticated with state service, cast the the expected type.
+   * @returns a list of all accounts that have been authenticated with state service, cast the expected type.
    */
   async getAccounts<ExpectedAccountType>(): Promise<
     { userId: string; account: ExpectedAccountType }[]
   > {
-    const userIds = (await this.get<string[]>("authenticatedAccounts")) ?? [];
+    const userIds = await this.getKnownUserIds();
     return Promise.all(
       userIds.map(async (userId) => ({
         userId,
         account: await this.get<ExpectedAccountType>(userId),
       })),
     );
+  }
+
+  /**
+   * Helper method to read known users ids.
+   */
+  async getKnownUserIds(): Promise<string[]> {
+    if (this.currentVersion < 60) {
+      return knownAccountUserIdsBuilderPre60(this.storageService);
+    } else {
+      return knownAccountUserIdsBuilder(this.storageService);
+    }
   }
 
   /**
@@ -176,4 +243,19 @@ function globalKeyBuilder(keyDefinition: KeyDefinitionLike): string {
 
 function globalKeyBuilderPre9(): string {
   throw Error("No key builder should be used for versions prior to 9.");
+}
+
+async function knownAccountUserIdsBuilderPre60(
+  storageService: AbstractStorageService,
+): Promise<string[]> {
+  return (await storageService.get<string[]>("authenticatedAccounts")) ?? [];
+}
+
+async function knownAccountUserIdsBuilder(
+  storageService: AbstractStorageService,
+): Promise<string[]> {
+  const accounts = await storageService.get<Record<string, unknown>>(
+    globalKeyBuilder({ stateDefinition: { name: "account" }, key: "accounts" }),
+  );
+  return Object.keys(accounts ?? {});
 }

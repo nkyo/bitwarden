@@ -5,6 +5,7 @@ import { UserVerificationService } from "@bitwarden/common/auth/abstractions/use
 import { Verification } from "@bitwarden/common/auth/types/verification";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { ToastService } from "@bitwarden/components";
 
 import { ModalRef } from "../../components/modal/modal.ref";
 
@@ -16,6 +17,7 @@ export interface UserVerificationPromptParams {
 
 /**
  * Used to verify the user's identity (using their master password or email-based OTP for Key Connector users). You can customize all of the text in the modal.
+ * @deprecated Jan 24, 2024: Use new libs/auth UserVerificationDialogComponent instead.
  */
 @Directive()
 export class UserVerificationPromptComponent {
@@ -36,6 +38,7 @@ export class UserVerificationPromptComponent {
     private formBuilder: FormBuilder,
     private platformUtilsService: PlatformUtilsService,
     private i18nService: I18nService,
+    private toastService: ToastService,
   ) {}
 
   get secret() {
@@ -55,7 +58,11 @@ export class UserVerificationPromptComponent {
       this.invalidSecret = false;
     } catch (e) {
       this.invalidSecret = true;
-      this.platformUtilsService.showToast("error", this.i18nService.t("error"), e.message);
+      this.toastService.showToast({
+        variant: "error",
+        title: this.i18nService.t("error"),
+        message: e.message,
+      });
       return;
     }
 

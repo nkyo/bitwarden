@@ -3,11 +3,13 @@
  * @jest-environment ../shared/test.environment.ts
  */
 
+import { mock } from "jest-mock-extended";
 import { firstValueFrom, of } from "rxjs";
 import { Jsonify } from "type-fest";
 
 import { trackEmissions, awaitAsync } from "../../../../spec";
 import { FakeStorageService } from "../../../../spec/fake-storage.service";
+import { LogService } from "../../abstractions/log.service";
 import { KeyDefinition, globalKeyBuilder } from "../key-definition";
 import { StateDefinition } from "../state-definition";
 
@@ -38,11 +40,12 @@ const globalKey = globalKeyBuilder(testKeyDefinition);
 describe("DefaultGlobalState", () => {
   let diskStorageService: FakeStorageService;
   let globalState: DefaultGlobalState<TestState>;
+  const logService = mock<LogService>();
   const newData = { date: new Date() };
 
   beforeEach(() => {
     diskStorageService = new FakeStorageService();
-    globalState = new DefaultGlobalState(testKeyDefinition, diskStorageService);
+    globalState = new DefaultGlobalState(testKeyDefinition, diskStorageService, logService);
   });
 
   afterEach(() => {
@@ -340,6 +343,8 @@ describe("DefaultGlobalState", () => {
       expect(diskStorageService["updatesSubject"]["observers"]).toHaveLength(1);
 
       // Still be listening to storage updates
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       diskStorageService.save(globalKey, newData);
       await awaitAsync(); // storage updates are behind a promise
       expect(sub2Emissions).toEqual([null, newData]);
@@ -362,6 +367,8 @@ describe("DefaultGlobalState", () => {
       const emissions = trackEmissions(globalState.state$);
       await awaitAsync();
 
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       diskStorageService.save(globalKey, newData);
       await awaitAsync();
 

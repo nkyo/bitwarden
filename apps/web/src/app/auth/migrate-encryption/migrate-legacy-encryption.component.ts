@@ -1,12 +1,15 @@
 import { Component } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
+import { firstValueFrom } from "rxjs";
 
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
+import { ToastService } from "@bitwarden/components";
 
 import { SharedModule } from "../../shared";
 import { UserKeyRotationModule } from "../key-rotation/user-key-rotation.module";
@@ -25,6 +28,7 @@ export class MigrateFromLegacyEncryptionComponent {
   });
 
   constructor(
+    private accountService: AccountService,
     private keyRotationService: UserKeyRotationService,
     private i18nService: I18nService,
     private platformUtilsService: PlatformUtilsService,
@@ -32,6 +36,7 @@ export class MigrateFromLegacyEncryptionComponent {
     private messagingService: MessagingService,
     private logService: LogService,
     private syncService: SyncService,
+    private toastService: ToastService,
   ) {}
 
   submit = async () => {
@@ -41,7 +46,9 @@ export class MigrateFromLegacyEncryptionComponent {
       return;
     }
 
-    const hasUserKey = await this.cryptoService.hasUserKey();
+    const activeUser = await firstValueFrom(this.accountService.activeAccount$);
+
+    const hasUserKey = await this.cryptoService.hasUserKey(activeUser.id);
     if (hasUserKey) {
       this.messagingService.send("logout");
       throw new Error("User key already exists, cannot migrate legacy encryption.");
@@ -52,14 +59,14 @@ export class MigrateFromLegacyEncryptionComponent {
     try {
       await this.syncService.fullSync(false, true);
 
-      await this.keyRotationService.rotateUserKeyAndEncryptedData(masterPassword);
+      await this.keyRotationService.rotateUserKeyAndEncryptedData(masterPassword, activeUser);
 
-      this.platformUtilsService.showToast(
-        "success",
-        this.i18nService.t("keyUpdated"),
-        this.i18nService.t("logBackInOthersToo"),
-        { timeout: 15000 },
-      );
+      this.toastService.showToast({
+        variant: "success",
+        title: this.i18nService.t("keyUpdated"),
+        message: this.i18nService.t("logBackInOthersToo"),
+        timeout: 15000,
+      });
       this.messagingService.send("logout");
     } catch (e) {
       this.logService.error(e);

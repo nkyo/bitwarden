@@ -1,14 +1,16 @@
 import { Directive, ElementRef, HostBinding, Input } from "@angular/core";
 
+import { FocusableElement } from "../shared/focusable-element";
+
 export type BadgeVariant = "primary" | "secondary" | "success" | "danger" | "warning" | "info";
 
 const styles: Record<BadgeVariant, string[]> = {
-  primary: ["tw-bg-primary-500"],
+  primary: ["tw-bg-primary-600"],
   secondary: ["tw-bg-text-muted"],
-  success: ["tw-bg-success-500"],
-  danger: ["tw-bg-danger-500"],
-  warning: ["tw-bg-warning-500"],
-  info: ["tw-bg-info-500"],
+  success: ["tw-bg-success-600"],
+  danger: ["tw-bg-danger-600"],
+  warning: ["tw-bg-warning-600"],
+  info: ["tw-bg-info-600"],
 };
 
 const hoverStyles: Record<BadgeVariant, string[]> = {
@@ -22,8 +24,9 @@ const hoverStyles: Record<BadgeVariant, string[]> = {
 
 @Directive({
   selector: "span[bitBadge], a[bitBadge], button[bitBadge]",
+  providers: [{ provide: FocusableElement, useExisting: BadgeDirective }],
 })
-export class BadgeDirective {
+export class BadgeDirective implements FocusableElement {
   @HostBinding("class") get classList() {
     return [
       "tw-inline-block",
@@ -46,11 +49,19 @@ export class BadgeDirective {
     ]
       .concat(styles[this.variant])
       .concat(this.hasHoverEffects ? hoverStyles[this.variant] : [])
-      .concat(this.truncate ? ["tw-truncate", "tw-max-w-40"] : []);
+      .concat(this.truncate ? ["tw-truncate", this.maxWidthClass] : []);
   }
-  @HostBinding("attr.title") get title() {
+  @HostBinding("attr.title") get titleAttr() {
+    if (this.title !== undefined) {
+      return this.title;
+    }
     return this.truncate ? this.el.nativeElement.textContent.trim() : null;
   }
+
+  /**
+   * Optional override for the automatic badge title when truncating.
+   */
+  @Input() title?: string;
 
   /**
    * Variant, sets the background color of the badge.
@@ -61,6 +72,12 @@ export class BadgeDirective {
    * Truncate long text
    */
   @Input() truncate = true;
+
+  @Input() maxWidthClass: `tw-max-w-${string}` = "tw-max-w-40";
+
+  getFocusTarget() {
+    return this.el.nativeElement;
+  }
 
   private hasHoverEffects = false;
 

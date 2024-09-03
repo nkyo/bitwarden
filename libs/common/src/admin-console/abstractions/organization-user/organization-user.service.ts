@@ -8,7 +8,6 @@ import {
   OrganizationUserInviteRequest,
   OrganizationUserResetPasswordEnrollmentRequest,
   OrganizationUserResetPasswordRequest,
-  OrganizationUserUpdateGroupsRequest,
   OrganizationUserUpdateRequest,
 } from "./requests";
 import {
@@ -66,6 +65,16 @@ export abstract class OrganizationUserService {
     organizationId: string,
     id: string,
   ): Promise<OrganizationUserResetPasswordDetailsResponse>;
+
+  /**
+   * Retrieve reset password details for many organization users
+   * @param organizationId - Identifier for the organization
+   * @param ids - A list of organization user identifiers
+   */
+  abstract getManyOrganizationUserAccountRecoveryDetails(
+    organizationId: string,
+    ids: string[],
+  ): Promise<ListResponse<OrganizationUserResetPasswordDetailsResponse>>;
 
   /**
    * Create new organization user invite(s) for the specified organization
@@ -166,18 +175,6 @@ export abstract class OrganizationUserService {
   ): Promise<void>;
 
   /**
-   * Update an organization user's groups
-   * @param organizationId - Identifier for the organization the user belongs to
-   * @param id - Organization user identifier
-   * @param groupIds - List of group ids to associate the user with
-   */
-  abstract putOrganizationUserGroups(
-    organizationId: string,
-    id: string,
-    groupIds: OrganizationUserUpdateGroupsRequest,
-  ): Promise<void>;
-
-  /**
    * Update an organization user's reset password enrollment
    * @param organizationId - Identifier for the organization the user belongs to
    * @param userId - Organization user identifier
@@ -213,19 +210,19 @@ export abstract class OrganizationUserService {
   ): Promise<void>;
 
   /**
-   * Delete an organization user
+   * Remove an organization user
    * @param organizationId - Identifier for the organization the user belongs to
    * @param id - Organization user identifier
    */
-  abstract deleteOrganizationUser(organizationId: string, id: string): Promise<void>;
+  abstract removeOrganizationUser(organizationId: string, id: string): Promise<void>;
 
   /**
-   * Delete many organization users
+   * Remove many organization users
    * @param organizationId - Identifier for the organization the users belongs to
-   * @param ids - List of organization user identifiers to delete
-   * @return List of user ids, including both those that were successfully deleted and those that had an error
+   * @param ids - List of organization user identifiers to remove
+   * @return List of user ids, including both those that were successfully removed and those that had an error
    */
-  abstract deleteManyOrganizationUsers(
+  abstract removeManyOrganizationUsers(
     organizationId: string,
     ids: string[],
   ): Promise<ListResponse<OrganizationUserBulkResponse>>;

@@ -1,9 +1,12 @@
+import { AutofillInlineMenuContentService } from "../overlay/inline-menu/abstractions/autofill-inline-menu-content.service";
 import { FillableFormFieldElement, FormFieldElement } from "../types";
 
-import { DomElementVisibilityService as domElementVisibilityServiceInterface } from "./abstractions/dom-element-visibility.service";
+import { DomElementVisibilityService as DomElementVisibilityServiceInterface } from "./abstractions/dom-element-visibility.service";
 
-class DomElementVisibilityService implements domElementVisibilityServiceInterface {
+class DomElementVisibilityService implements DomElementVisibilityServiceInterface {
   private cachedComputedStyle: CSSStyleDeclaration | null = null;
+
+  constructor(private inlineMenuElements?: AutofillInlineMenuContentService) {}
 
   /**
    * Checks if a form field is viewable. This is done by checking if the element is within the
@@ -66,7 +69,7 @@ class DomElementVisibilityService implements domElementVisibilityServiceInterfac
    */
   private getElementStyle(element: HTMLElement, styleProperty: string): string {
     if (!this.cachedComputedStyle) {
-      this.cachedComputedStyle = (element.ownerDocument.defaultView || window).getComputedStyle(
+      this.cachedComputedStyle = (element.ownerDocument.defaultView || globalThis).getComputedStyle(
         element,
       );
     }
@@ -184,6 +187,10 @@ class DomElementVisibilityService implements domElementVisibilityServiceInterfac
     );
 
     if (elementAtCenterPoint === targetElement) {
+      return true;
+    }
+
+    if (this.inlineMenuElements?.isElementInlineMenu(elementAtCenterPoint as HTMLElement)) {
       return true;
     }
 

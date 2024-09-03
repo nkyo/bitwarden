@@ -1,4 +1,4 @@
-import { Observable, ReplaySubject, firstValueFrom, map, timeout } from "rxjs";
+import { Observable, ReplaySubject, concatMap, filter, firstValueFrom, map, timeout } from "rxjs";
 
 import {
   DerivedState,
@@ -6,12 +6,15 @@ import {
   SingleUserState,
   ActiveUserState,
   KeyDefinition,
+  DeriveDefinition,
+  UserKeyDefinition,
 } from "../src/platform/state";
 // eslint-disable-next-line import/no-restricted-paths -- using unexposed options for clean typing in test class
 import { StateUpdateOptions } from "../src/platform/state/state-update-options";
 // eslint-disable-next-line import/no-restricted-paths -- using unexposed options for clean typing in test class
 import { CombinedState, activeMarker } from "../src/platform/state/user-state";
 import { UserId } from "../src/types/guid";
+import { DerivedStateDependencies } from "../src/types/state";
 
 import { FakeAccountService } from "./fake-account-service";
 
@@ -38,10 +41,14 @@ export class FakeGlobalState<T> implements GlobalState<T> {
     this.stateSubject.next(initialValue ?? null);
   }
 
-  update: <TCombine>(
+  nextState(state: T) {
+    this.stateSubject.next(state);
+  }
+
+  async update<TCombine>(
     configureState: (state: T, dependency: TCombine) => T,
     options?: StateUpdateOptions<T, TCombine>,
-  ) => Promise<T> = jest.fn(async (configureState, options) => {
+  ): Promise<T> {
     options = populateOptionsWithDefault(options);
     if (this.stateSubject["_buffer"].length == 0) {
       // throw a more helpful not initialized error
@@ -61,9 +68,9 @@ export class FakeGlobalState<T> implements GlobalState<T> {
     this.stateSubject.next(newState);
     this.nextMock(newState);
     return newState;
-  });
+  }
 
-  updateMock = this.update as jest.MockedFunction<typeof this.update>;
+  /** Tracks update values resolved by `FakeState.update` */
   nextMock = jest.fn<void, [T]>();
 
   get state$() {
@@ -86,7 +93,10 @@ export class FakeGlobalState<T> implements GlobalState<T> {
 
 export class FakeSingleUserState<T> implements SingleUserState<T> {
   // eslint-disable-next-line rxjs/no-exposed-subjects -- exposed for testing setup
-  stateSubject = new ReplaySubject<CombinedState<T>>(1);
+  stateSubject = new ReplaySubject<{
+    syncValue: boolean;
+    combinedState: CombinedState<T>;
+  }>(1);
 
   state$: Observable<T>;
   combinedState$: Observable<CombinedState<T>>;
@@ -94,15 +104,28 @@ export class FakeSingleUserState<T> implements SingleUserState<T> {
   constructor(
     readonly userId: UserId,
     initialValue?: T,
+    updateSyncCallback?: (userId: UserId, newValue: T) => Promise<void>,
   ) {
-    this.stateSubject.next([userId, initialValue ?? null]);
+    // Inform the state provider of updates to keep active user states in sync
+    this.stateSubject
+      .pipe(
+        filter((next) => next.syncValue),
+        concatMap(async ({ combinedState }) => {
+          await updateSyncCallback?.(...combinedState);
+        }),
+      )
+      .subscribe();
+    this.nextState(initialValue ?? null, { syncValue: initialValue != null });
 
-    this.combinedState$ = this.stateSubject.asObservable();
+    this.combinedState$ = this.stateSubject.pipe(map((v) => v.combinedState));
     this.state$ = this.combinedState$.pipe(map(([_userId, state]) => state));
   }
 
-  nextState(state: T) {
-    this.stateSubject.next([this.userId, state]);
+  nextState(state: T, { syncValue }: { syncValue: boolean } = { syncValue: true }) {
+    this.stateSubject.next({
+      syncValue,
+      combinedState: [this.userId, state],
+    });
   }
 
   async update<TCombine>(
@@ -119,15 +142,14 @@ export class FakeSingleUserState<T> implements SingleUserState<T> {
       return current;
     }
     const newState = configureState(current, combinedDependencies);
-    this.stateSubject.next([this.userId, newState]);
+    this.nextState(newState);
     this.nextMock(newState);
     return newState;
   }
 
-  updateMock = this.update as jest.MockedFunction<typeof this.update>;
-
+  /** Tracks update values resolved by `FakeState.update` */
   nextMock = jest.fn<void, [T]>();
-  private _keyDefinition: KeyDefinition<T> | null = null;
+  private _keyDefinition: UserKeyDefinition<T> | null = null;
   get keyDefinition() {
     if (this._keyDefinition == null) {
       throw new Error(
@@ -136,7 +158,7 @@ export class FakeSingleUserState<T> implements SingleUserState<T> {
     }
     return this._keyDefinition;
   }
-  set keyDefinition(value: KeyDefinition<T>) {
+  set keyDefinition(value: UserKeyDefinition<T>) {
     this._keyDefinition = value;
   }
 }
@@ -144,7 +166,10 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
   [activeMarker]: true;
 
   // eslint-disable-next-line rxjs/no-exposed-subjects -- exposed for testing setup
-  stateSubject = new ReplaySubject<CombinedState<T>>(1);
+  stateSubject = new ReplaySubject<{
+    syncValue: boolean;
+    combinedState: CombinedState<T>;
+  }>(1);
 
   state$: Observable<T>;
   combinedState$: Observable<CombinedState<T>>;
@@ -152,10 +177,18 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
   constructor(
     private accountService: FakeAccountService,
     initialValue?: T,
+    updateSyncCallback?: (userId: UserId, newValue: T) => Promise<void>,
   ) {
-    this.stateSubject.next([accountService.activeUserId, initialValue ?? null]);
+    // Inform the state provider of updates to keep single user states in sync
+    this.stateSubject.pipe(
+      filter((next) => next.syncValue),
+      concatMap(async ({ combinedState }) => {
+        await updateSyncCallback?.(...combinedState);
+      }),
+    );
+    this.nextState(initialValue ?? null, { syncValue: initialValue != null });
 
-    this.combinedState$ = this.stateSubject.asObservable();
+    this.combinedState$ = this.stateSubject.pipe(map((v) => v.combinedState));
     this.state$ = this.combinedState$.pipe(map(([_userId, state]) => state));
   }
 
@@ -163,14 +196,17 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
     return this.accountService.activeUserId;
   }
 
-  nextState(state: T) {
-    this.stateSubject.next([this.userId, state]);
+  nextState(state: T, { syncValue }: { syncValue: boolean } = { syncValue: true }) {
+    this.stateSubject.next({
+      syncValue,
+      combinedState: [this.userId, state],
+    });
   }
 
   async update<TCombine>(
     configureState: (state: T, dependency: TCombine) => T,
     options?: StateUpdateOptions<T, TCombine>,
-  ): Promise<T> {
+  ): Promise<[UserId, T]> {
     options = populateOptionsWithDefault(options);
     const current = await firstValueFrom(this.state$.pipe(timeout(options.msTimeout)));
     const combinedDependencies =
@@ -178,19 +214,18 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
         ? await firstValueFrom(options.combineLatestWith.pipe(timeout(options.msTimeout)))
         : null;
     if (!options.shouldUpdate(current, combinedDependencies)) {
-      return current;
+      return [this.userId, current];
     }
     const newState = configureState(current, combinedDependencies);
-    this.stateSubject.next([this.userId, newState]);
-    this.nextMock(this.userId, newState);
-    return newState;
+    this.nextState(newState);
+    this.nextMock([this.userId, newState]);
+    return [this.userId, newState];
   }
 
-  updateMock = this.update as jest.MockedFunction<typeof this.update>;
+  /** Tracks update values resolved by `FakeState.update` */
+  nextMock = jest.fn<void, [[UserId, T]]>();
 
-  nextMock = jest.fn<void, [UserId, T]>();
-
-  private _keyDefinition: KeyDefinition<T> | null = null;
+  private _keyDefinition: UserKeyDefinition<T> | null = null;
   get keyDefinition() {
     if (this._keyDefinition == null) {
       throw new Error(
@@ -199,16 +234,38 @@ export class FakeActiveUserState<T> implements ActiveUserState<T> {
     }
     return this._keyDefinition;
   }
-  set keyDefinition(value: KeyDefinition<T>) {
+  set keyDefinition(value: UserKeyDefinition<T>) {
     this._keyDefinition = value;
   }
 }
 
-export class FakeDerivedState<T> implements DerivedState<T> {
+export class FakeDerivedState<TFrom, TTo, TDeps extends DerivedStateDependencies>
+  implements DerivedState<TTo>
+{
   // eslint-disable-next-line rxjs/no-exposed-subjects -- exposed for testing setup
-  stateSubject = new ReplaySubject<T>(1);
+  stateSubject = new ReplaySubject<TTo>(1);
 
-  forceValue(value: T): Promise<T> {
+  constructor(
+    parentState$: Observable<TFrom>,
+    deriveDefinition: DeriveDefinition<TFrom, TTo, TDeps>,
+    dependencies: TDeps,
+  ) {
+    parentState$
+      .pipe(
+        concatMap(async (v) => {
+          const newState = deriveDefinition.derive(v, dependencies);
+          if (newState instanceof Promise) {
+            return newState;
+          }
+          return Promise.resolve(newState);
+        }),
+      )
+      .subscribe((newState) => {
+        this.stateSubject.next(newState);
+      });
+  }
+
+  forceValue(value: TTo): Promise<TTo> {
     this.stateSubject.next(value);
     return Promise.resolve(value);
   }

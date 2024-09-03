@@ -1,3 +1,8 @@
+import "jest-preset-angular/setup-jest";
+import { addCustomMatchers } from "@bitwarden/common/spec";
+
+addCustomMatchers();
+
 // Add chrome storage api
 const QUOTA_BYTES = 10;
 const storage = {
@@ -8,6 +13,10 @@ const storage = {
     QUOTA_BYTES,
     getBytesInUse: jest.fn(),
     clear: jest.fn(),
+    onChanged: {
+      addListener: jest.fn(),
+      removeListener: jest.fn(),
+    },
   },
   session: {
     set: jest.fn(),
@@ -30,6 +39,7 @@ const runtime = {
     addListener: jest.fn(),
     removeListener: jest.fn(),
   },
+  reload: jest.fn(),
 };
 
 const contextMenus = {
@@ -43,6 +53,7 @@ const i18n = {
 };
 
 const tabs = {
+  get: jest.fn(),
   executeScript: jest.fn(),
   sendMessage: jest.fn(),
   query: jest.fn(),
@@ -66,6 +77,8 @@ const tabs = {
 
 const scripting = {
   executeScript: jest.fn(),
+  registerContentScripts: jest.fn(),
+  unregisterContentScripts: jest.fn(),
 };
 
 const windows = {
@@ -105,6 +118,69 @@ const privacy = {
   },
 };
 
+const extension = {
+  getBackgroundPage: jest.fn(),
+  getViews: jest.fn(),
+};
+
+const offscreen = {
+  createDocument: jest.fn(),
+  closeDocument: jest.fn((callback) => {
+    if (callback) {
+      callback();
+    }
+  }),
+  Reason: {
+    CLIPBOARD: "clipboard",
+  },
+};
+
+const permissions = {
+  contains: jest.fn((permissions, callback) => {
+    callback(true);
+  }),
+};
+
+const webNavigation = {
+  getFrame: jest.fn(),
+  getAllFrames: jest.fn(),
+  onCommitted: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+  onCompleted: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+};
+
+const webRequest = {
+  onBeforeRequest: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+  onBeforeRedirect: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+  onCompleted: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+};
+
+const alarms = {
+  clear: jest.fn().mockImplementation((_name, callback) => callback(true)),
+  clearAll: jest.fn().mockImplementation((callback) => callback(true)),
+  create: jest.fn().mockImplementation((_name, _createInfo, callback) => callback()),
+  get: jest.fn().mockImplementation((_name, callback) => callback(null)),
+  getAll: jest.fn().mockImplementation((callback) => callback([])),
+  onAlarm: {
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+  },
+};
+
 // set chrome
 global.chrome = {
   i18n,
@@ -116,4 +192,10 @@ global.chrome = {
   windows,
   port,
   privacy,
+  extension,
+  offscreen,
+  permissions,
+  webNavigation,
+  webRequest,
+  alarms,
 } as any;

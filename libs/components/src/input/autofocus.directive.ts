@@ -1,14 +1,9 @@
-import { Directive, ElementRef, Input, NgZone, Optional } from "@angular/core";
+import { Directive, ElementRef, Input, NgZone, OnInit, Optional } from "@angular/core";
 import { take } from "rxjs/operators";
 
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 
-/**
- * Interface for implementing focusable components. Used by the AutofocusDirective.
- */
-export abstract class FocusableElement {
-  focus: () => void;
-}
+import { FocusableElement } from "../shared/focusable-element";
 
 /**
  * Directive to focus an element.
@@ -21,7 +16,7 @@ export abstract class FocusableElement {
 @Directive({
   selector: "[appAutofocus], [bitAutofocus]",
 })
-export class AutofocusDirective {
+export class AutofocusDirective implements OnInit {
   @Input() set appAutofocus(condition: boolean | string) {
     this.autofocus = condition === "" || condition === true;
   }
@@ -46,7 +41,7 @@ export class AutofocusDirective {
 
   private focus() {
     if (this.focusableElement) {
-      this.focusableElement.focus();
+      this.focusableElement.getFocusTarget().focus();
     } else {
       this.el.nativeElement.focus();
     }

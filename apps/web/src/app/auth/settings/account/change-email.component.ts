@@ -2,6 +2,7 @@ import { Component, OnInit } from "@angular/core";
 import { FormBuilder, Validators } from "@angular/forms";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { TwoFactorProviderType } from "@bitwarden/common/auth/enums/two-factor-provider-type";
 import { EmailTokenRequest } from "@bitwarden/common/auth/models/request/email-token.request";
 import { EmailRequest } from "@bitwarden/common/auth/models/request/email.request";
@@ -11,6 +12,7 @@ import { LogService } from "@bitwarden/common/platform/abstractions/log.service"
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
+import { ToastService } from "@bitwarden/components";
 
 @Component({
   selector: "app-change-email",
@@ -37,6 +39,8 @@ export class ChangeEmailComponent implements OnInit {
     private logService: LogService,
     private stateService: StateService,
     private formBuilder: FormBuilder,
+    private kdfConfigService: KdfConfigService,
+    private toastService: ToastService,
   ) {}
 
   async ngOnInit() {
@@ -83,12 +87,10 @@ export class ChangeEmailComponent implements OnInit {
         step1Value.masterPassword,
         await this.cryptoService.getOrDeriveMasterKey(step1Value.masterPassword),
       );
-      const kdf = await this.stateService.getKdfType();
-      const kdfConfig = await this.stateService.getKdfConfig();
+      const kdfConfig = await this.kdfConfigService.getKdfConfig();
       const newMasterKey = await this.cryptoService.makeMasterKey(
         step1Value.masterPassword,
         newEmail,
-        kdf,
         kdfConfig,
       );
       request.newMasterPasswordHash = await this.cryptoService.hashMasterKey(
@@ -100,11 +102,11 @@ export class ChangeEmailComponent implements OnInit {
       try {
         await this.apiService.postEmail(request);
         this.reset();
-        this.platformUtilsService.showToast(
-          "success",
-          this.i18nService.t("emailChanged"),
-          this.i18nService.t("logBackIn"),
-        );
+        this.toastService.showToast({
+          variant: "success",
+          title: this.i18nService.t("emailChanged"),
+          message: this.i18nService.t("logBackIn"),
+        });
         this.messagingService.send("logout");
       } catch (e) {
         this.logService.error(e);

@@ -2,7 +2,6 @@ import { Injectable, NgZone } from "@angular/core";
 import { OidcClient } from "oidc-client-ts";
 import { Subject, firstValueFrom } from "rxjs";
 
-import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { ClientType } from "@bitwarden/common/enums";
 import { AppIdService } from "@bitwarden/common/platform/abstractions/app-id.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
@@ -11,7 +10,7 @@ import { EnvironmentService } from "@bitwarden/common/platform/abstractions/envi
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
-import { PasswordGenerationServiceAbstraction } from "@bitwarden/common/tools/generator/password";
+import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legacy";
 
 import { DialogService } from "../../../../components/src/dialog";
 import { ClientInfo, Vault } from "../../importers/lastpass/access";
@@ -32,7 +31,6 @@ export class LastPassDirectImportService {
   ssoImportCallback$ = this._ssoImportCallback$.asObservable();
 
   constructor(
-    private tokenService: TokenService,
     private cryptoFunctionService: CryptoFunctionService,
     private environmentService: EnvironmentService,
     private appIdService: AppIdService,
@@ -44,10 +42,12 @@ export class LastPassDirectImportService {
     private dialogService: DialogService,
     private i18nService: I18nService,
   ) {
-    this.vault = new Vault(this.cryptoFunctionService, this.tokenService);
+    this.vault = new Vault(this.cryptoFunctionService);
 
     /** TODO: remove this in favor of dedicated service */
     this.broadcasterService.subscribe("LastPassDirectImportService", (message: any) => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       this.ngZone.run(async () => {
         switch (message.command) {
           case "importCallbackLastPass":
@@ -121,7 +121,7 @@ export class LastPassDirectImportService {
     this.oidcClient = new OidcClient({
       authority: this.vault.userType.openIDConnectAuthorityBase,
       client_id: this.vault.userType.openIDConnectClientId,
-      redirect_uri: this.getOidcRedirectUrl(),
+      redirect_uri: await this.getOidcRedirectUrl(),
       response_type: "code",
       scope: this.vault.userType.oidcScope,
       response_mode: "query",
@@ -151,12 +151,13 @@ export class LastPassDirectImportService {
     return redirectUri + "&" + params;
   }
 
-  private getOidcRedirectUrl() {
+  private async getOidcRedirectUrl() {
     const clientType = this.platformUtilsService.getClientType();
     if (clientType === ClientType.Desktop) {
       return "bitwarden://import-callback-lp";
     }
-    const webUrl = this.environmentService.getWebVaultUrl();
+    const env = await firstValueFrom(this.environmentService.environment$);
+    const webUrl = env.getWebVaultUrl();
     return webUrl + "/sso-connector.html?lp=1";
   }
 

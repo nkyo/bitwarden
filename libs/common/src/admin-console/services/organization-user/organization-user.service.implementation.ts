@@ -9,7 +9,6 @@ import {
   OrganizationUserInviteRequest,
   OrganizationUserResetPasswordEnrollmentRequest,
   OrganizationUserResetPasswordRequest,
-  OrganizationUserUpdateGroupsRequest,
   OrganizationUserUpdateRequest,
 } from "../../abstractions/organization-user/requests";
 import {
@@ -97,6 +96,20 @@ export class OrganizationUserServiceImplementation implements OrganizationUserSe
       true,
     );
     return new OrganizationUserResetPasswordDetailsResponse(r);
+  }
+
+  async getManyOrganizationUserAccountRecoveryDetails(
+    organizationId: string,
+    ids: string[],
+  ): Promise<ListResponse<OrganizationUserResetPasswordDetailsResponse>> {
+    const r = await this.apiService.send(
+      "POST",
+      "/organizations/" + organizationId + "/users/account-recovery-details",
+      new OrganizationUserBulkRequest(ids),
+      true,
+      true,
+    );
+    return new ListResponse(r, OrganizationUserResetPasswordDetailsResponse);
   }
 
   postOrganizationUserInvite(
@@ -233,20 +246,6 @@ export class OrganizationUserServiceImplementation implements OrganizationUserSe
     );
   }
 
-  putOrganizationUserGroups(
-    organizationId: string,
-    id: string,
-    request: OrganizationUserUpdateGroupsRequest,
-  ): Promise<void> {
-    return this.apiService.send(
-      "PUT",
-      "/organizations/" + organizationId + "/users/" + id + "/groups",
-      request,
-      true,
-      false,
-    );
-  }
-
   putOrganizationUserResetPasswordEnrollment(
     organizationId: string,
     userId: string,
@@ -275,7 +274,7 @@ export class OrganizationUserServiceImplementation implements OrganizationUserSe
     );
   }
 
-  deleteOrganizationUser(organizationId: string, id: string): Promise<any> {
+  removeOrganizationUser(organizationId: string, id: string): Promise<any> {
     return this.apiService.send(
       "DELETE",
       "/organizations/" + organizationId + "/users/" + id,
@@ -285,7 +284,7 @@ export class OrganizationUserServiceImplementation implements OrganizationUserSe
     );
   }
 
-  async deleteManyOrganizationUsers(
+  async removeManyOrganizationUsers(
     organizationId: string,
     ids: string[],
   ): Promise<ListResponse<OrganizationUserBulkResponse>> {

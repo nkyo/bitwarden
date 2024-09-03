@@ -6,14 +6,19 @@ import { of } from "rxjs";
 
 import { LockComponent as BaseLockComponent } from "@bitwarden/angular/auth/components/lock.component";
 import { I18nPipe } from "@bitwarden/angular/platform/pipes/i18n.pipe";
-import { PinCryptoServiceAbstraction } from "@bitwarden/auth/common";
+import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { VaultTimeoutSettingsService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout-settings.service";
 import { VaultTimeoutService } from "@bitwarden/common/abstractions/vault-timeout/vault-timeout.service";
 import { PolicyApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/policy/policy-api.service.abstraction";
 import { InternalPolicyService } from "@bitwarden/common/admin-console/abstractions/policy/policy.service.abstraction";
-import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
+import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
+import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
+import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
+import { InternalMasterPasswordServiceAbstraction } from "@bitwarden/common/auth/abstractions/master-password.service.abstraction";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { FakeMasterPasswordService } from "@bitwarden/common/auth/services/master-password/fake-master-password.service";
 import { BroadcasterService } from "@bitwarden/common/platform/abstractions/broadcaster.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
@@ -21,10 +26,17 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
+import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
+import { BiometricStateService } from "@bitwarden/common/platform/biometrics/biometric-state.service";
+import { BiometricsService as AbstractBiometricService } from "@bitwarden/common/platform/biometrics/biometric.service";
+import { Utils } from "@bitwarden/common/platform/misc/utils";
+import { FakeAccountService, mockAccountServiceWith } from "@bitwarden/common/spec";
 import { PasswordStrengthServiceAbstraction } from "@bitwarden/common/tools/password-strength";
-import { DialogService } from "@bitwarden/components";
+import { UserId } from "@bitwarden/common/types/guid";
+import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
+import { DialogService, ToastService } from "@bitwarden/components";
 
-import { ElectronStateService } from "../platform/services/electron-state.service.abstraction";
+import { BiometricsService } from "src/platform/main/biometric";
 
 import { LockComponent } from "./lock.component";
 
@@ -42,26 +54,41 @@ const isWindowVisibleMock = jest.fn();
 describe("LockComponent", () => {
   let component: LockComponent;
   let fixture: ComponentFixture<LockComponent>;
-  let stateServiceMock: MockProxy<ElectronStateService>;
+  let stateServiceMock: MockProxy<StateService>;
+  let biometricStateService: MockProxy<BiometricStateService>;
+  let biometricsService: MockProxy<BiometricsService>;
   let messagingServiceMock: MockProxy<MessagingService>;
   let broadcasterServiceMock: MockProxy<BroadcasterService>;
   let platformUtilsServiceMock: MockProxy<PlatformUtilsService>;
   let activatedRouteMock: MockProxy<ActivatedRoute>;
+  let mockMasterPasswordService: FakeMasterPasswordService;
+  let mockToastService: MockProxy<ToastService>;
 
-  beforeEach(() => {
-    stateServiceMock = mock<ElectronStateService>();
-    stateServiceMock.activeAccount$ = of(null);
+  const mockUserId = Utils.newGuid() as UserId;
+  const accountService: FakeAccountService = mockAccountServiceWith(mockUserId);
+
+  beforeEach(async () => {
+    stateServiceMock = mock<StateService>();
 
     messagingServiceMock = mock<MessagingService>();
     broadcasterServiceMock = mock<BroadcasterService>();
     platformUtilsServiceMock = mock<PlatformUtilsService>();
+    mockToastService = mock<ToastService>();
 
     activatedRouteMock = mock<ActivatedRoute>();
     activatedRouteMock.queryParams = mock<ActivatedRoute["queryParams"]>();
 
-    TestBed.configureTestingModule({
+    mockMasterPasswordService = new FakeMasterPasswordService();
+
+    biometricStateService = mock();
+    biometricStateService.dismissedRequirePasswordOnStartCallout$ = of(false);
+    biometricStateService.promptAutomatically$ = of(false);
+    biometricStateService.promptCancelled$ = of(false);
+
+    await TestBed.configureTestingModule({
       declarations: [LockComponent, I18nPipe],
       providers: [
+        { provide: InternalMasterPasswordServiceAbstraction, useValue: mockMasterPasswordService },
         {
           provide: I18nService,
           useValue: mock<I18nService>(),
@@ -91,7 +118,7 @@ describe("LockComponent", () => {
           useValue: mock<EnvironmentService>(),
         },
         {
-          provide: ElectronStateService,
+          provide: StateService,
           useValue: stateServiceMock,
         },
         {
@@ -127,27 +154,56 @@ describe("LockComponent", () => {
           useValue: mock<DialogService>(),
         },
         {
-          provide: DeviceTrustCryptoServiceAbstraction,
-          useValue: mock<DeviceTrustCryptoServiceAbstraction>(),
+          provide: DeviceTrustServiceAbstraction,
+          useValue: mock<DeviceTrustServiceAbstraction>(),
         },
         {
           provide: UserVerificationService,
           useValue: mock<UserVerificationService>(),
         },
         {
-          provide: PinCryptoServiceAbstraction,
-          useValue: mock<PinCryptoServiceAbstraction>(),
+          provide: PinServiceAbstraction,
+          useValue: mock<PinServiceAbstraction>(),
+        },
+        {
+          provide: BiometricStateService,
+          useValue: biometricStateService,
+        },
+        {
+          provide: AbstractBiometricService,
+          useValue: biometricsService,
+        },
+        {
+          provide: AccountService,
+          useValue: accountService,
+        },
+        {
+          provide: AuthService,
+          useValue: mock(),
+        },
+        {
+          provide: KdfConfigService,
+          useValue: mock<KdfConfigService>(),
+        },
+        {
+          provide: SyncService,
+          useValue: mock<SyncService>(),
+        },
+        {
+          provide: ToastService,
+          useValue: mockToastService,
         },
       ],
       schemas: [NO_ERRORS_SCHEMA],
     }).compileComponents();
-  });
 
-  beforeEach(() => {
     fixture = TestBed.createComponent(LockComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   describe("ngOnInit", () => {
@@ -157,15 +213,15 @@ describe("LockComponent", () => {
       expect(superNgOnInitSpy).toHaveBeenCalledTimes(1);
     });
 
-    it('should set "autoPromptBiometric" to true if "stateService.getDisableAutoBiometricsPrompt()" resolves to false', async () => {
-      stateServiceMock.getDisableAutoBiometricsPrompt.mockResolvedValue(false);
+    it('should set "autoPromptBiometric" to true if "biometricState.promptAutomatically$" resolves to true', async () => {
+      biometricStateService.promptAutomatically$ = of(true);
 
       await component.ngOnInit();
       expect(component["autoPromptBiometric"]).toBe(true);
     });
 
-    it('should set "autoPromptBiometric" to false if "stateService.getDisableAutoBiometricsPrompt()" resolves to true', async () => {
-      stateServiceMock.getDisableAutoBiometricsPrompt.mockResolvedValue(true);
+    it('should set "autoPromptBiometric" to false if "biometricState.promptAutomatically$" resolves to false', async () => {
+      biometricStateService.promptAutomatically$ = of(false);
 
       await component.ngOnInit();
       expect(component["autoPromptBiometric"]).toBe(false);
@@ -307,6 +363,8 @@ describe("LockComponent", () => {
 
     it('should wait for "delay" milliseconds', fakeAsync(async () => {
       const delaySpy = jest.spyOn(global, "setTimeout");
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
 
       tick(4000);
@@ -319,18 +377,24 @@ describe("LockComponent", () => {
     }));
 
     it('should return; if "params" is defined and "params.promptBiometric" is false', fakeAsync(async () => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000, { promptBiometric: false });
       tick(5000);
       expect(component["biometricAsked"]).toBe(false);
     }));
 
     it('should not return; if "params" is defined and "params.promptBiometric" is true', fakeAsync(async () => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000, { promptBiometric: true });
       tick(5000);
       expect(component["biometricAsked"]).toBe(true);
     }));
 
     it('should not return; if "params" is undefined', fakeAsync(async () => {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
       tick(5000);
       expect(component["biometricAsked"]).toBe(true);
@@ -338,6 +402,8 @@ describe("LockComponent", () => {
 
     it('should return; if "supportsBiometric" is false', fakeAsync(async () => {
       component["supportsBiometric"] = false;
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
       tick(5000);
       expect(component["biometricAsked"]).toBe(false);
@@ -345,6 +411,8 @@ describe("LockComponent", () => {
 
     it('should return; if "autoPromptBiometric" is false', fakeAsync(async () => {
       component["autoPromptBiometric"] = false;
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
       tick(5000);
       expect(component["biometricAsked"]).toBe(false);
@@ -354,6 +422,8 @@ describe("LockComponent", () => {
       isWindowVisibleMock.mockResolvedValue(true);
       component["unlockBiometric"] = jest.fn();
       component["biometricAsked"] = false;
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
       tick(5000);
 
@@ -364,6 +434,8 @@ describe("LockComponent", () => {
       isWindowVisibleMock.mockResolvedValue(false);
       component["unlockBiometric"] = jest.fn();
       component["biometricAsked"] = false;
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
       tick(5000);
 
@@ -375,6 +447,8 @@ describe("LockComponent", () => {
       component["unlockBiometric"] = jest.fn();
       component["biometricAsked"] = true;
 
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
       component["delayedAskForBiometric"](5000);
       tick(5000);
 

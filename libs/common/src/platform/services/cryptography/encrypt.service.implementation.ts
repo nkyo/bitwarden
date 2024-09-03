@@ -71,12 +71,12 @@ export class EncryptServiceImplementation implements EncryptService {
     key = this.resolveLegacyKey(key, encString);
 
     if (key.macKey != null && encString?.mac == null) {
-      this.logService.error("mac required.");
+      this.logService.error("MAC required but not provided.");
       return null;
     }
 
     if (key.encType !== encString.encryptionType) {
-      this.logService.error("encType unavailable.");
+      this.logService.error("Key encryption type does not match payload encryption type.");
       return null;
     }
 
@@ -94,7 +94,7 @@ export class EncryptServiceImplementation implements EncryptService {
       );
       const macsEqual = await this.cryptoFunctionService.compareFast(fastParams.mac, computedMac);
       if (!macsEqual) {
-        this.logMacFailed("mac failed.");
+        this.logMacFailed("MAC comparison failed. Key or payload has changed.");
         return null;
       }
     }
@@ -114,10 +114,12 @@ export class EncryptServiceImplementation implements EncryptService {
     key = this.resolveLegacyKey(key, encThing);
 
     if (key.macKey != null && encThing.macBytes == null) {
+      this.logService.error("MAC required but not provided.");
       return null;
     }
 
     if (key.encType !== encThing.encryptionType) {
+      this.logService.error("Key encryption type does not match payload encryption type.");
       return null;
     }
 
@@ -127,12 +129,13 @@ export class EncryptServiceImplementation implements EncryptService {
       macData.set(new Uint8Array(encThing.dataBytes), encThing.ivBytes.byteLength);
       const computedMac = await this.cryptoFunctionService.hmac(macData, key.macKey, "sha256");
       if (computedMac === null) {
+        this.logMacFailed("Failed to compute MAC.");
         return null;
       }
 
       const macsMatch = await this.cryptoFunctionService.compare(encThing.macBytes, computedMac);
       if (!macsMatch) {
-        this.logMacFailed("mac failed.");
+        this.logMacFailed("MAC comparison failed. Key or payload has changed.");
         return null;
       }
     }
@@ -147,6 +150,47 @@ export class EncryptServiceImplementation implements EncryptService {
     return result ?? null;
   }
 
+  async rsaEncrypt(data: Uint8Array, publicKey: Uint8Array): Promise<EncString> {
+    if (data == null) {
+      throw new Error("No data provided for encryption.");
+    }
+
+    if (publicKey == null) {
+      throw new Error("No public key provided for encryption.");
+    }
+    const encrypted = await this.cryptoFunctionService.rsaEncrypt(data, publicKey, "sha1");
+    return new EncString(EncryptionType.Rsa2048_OaepSha1_B64, Utils.fromBufferToB64(encrypted));
+  }
+
+  async rsaDecrypt(data: EncString, privateKey: Uint8Array): Promise<Uint8Array> {
+    if (data == null) {
+      throw new Error("No data provided for decryption.");
+    }
+
+    let algorithm: "sha1" | "sha256";
+    switch (data.encryptionType) {
+      case EncryptionType.Rsa2048_OaepSha1_B64:
+      case EncryptionType.Rsa2048_OaepSha1_HmacSha256_B64:
+        algorithm = "sha1";
+        break;
+      case EncryptionType.Rsa2048_OaepSha256_B64:
+      case EncryptionType.Rsa2048_OaepSha256_HmacSha256_B64:
+        algorithm = "sha256";
+        break;
+      default:
+        throw new Error("Invalid encryption type.");
+    }
+
+    if (privateKey == null) {
+      throw new Error("No private key provided for decryption.");
+    }
+
+    return this.cryptoFunctionService.rsaDecrypt(data.dataBytes, privateKey, algorithm);
+  }
+
+  /**
+   * @deprecated Replaced by BulkEncryptService (PM-4154)
+   */
   async decryptItems<T extends InitializerMetadata>(
     items: Decryptable<T>[],
     key: SymmetricCryptoKey,
@@ -155,7 +199,12 @@ export class EncryptServiceImplementation implements EncryptService {
       return [];
     }
 
-    return await Promise.all(items.map((item) => item.decrypt(key)));
+    // don't use promise.all because this task is not io bound
+    const results = [];
+    for (let i = 0; i < items.length; i++) {
+      results.push(await items[i].decrypt(key));
+    }
+    return results;
   }
 
   async hash(value: string | Uint8Array, algorithm: "sha1" | "sha256" | "sha512"): Promise<string> {

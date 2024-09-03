@@ -12,12 +12,6 @@ export class OrganizationUserView {
   userId: string;
   type: OrganizationUserType;
   status: OrganizationUserStatusType;
-  /**
-   * @deprecated
-   * To be removed after Flexible Collections.
-   * This will always return `false` if Flexible Collections is enabled.
-   **/
-  accessAll: boolean;
   permissions: PermissionsApi;
   resetPasswordEnrolled: boolean;
   name: string;
@@ -26,6 +20,10 @@ export class OrganizationUserView {
   twoFactorEnabled: boolean;
   usesKeyConnector: boolean;
   hasMasterPassword: boolean;
+  /**
+   * True if this organizaztion user has been granted access to Secrets Manager, false otherwise.
+   */
+  accessSecretsManager: boolean;
 
   collections: CollectionAccessSelectionView[] = [];
   groups: string[] = [];

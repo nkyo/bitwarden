@@ -1,21 +1,23 @@
 import { Injectable } from "@angular/core";
 import { firstValueFrom } from "rxjs";
 
-import { DeviceTrustCryptoServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust-crypto.service.abstraction";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigServiceAbstraction } from "@bitwarden/common/platform/abstractions/config/config.service.abstraction";
+import { AccountInfo } from "@bitwarden/common/auth/abstractions/account.service";
+import { DeviceTrustServiceAbstraction } from "@bitwarden/common/auth/abstractions/device-trust.service.abstraction";
+import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
+import { VerificationType } from "@bitwarden/common/auth/enums/verification-type";
+import { MasterPasswordVerification } from "@bitwarden/common/auth/types/verification";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { EncryptedString } from "@bitwarden/common/platform/models/domain/enc-string";
 import { SendService } from "@bitwarden/common/tools/send/services/send.service.abstraction";
+import { UserId } from "@bitwarden/common/types/guid";
 import { UserKey } from "@bitwarden/common/types/key";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
-import { CipherWithIdRequest } from "@bitwarden/common/vault/models/request/cipher-with-id.request";
-import { FolderWithIdRequest } from "@bitwarden/common/vault/models/request/folder-with-id.request";
+import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
 
 import { OrganizationUserResetPasswordService } from "../../admin-console/organizations/members/services/organization-user-reset-password/organization-user-reset-password.service";
+import { WebauthnLoginAdminService } from "../core";
 import { EmergencyAccessService } from "../emergency-access";
 
 import { UpdateKeyRequest } from "./request/update-key.request";
@@ -24,42 +26,51 @@ import { UserKeyRotationApiService } from "./user-key-rotation-api.service";
 @Injectable()
 export class UserKeyRotationService {
   constructor(
+    private userVerificationService: UserVerificationService,
     private apiService: UserKeyRotationApiService,
     private cipherService: CipherService,
     private folderService: FolderService,
     private sendService: SendService,
     private emergencyAccessService: EmergencyAccessService,
     private resetPasswordService: OrganizationUserResetPasswordService,
-    private deviceTrustCryptoService: DeviceTrustCryptoServiceAbstraction,
+    private deviceTrustService: DeviceTrustServiceAbstraction,
     private cryptoService: CryptoService,
     private encryptService: EncryptService,
-    private stateService: StateService,
-    private configService: ConfigServiceAbstraction,
+    private syncService: SyncService,
+    private webauthnLoginAdminService: WebauthnLoginAdminService,
   ) {}
 
   /**
    * Creates a new user key and re-encrypts all required data with the it.
    * @param masterPassword current master password (used for validation)
    */
-  async rotateUserKeyAndEncryptedData(masterPassword: string): Promise<void> {
+  async rotateUserKeyAndEncryptedData(
+    masterPassword: string,
+    user: { id: UserId } & AccountInfo,
+  ): Promise<void> {
     if (!masterPassword) {
       throw new Error("Invalid master password");
     }
 
-    // Create master key to validate the master password
-    const masterKey = await this.cryptoService.makeMasterKey(
-      masterPassword,
-      await this.stateService.getEmail(),
-      await this.stateService.getKdfType(),
-      await this.stateService.getKdfConfig(),
-    );
-
-    if (!masterKey) {
-      throw new Error("Master key could not be created");
+    if ((await this.syncService.getLastSync()) === null) {
+      throw new Error(
+        "The local vault is de-synced and the keys cannot be rotated. Please log out and log back in to resolve this issue.",
+      );
     }
 
-    // Set master key again in case it was lost (could be lost on refresh)
-    await this.cryptoService.setMasterKey(masterKey);
+    // Verify master password
+    // UV service sets master key on success since it is stored in memory and can be lost on refresh
+    const verification = {
+      type: VerificationType.MasterPassword,
+      secret: masterPassword,
+    } as MasterPasswordVerification;
+
+    const { masterKey } = await this.userVerificationService.verifyUserByMasterPassword(
+      verification,
+      user.id,
+      user.email,
+    );
+
     const [newUserKey, newEncUserKey] = await this.cryptoService.makeUserKey(masterKey);
 
     if (!newUserKey || !newEncUserKey) {
@@ -76,68 +87,86 @@ export class UserKeyRotationService {
     const masterPasswordHash = await this.cryptoService.hashMasterKey(masterPassword, masterKey);
     request.masterPasswordHash = masterPasswordHash;
 
+    // Get original user key
+    // Note: We distribute the legacy key, but not all domains actually use it. If any of those
+    // domains break their legacy support it will break the migration process for legacy users.
+    const originalUserKey = await this.cryptoService.getUserKeyWithLegacySupport(user.id);
+
     // Add re-encrypted data
-    request.privateKey = await this.encryptPrivateKey(newUserKey);
-    request.ciphers = await this.encryptCiphers(newUserKey);
-    request.folders = await this.encryptFolders(newUserKey);
-    request.sends = await this.sendService.getRotatedKeys(newUserKey);
-    request.emergencyAccessKeys = await this.emergencyAccessService.getRotatedKeys(newUserKey);
-    request.resetPasswordKeys = await this.resetPasswordService.getRotatedKeys(newUserKey);
+    request.privateKey = await this.encryptPrivateKey(newUserKey, user.id);
 
-    if (await this.configService.getFeatureFlag<boolean>(FeatureFlag.KeyRotationImprovements)) {
-      await this.apiService.postUserKeyUpdate(request);
-    } else {
-      await this.rotateUserKeyAndEncryptedDataLegacy(request);
-    }
-
-    await this.deviceTrustCryptoService.rotateDevicesTrust(newUserKey, masterPasswordHash);
-  }
-
-  private async encryptPrivateKey(newUserKey: UserKey): Promise<EncryptedString | null> {
-    const privateKey = await this.cryptoService.getPrivateKey();
-    if (!privateKey) {
-      return;
-    }
-    return (await this.encryptService.encrypt(privateKey, newUserKey)).encryptedString;
-  }
-
-  private async encryptCiphers(newUserKey: UserKey): Promise<CipherWithIdRequest[]> {
-    const ciphers = await this.cipherService.getAllDecrypted();
-    if (!ciphers) {
-      // Must return an empty array for backwards compatibility
-      return [];
-    }
-    return await Promise.all(
-      ciphers.map(async (cipher) => {
-        const encryptedCipher = await this.cipherService.encrypt(cipher, newUserKey);
-        return new CipherWithIdRequest(encryptedCipher);
-      }),
+    const rotatedCiphers = await this.cipherService.getRotatedData(
+      originalUserKey,
+      newUserKey,
+      user.id,
     );
-  }
-
-  private async encryptFolders(newUserKey: UserKey): Promise<FolderWithIdRequest[]> {
-    const folders = await firstValueFrom(this.folderService.folderViews$);
-    if (!folders) {
-      // Must return an empty array for backwards compatibility
-      return [];
+    if (rotatedCiphers != null) {
+      request.ciphers = rotatedCiphers;
     }
-    return await Promise.all(
-      folders.map(async (folder) => {
-        const encryptedFolder = await this.folderService.encrypt(folder, newUserKey);
-        return new FolderWithIdRequest(encryptedFolder);
-      }),
-    );
-  }
 
-  private async rotateUserKeyAndEncryptedDataLegacy(request: UpdateKeyRequest): Promise<void> {
-    // Update keys, ciphers, folders, and sends
+    const rotatedFolders = await this.folderService.getRotatedData(
+      originalUserKey,
+      newUserKey,
+      user.id,
+    );
+    if (rotatedFolders != null) {
+      request.folders = rotatedFolders;
+    }
+
+    const rotatedSends = await this.sendService.getRotatedData(
+      originalUserKey,
+      newUserKey,
+      user.id,
+    );
+    if (rotatedSends != null) {
+      request.sends = rotatedSends;
+    }
+
+    const rotatedEmergencyAccessKeys = await this.emergencyAccessService.getRotatedData(
+      originalUserKey,
+      newUserKey,
+      user.id,
+    );
+    if (rotatedEmergencyAccessKeys != null) {
+      request.emergencyAccessKeys = rotatedEmergencyAccessKeys;
+    }
+
+    // Note: Reset password keys request model has user verification
+    // properties, but the rotation endpoint uses its own MP hash.
+    const rotatedResetPasswordKeys = await this.resetPasswordService.getRotatedData(
+      originalUserKey,
+      newUserKey,
+      user.id,
+    );
+    if (rotatedResetPasswordKeys != null) {
+      request.resetPasswordKeys = rotatedResetPasswordKeys;
+    }
+
+    const rotatedWebauthnKeys = await this.webauthnLoginAdminService.getRotatedData(
+      originalUserKey,
+      newUserKey,
+      user.id,
+    );
+    if (rotatedWebauthnKeys != null) {
+      request.webauthnKeys = rotatedWebauthnKeys;
+    }
+
     await this.apiService.postUserKeyUpdate(request);
 
-    // Update emergency access keys
-    await this.emergencyAccessService.postLegacyRotation(request.emergencyAccessKeys);
+    // TODO PM-2199: Add device trust rotation support to the user key rotation endpoint
+    await this.deviceTrustService.rotateDevicesTrust(user.id, newUserKey, masterPasswordHash);
+  }
 
-    // Update account recovery keys
-    const userId = await this.stateService.getUserId();
-    await this.resetPasswordService.postLegacyRotation(userId, request.resetPasswordKeys);
+  private async encryptPrivateKey(
+    newUserKey: UserKey,
+    userId: UserId,
+  ): Promise<EncryptedString | null> {
+    const privateKey = await firstValueFrom(
+      this.cryptoService.userPrivateKeyWithLegacySupport$(userId),
+    );
+    if (!privateKey) {
+      throw new Error("No private key found for user key rotation");
+    }
+    return (await this.encryptService.encrypt(privateKey, newUserKey)).encryptedString;
   }
 }

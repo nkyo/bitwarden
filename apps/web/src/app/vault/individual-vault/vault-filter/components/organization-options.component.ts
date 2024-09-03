@@ -1,6 +1,7 @@
 import { Component, Inject, OnDestroy, OnInit } from "@angular/core";
 import { combineLatest, map, Observable, Subject, takeUntil } from "rxjs";
 
+import { UserDecryptionOptionsServiceAbstraction } from "@bitwarden/auth/common";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
@@ -9,13 +10,14 @@ import { PolicyService } from "@bitwarden/common/admin-console/abstractions/poli
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { Policy } from "@bitwarden/common/admin-console/models/domain/policy";
+import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
-import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
-import { SyncService } from "@bitwarden/common/vault/abstractions/sync/sync.service.abstraction";
-import { DialogService } from "@bitwarden/components";
+import { SyncService } from "@bitwarden/common/platform/sync";
+import { DialogService, ToastService } from "@bitwarden/components";
 
+import { OrganizationUserResetPasswordService } from "../../../../admin-console/organizations/members/services/organization-user-reset-password/organization-user-reset-password.service";
 import { EnrollMasterPasswordReset } from "../../../../admin-console/organizations/users/enroll-master-password-reset.component";
 import { OptionsInput } from "../shared/components/vault-filter-section.component";
 import { OrganizationFilter } from "../shared/models/vault-filter.type";
@@ -44,8 +46,11 @@ export class OrganizationOptionsComponent implements OnInit, OnDestroy {
     private logService: LogService,
     private organizationApiService: OrganizationApiServiceAbstraction,
     private organizationUserService: OrganizationUserService,
+    private userDecryptionOptionsService: UserDecryptionOptionsServiceAbstraction,
     private dialogService: DialogService,
-    private stateService: StateService,
+    private resetPasswordService: OrganizationUserResetPasswordService,
+    private userVerificationService: UserVerificationService,
+    private toastService: ToastService,
   ) {}
 
   async ngOnInit() {
@@ -56,7 +61,7 @@ export class OrganizationOptionsComponent implements OnInit, OnDestroy {
     combineLatest([
       this.organization$,
       resetPasswordPolicies$,
-      this.stateService.getAccountDecryptionOptions(),
+      this.userDecryptionOptionsService.userDecryptionOptions$,
     ])
       .pipe(takeUntil(this.destroy$))
       .subscribe(([organization, resetPasswordPolicies, decryptionOptions]) => {
@@ -144,7 +149,18 @@ export class OrganizationOptionsComponent implements OnInit, OnDestroy {
 
   async toggleResetPasswordEnrollment(org: Organization) {
     if (!this.organization.resetPasswordEnrolled) {
-      EnrollMasterPasswordReset.open(this.dialogService, { organization: org });
+      await EnrollMasterPasswordReset.open(
+        this.dialogService,
+        { organization: org },
+        this.resetPasswordService,
+        this.organizationUserService,
+        this.platformUtilsService,
+        this.i18nService,
+        this.syncService,
+        this.logService,
+        this.userVerificationService,
+        this.toastService,
+      );
     } else {
       // Remove reset password
       const request = new OrganizationUserResetPasswordEnrollmentRequest();

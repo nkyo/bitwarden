@@ -1,10 +1,6 @@
 import { Observable, ReplaySubject, Subject, concatMap, merge, share, timer } from "rxjs";
 
 import { DerivedStateDependencies } from "../../../types/state";
-import {
-  AbstractStorageService,
-  ObservableStorageService,
-} from "../../abstractions/storage.service";
 import { DeriveDefinition } from "../derive-definition";
 import { DerivedState } from "../derived-state";
 
@@ -22,7 +18,6 @@ export class DefaultDerivedState<TFrom, TTo, TDeps extends DerivedStateDependenc
   constructor(
     private parentState$: Observable<TFrom>,
     protected deriveDefinition: DeriveDefinition<TFrom, TTo, TDeps>,
-    private memoryStorage: AbstractStorageService & ObservableStorageService,
     private dependencies: TDeps,
   ) {
     this.storageKey = deriveDefinition.storageKey;
@@ -34,7 +29,6 @@ export class DefaultDerivedState<TFrom, TTo, TDeps extends DerivedStateDependenc
           derivedStateOrPromise = await derivedStateOrPromise;
         }
         const derivedState = derivedStateOrPromise;
-        await this.memoryStorage.save(this.storageKey, derivedState);
         return derivedState;
       }),
     );
@@ -50,7 +44,6 @@ export class DefaultDerivedState<TFrom, TTo, TDeps extends DerivedStateDependenc
   }
 
   async forceValue(value: TTo) {
-    await this.memoryStorage.save(this.storageKey, value);
     this.forcedValueSubject.next(value);
     return value;
   }

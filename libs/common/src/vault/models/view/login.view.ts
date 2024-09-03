@@ -1,6 +1,7 @@
+import { UriMatchStrategySetting } from "../../../models/domain/domain-service";
 import { Utils } from "../../../platform/misc/utils";
 import { DeepJsonify } from "../../../types/deep-jsonify";
-import { LoginLinkedId as LinkedId, UriMatchType } from "../../enums";
+import { LoginLinkedId as LinkedId } from "../../enums";
 import { linkedFieldOption } from "../../linked-field-option.decorator";
 import { Login } from "../domain/login";
 
@@ -9,9 +10,9 @@ import { ItemView } from "./item.view";
 import { LoginUriView } from "./login-uri.view";
 
 export class LoginView extends ItemView {
-  @linkedFieldOption(LinkedId.Username)
+  @linkedFieldOption(LinkedId.Username, { sortPosition: 0 })
   username: string = null;
-  @linkedFieldOption(LinkedId.Password)
+  @linkedFieldOption(LinkedId.Password, { sortPosition: 1 })
   password: string = null;
 
   passwordRevisionDate?: Date = null;
@@ -39,6 +40,11 @@ export class LoginView extends ItemView {
   }
 
   get subTitle(): string {
+    // if there's a passkey available, use that as a fallback
+    if (Utils.isNullOrEmpty(this.username) && this.fido2Credentials?.length > 0) {
+      return this.fido2Credentials[0].userName;
+    }
+
     return this.username;
   }
 
@@ -71,7 +77,7 @@ export class LoginView extends ItemView {
   matchesUri(
     targetUri: string,
     equivalentDomains: Set<string>,
-    defaultUriMatch: UriMatchType = null,
+    defaultUriMatch: UriMatchStrategySetting = null,
   ): boolean {
     if (this.uris == null) {
       return false;

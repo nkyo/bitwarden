@@ -1,23 +1,26 @@
 import { mock } from "jest-mock-extended";
-import { Observable, ReplaySubject } from "rxjs";
+import { ReplaySubject, combineLatest, map } from "rxjs";
 
 import { AccountInfo, AccountService } from "../src/auth/abstractions/account.service";
-import { AuthenticationStatus } from "../src/auth/enums/authentication-status";
 import { UserId } from "../src/types/guid";
 
 export function mockAccountServiceWith(
   userId: UserId,
   info: Partial<AccountInfo> = {},
+  activity: Record<UserId, Date> = {},
 ): FakeAccountService {
   const fullInfo: AccountInfo = {
     ...info,
     ...{
       name: "name",
       email: "email",
-      status: AuthenticationStatus.Locked,
+      emailVerified: true,
     },
   };
-  const service = new FakeAccountService({ [userId]: fullInfo });
+
+  const fullActivity = { [userId]: new Date(), ...activity };
+
+  const service = new FakeAccountService({ [userId]: fullInfo }, fullActivity);
   service.activeAccountSubject.next({ id: userId, ...fullInfo });
   return service;
 }
@@ -28,42 +31,83 @@ export class FakeAccountService implements AccountService {
   accountsSubject = new ReplaySubject<Record<UserId, AccountInfo>>(1);
   // eslint-disable-next-line rxjs/no-exposed-subjects -- test class
   activeAccountSubject = new ReplaySubject<{ id: UserId } & AccountInfo>(1);
+  // eslint-disable-next-line rxjs/no-exposed-subjects -- test class
+  accountActivitySubject = new ReplaySubject<Record<UserId, Date>>(1);
   private _activeUserId: UserId;
   get activeUserId() {
     return this._activeUserId;
   }
-  get accounts$() {
-    return this.accountsSubject.asObservable();
+  accounts$ = this.accountsSubject.asObservable();
+  activeAccount$ = this.activeAccountSubject.asObservable();
+  accountActivity$ = this.accountActivitySubject.asObservable();
+  get sortedUserIds$() {
+    return this.accountActivity$.pipe(
+      map((activity) => {
+        return Object.entries(activity)
+          .map(([userId, lastActive]: [UserId, Date]) => ({ userId, lastActive }))
+          .sort((a, b) => a.lastActive.getTime() - b.lastActive.getTime())
+          .map((a) => a.userId);
+      }),
+    );
   }
-  get activeAccount$() {
-    return this.activeAccountSubject.asObservable();
+  get nextUpAccount$() {
+    return combineLatest([this.accounts$, this.activeAccount$, this.sortedUserIds$]).pipe(
+      map(([accounts, activeAccount, sortedUserIds]) => {
+        const nextId = sortedUserIds.find((id) => id !== activeAccount?.id && accounts[id] != null);
+        return nextId ? { id: nextId, ...accounts[nextId] } : null;
+      }),
+    );
   }
-  accountLock$: Observable<UserId>;
-  accountLogout$: Observable<UserId>;
 
-  constructor(initialData: Record<UserId, AccountInfo>) {
+  constructor(initialData: Record<UserId, AccountInfo>, accountActivity?: Record<UserId, Date>) {
     this.accountsSubject.next(initialData);
     this.activeAccountSubject.subscribe((data) => (this._activeUserId = data?.id));
     this.activeAccountSubject.next(null);
+    this.accountActivitySubject.next(accountActivity);
+  }
+  setAccountActivity(userId: UserId, lastActivity: Date): Promise<void> {
+    this.accountActivitySubject.next({
+      ...this.accountActivitySubject["_buffer"][0],
+      [userId]: lastActivity,
+    });
+    return this.mock.setAccountActivity(userId, lastActivity);
   }
 
   async addAccount(userId: UserId, accountData: AccountInfo): Promise<void> {
-    this.mock.addAccount(userId, accountData);
+    const current = this.accountsSubject["_buffer"][0] ?? {};
+    this.accountsSubject.next({ ...current, [userId]: accountData });
+    await this.mock.addAccount(userId, accountData);
   }
 
   async setAccountName(userId: UserId, name: string): Promise<void> {
-    this.mock.setAccountName(userId, name);
+    await this.mock.setAccountName(userId, name);
   }
 
   async setAccountEmail(userId: UserId, email: string): Promise<void> {
-    this.mock.setAccountEmail(userId, email);
+    await this.mock.setAccountEmail(userId, email);
   }
 
-  async setAccountStatus(userId: UserId, status: AuthenticationStatus): Promise<void> {
-    this.mock.setAccountStatus(userId, status);
+  async setAccountEmailVerified(userId: UserId, emailVerified: boolean): Promise<void> {
+    await this.mock.setAccountEmailVerified(userId, emailVerified);
   }
 
   async switchAccount(userId: UserId): Promise<void> {
-    this.mock.switchAccount(userId);
+    const next =
+      userId == null ? null : { id: userId, ...this.accountsSubject["_buffer"]?.[0]?.[userId] };
+    this.activeAccountSubject.next(next);
+    await this.mock.switchAccount(userId);
+  }
+
+  async clean(userId: UserId): Promise<void> {
+    const current = this.accountsSubject["_buffer"][0] ?? {};
+    const updated = { ...current, [userId]: loggedOutInfo };
+    this.accountsSubject.next(updated);
+    await this.mock.clean(userId);
   }
 }
+
+const loggedOutInfo: AccountInfo = {
+  name: undefined,
+  email: "",
+  emailVerified: false,
+};
