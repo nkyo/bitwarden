@@ -2,7 +2,6 @@ import { OptionValues } from "commander";
 import { firstValueFrom } from "rxjs";
 
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -18,10 +17,9 @@ export class SendGetCommand extends DownloadCommand {
     private sendService: SendService,
     private environmentService: EnvironmentService,
     private searchService: SearchService,
-    cryptoService: CryptoService,
     encryptService: EncryptService,
   ) {
-    super(cryptoService, encryptService);
+    super(encryptService);
   }
 
   async run(id: string, options: OptionValues) {

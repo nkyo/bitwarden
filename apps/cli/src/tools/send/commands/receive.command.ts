@@ -29,14 +29,14 @@ export class SendReceiveCommand extends DownloadCommand {
 
   constructor(
     private apiService: ApiService,
-    cryptoService: CryptoService,
+    private cryptoService: CryptoService,
     encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
     private platformUtilsService: PlatformUtilsService,
     private environmentService: EnvironmentService,
     private sendApiService: SendApiService,
   ) {
-    super(cryptoService, encryptService);
+    super(encryptService);
   }
 
   async run(url: string, options: OptionValues): Promise<Response> {

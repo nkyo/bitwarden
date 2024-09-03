@@ -189,7 +189,6 @@ export class SendProgram extends BaseProgram {
           this.serviceContainer.sendService,
           this.serviceContainer.environmentService,
           this.serviceContainer.searchService,
-          this.serviceContainer.cryptoService,
           this.serviceContainer.encryptService,
         );
         const response = await cmd.run(id, options);
@@ -249,7 +248,6 @@ export class SendProgram extends BaseProgram {
           this.serviceContainer.sendService,
           this.serviceContainer.environmentService,
           this.serviceContainer.searchService,
-          this.serviceContainer.cryptoService,
           this.serviceContainer.encryptService,
         );
         const cmd = new SendEditCommand(

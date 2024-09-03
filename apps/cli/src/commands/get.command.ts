@@ -57,7 +57,7 @@ export class GetCommand extends DownloadCommand {
     private collectionService: CollectionService,
     private totpService: TotpService,
     private auditService: AuditService,
-    cryptoService: CryptoService,
+    private cryptoService: CryptoService,
     encryptService: EncryptService,
     private stateService: StateService,
     private searchService: SearchService,
@@ -67,7 +67,7 @@ export class GetCommand extends DownloadCommand {
     private accountProfileService: BillingAccountProfileStateService,
     private accountService: AccountService,
   ) {
-    super(cryptoService, encryptService);
+    super(encryptService);
   }
 
   async run(object: string, id: string, cmdOptions: Record<string, any>): Promise<Response> {
