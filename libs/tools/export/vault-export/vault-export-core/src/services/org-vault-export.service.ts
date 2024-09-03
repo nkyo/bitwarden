@@ -40,14 +40,14 @@ export class OrganizationVaultExportService
     private cipherService: CipherService,
     private apiService: ApiService,
     pinService: PinServiceAbstraction,
-    cryptoService: CryptoService,
+    private cryptoService: CryptoService,
     encryptService: EncryptService,
     cryptoFunctionService: CryptoFunctionService,
     private collectionService: CollectionService,
     kdfConfigService: KdfConfigService,
     private accountService: AccountService,
   ) {
-    super(pinService, cryptoService, encryptService, cryptoFunctionService, kdfConfigService);
+    super(pinService, encryptService, cryptoFunctionService, kdfConfigService);
   }
 
   async getPasswordProtectedExport(

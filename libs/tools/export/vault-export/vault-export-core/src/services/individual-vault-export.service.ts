@@ -35,13 +35,13 @@ export class IndividualVaultExportService
     private folderService: FolderService,
     private cipherService: CipherService,
     pinService: PinServiceAbstraction,
-    cryptoService: CryptoService,
+    private cryptoService: CryptoService,
     encryptService: EncryptService,
     cryptoFunctionService: CryptoFunctionService,
     kdfConfigService: KdfConfigService,
     private accountService: AccountService,
   ) {
-    super(pinService, cryptoService, encryptService, cryptoFunctionService, kdfConfigService);
+    super(pinService, encryptService, cryptoFunctionService, kdfConfigService);
   }
 
   async getExport(format: ExportFormat = "csv"): Promise<string> {

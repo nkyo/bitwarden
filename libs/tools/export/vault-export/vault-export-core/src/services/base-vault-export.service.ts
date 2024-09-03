@@ -2,7 +2,6 @@ import { PinServiceAbstraction } from "@bitwarden/auth/common";
 import { KdfConfigService } from "@bitwarden/common/auth/abstractions/kdf-config.service";
 import { KdfConfig } from "@bitwarden/common/auth/models/domain/kdf-config";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
-import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { KdfType } from "@bitwarden/common/platform/enums";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -13,7 +12,6 @@ import { BitwardenCsvExportType, BitwardenPasswordProtectedFileFormat } from "..
 export class BaseVaultExportService {
   constructor(
     protected pinService: PinServiceAbstraction,
-    protected cryptoService: CryptoService,
     protected encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
     private kdfConfigService: KdfConfigService,
