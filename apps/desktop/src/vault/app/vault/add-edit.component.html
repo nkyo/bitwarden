@@ -489,6 +489,7 @@
                   type="button"
                   class="row-btn"
                   appStopClick
+                  appA11yTitle="{{ 'copySSHPrivateKey' | i18n }}"
                   (click)="copy(this.cipher.sshKey.privateKey, 'sshPrivateKey', 'SSHPrivateKey')"
                 >
                   <i class="bwi bwi-lg bwi-clone" aria-hidden="true"></i>
@@ -510,7 +511,7 @@
                   type="button"
                   class="row-btn"
                   appStopClick
-                  appA11yTitle="{{ 'generateSSHKey' | i18n }}"
+                  appA11yTitle="{{ 'regenerateSSHKey' | i18n }}"
                   (click)="generateSSHKey()"
                   *ngIf="!(!cipher.edit && editMode)"
                 >

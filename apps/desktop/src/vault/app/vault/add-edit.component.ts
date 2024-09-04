@@ -30,11 +30,8 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { FolderService } from "@bitwarden/common/vault/abstractions/folder/folder.service.abstraction";
 import { CipherType } from "@bitwarden/common/vault/enums";
-import { SSHKeyData } from "@bitwarden/common/vault/models/data/ssh-key.data";
 import { DialogService, ToastService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
-
-import { SSHGeneratorComponent } from "../../../app/tools/sshkey-generator.component";
 
 const BroadcasterSubscriptionId = "AddEditComponent";
 
@@ -161,26 +158,14 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
   }
 
   async generateSSHKey() {
-    this.modalService.closeAll();
-
-    const [modal, childComponent] = await this.modalService.openViewRef(
-      SSHGeneratorComponent,
-      this.sshGeneratorModalRef,
-      (comp) => {},
-    );
-    this.modal = modal;
-
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-    childComponent.onSelected.subscribe((value: SSHKeyData) => {
-      this.modal.close();
-      this.cipher.sshKey.privateKey = value.privateKey;
-      this.cipher.sshKey.publicKey = value.publicKey;
-      this.cipher.sshKey.keyFingerprint = value.keyFingerprint;
-    });
-
-    // eslint-disable-next-line rxjs-angular/prefer-takeuntil
-    this.modal.onClosed.subscribe(() => {
-      this.modal = null;
+    const sshKey = await ipc.platform.sshagent.generateKey("ed25519");
+    this.cipher.sshKey.privateKey = sshKey.privateKey;
+    this.cipher.sshKey.publicKey = sshKey.publicKey;
+    this.cipher.sshKey.keyFingerprint = sshKey.keyFingerprint;
+    this.toastService.showToast({
+      variant: "success",
+      title: "",
+      message: this.i18nService.t("sshKeyGenerated"),
     });
   }
 

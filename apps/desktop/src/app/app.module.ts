@@ -51,7 +51,6 @@ import { GeneratorComponent } from "./tools/generator.component";
 import { PasswordGeneratorHistoryComponent } from "./tools/password-generator-history.component";
 import { AddEditComponent as SendAddEditComponent } from "./tools/send/add-edit.component";
 import { SendComponent } from "./tools/send/send.component";
-import { SSHGeneratorComponent } from "./tools/sshkey-generator.component";
 
 @NgModule({
   imports: [
@@ -82,7 +81,6 @@ import { SSHGeneratorComponent } from "./tools/sshkey-generator.component";
     LockComponent,
     NavComponent,
     GeneratorComponent,
-    SSHGeneratorComponent,
     PasswordGeneratorHistoryComponent,
     PasswordHistoryComponent,
     PremiumComponent,

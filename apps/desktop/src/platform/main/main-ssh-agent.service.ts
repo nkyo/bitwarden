@@ -81,7 +81,7 @@ export class SSHAgent {
     );
     ipcMain.handle(
       "sshagent.generatekey",
-      async (event: any, { keyAlgorithm }: { keyAlgorithm: string }) => {
+      async (event: any, { keyAlgorithm }: { keyAlgorithm: string }): Promise<sshagent.SshKey> => {
         return await sshagent.generateKeypair(keyAlgorithm);
       },
     );
