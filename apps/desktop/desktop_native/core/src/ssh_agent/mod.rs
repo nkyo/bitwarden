@@ -12,9 +12,10 @@ use std::sync::RwLock;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-pub mod msg;
-pub mod ssh_agent;
-pub mod russh_encoding;
+use bitwarden_russh::msg;
+use bitwarden_russh::ssh_agent;
+use bitwarden_russh::encoding;
+
 #[cfg(windows)]
 pub mod namedpipelistenerstream;
 
