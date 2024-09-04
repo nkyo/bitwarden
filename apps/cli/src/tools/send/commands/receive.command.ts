@@ -2,7 +2,6 @@ import { OptionValues } from "commander";
 import * as inquirer from "inquirer";
 import { firstValueFrom } from "rxjs";
 
-import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { ErrorResponse } from "@bitwarden/common/models/response/error.response";
 import { CryptoFunctionService } from "@bitwarden/common/platform/abstractions/crypto-function.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
@@ -28,7 +27,6 @@ export class SendReceiveCommand extends DownloadCommand {
   private sendAccessRequest: SendAccessRequest;
 
   constructor(
-    private apiService: ApiService,
     private cryptoService: CryptoService,
     encryptService: EncryptService,
     private cryptoFunctionService: CryptoFunctionService,
