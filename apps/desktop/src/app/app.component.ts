@@ -80,7 +80,6 @@ const SyncInterval = 6 * 60 * 60 * 1000; // 6 hours
     <ng-template #exportVault></ng-template>
     <ng-template #appGenerator></ng-template>
     <ng-template #loginApproval></ng-template>
-    <ng-template #appSshGenerator></ng-template>
     <app-header></app-header>
 
     <div id="container">
@@ -104,8 +103,6 @@ export class AppComponent implements OnInit, OnDestroy {
   generatorModalRef: ViewContainerRef;
   @ViewChild("loginApproval", { read: ViewContainerRef, static: true })
   loginApprovalModalRef: ViewContainerRef;
-  @ViewChild("appSshGenerator", { read: ViewContainerRef, static: true })
-  sshGeneratorModalRef: ViewContainerRef;
 
   loading = false;
 
