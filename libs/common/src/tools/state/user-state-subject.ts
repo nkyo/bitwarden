@@ -17,37 +17,17 @@ import {
   startWith,
   Observable,
   Subscription,
+  last,
+  concat,
+  combineLatestWith,
+  catchError,
+  EMPTY,
 } from "rxjs";
-import { Simplify } from "type-fest";
 
 import { SingleUserState } from "@bitwarden/common/platform/state";
 
-import { Dependencies, SingleUserDependency, WhenDependency } from "../dependencies";
-
-/** dependencies accepted by the user state subject */
-export type UserStateSubjectDependencies<State, Dependency> = Simplify<
-  SingleUserDependency &
-    Partial<WhenDependency> &
-    Partial<Dependencies<Dependency>> & {
-      /** Compute the next stored value. If this is not set, values
-       *  provided to `next` unconditionally override state.
-       *  @param current the value stored in state
-       *  @param next the value received by the user state subject's `next` member
-       *  @param dependencies the latest value from `Dependencies<TCombine>`
-       *  @returns the value to store in state
-       */
-      nextValue?: (current: State, next: State, dependencies?: Dependency) => State;
-      /**
-       * Compute whether the state should update. If this is not set, values
-       * provided to `next` always update the state.
-       * @param current the value stored in state
-       * @param next the value received by the user state subject's `next` member
-       * @param dependencies the latest value from `Dependencies<TCombine>`
-       * @returns `true` if the value should be stored, otherwise `false`.
-       */
-      shouldUpdate?: (value: State, next: State, dependencies?: Dependency) => boolean;
-    }
->;
+import { IdentityConstraint } from "./identity-state-constraint";
+import { UserStateSubjectDependencies } from "./user-state-subject-dependencies";
 
 /**
  * Adapt a state provider to an rxjs subject.
@@ -61,7 +41,7 @@ export type UserStateSubjectDependencies<State, Dependency> = Simplify<
  * @template State the state stored by the subject
  * @template Dependencies use-specific dependencies provided by the user.
  */
-export class UserStateSubject<State, Dependencies = null>
+export class UserStateSubject<State extends object, Dependencies = null>
   extends Observable<State>
   implements SubjectLike<State>
 {
@@ -99,6 +79,27 @@ export class UserStateSubject<State, Dependencies = null>
       }),
       distinctUntilChanged(),
     );
+    const constraints$ = (
+      this.dependencies.constraints$ ?? new BehaviorSubject(new IdentityConstraint<State>())
+    ).pipe(
+      // FIXME: this should probably log that an error occurred
+      catchError(() => EMPTY),
+    );
+
+    // normalize input in case this `UserStateSubject` is not the only
+    // observer of the backing store
+    const input$ = combineLatest([this.input, constraints$]).pipe(
+      map(([input, constraints]) => constraints.normalize(input)),
+    );
+
+    // when the output subscription completes, its last-emitted value
+    // loops around to the input for finalization
+    const finalize$ = this.output.pipe(
+      last(),
+      combineLatestWith(constraints$),
+      map(([state, constraints]) => constraints.finalize(state)),
+    );
+    const updates$ = concat(input$, finalize$);
 
     // observe completion
     const whenComplete$ = when$.pipe(ignoreElements(), endWith(true));
@@ -106,9 +107,15 @@ export class UserStateSubject<State, Dependencies = null>
     const userIdComplete$ = this.dependencies.singleUserId$.pipe(ignoreElements(), endWith(true));
     const completion$ = race(whenComplete$, inputComplete$, userIdComplete$);
 
-    // wire subscriptions
-    this.outputSubscription = this.state.state$.subscribe(this.output);
-    this.inputSubscription = combineLatest([this.input, when$, userIdAvailable$])
+    // wire output before input so that output normalizes the current state
+    // before any `next` value is processed
+    this.outputSubscription = this.state.state$
+      .pipe(
+        combineLatestWith(constraints$),
+        map(([state, constraints]) => constraints.normalize(state)),
+      )
+      .subscribe(this.output);
+    this.inputSubscription = combineLatest([updates$, when$, userIdAvailable$])
       .pipe(
         filter(([_, when]) => when),
         map(([state]) => state),

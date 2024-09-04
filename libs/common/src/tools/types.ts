@@ -34,7 +34,7 @@ type NumberConstraints = {
  *  validators.
  */
 export type Constraints<T> = {
-  [Key in keyof T]: Simplify<
+  [Key in keyof T]?: Simplify<
     PrimitiveConstraint &
       (T[Key] extends string
         ? StringConstraints
@@ -46,6 +46,36 @@ export type Constraints<T> = {
 
 /** utility type for methods that evaluate constraints generically. */
 export type AnyConstraint = PrimitiveConstraint & StringConstraints & NumberConstraints;
+
+/** Constraints that are applied automatically to application state.
+ *  @remarks this type automatically corrects incoming our outgoing
+ *   data. If you would like to prevent invalid data from being
+ *   applied, use an rxjs filter and evaluate `Constraints<State>`
+ *   instead.
+ */
+export type StateConstraints<State> = {
+  /** The constraints applied by this type */
+  readonly constraints: Readonly<Constraints<State>>;
+
+  /** Enforces constraints that always hold for the emitted state.
+   *  @remarks This is useful for enforcing "override" constraints,
+   *   such as when a policy requires a value fall within a specific
+   *   range.
+   *  @param state the state pending emission from the subject.
+   *  @return the value emitted by the subject
+   */
+  normalize: (state: State) => State;
+
+  /** Enforces constraints that holds when the subject completes.
+   *  @remarks This is useful for enforcing "default" constraints,
+   *   such as when a policy requires some state is true when data is
+   *   first subscribed, but the state may vary thereafter.
+   *  @param state the state of the subject immediately before
+   *   completion.
+   *  @return the value stored to state upon completion.
+   */
+  finalize: (state: State) => State;
+};
 
 /** Options that provide contextual information about the application state
  *  when a generator is invoked.
