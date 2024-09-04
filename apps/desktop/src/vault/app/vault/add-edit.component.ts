@@ -1,18 +1,8 @@
 import { DatePipe } from "@angular/common";
-import {
-  Component,
-  NgZone,
-  OnChanges,
-  OnDestroy,
-  OnInit,
-  ViewChild,
-  ViewContainerRef,
-} from "@angular/core";
+import { Component, NgZone, OnChanges, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { NgForm } from "@angular/forms";
 import { sshagent } from "desktop_native/napi";
 
-import { ModalRef } from "@bitwarden/angular/components/modal/modal.ref";
-import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { AddEditComponent as BaseAddEditComponent } from "@bitwarden/angular/vault/components/add-edit.component";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
@@ -42,9 +32,6 @@ const BroadcasterSubscriptionId = "AddEditComponent";
 export class AddEditComponent extends BaseAddEditComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild("form")
   private form: NgForm;
-  @ViewChild("sshGenerator", { read: ViewContainerRef, static: true })
-  sshGeneratorModalRef: ViewContainerRef;
-  private modal: ModalRef = null;
   showPrivateKey = false;
 
   constructor(
@@ -67,7 +54,6 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
     dialogService: DialogService,
     datePipe: DatePipe,
     configService: ConfigService,
-    private modalService: ModalService,
     private toastService: ToastService,
   ) {
     super(
