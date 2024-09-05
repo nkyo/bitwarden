@@ -415,6 +415,7 @@ export class VaultProgram extends BaseProgram {
         const command = new ConfirmCommand(
           this.serviceContainer.apiService,
           this.serviceContainer.cryptoService,
+          this.serviceContainer.encryptService,
           this.serviceContainer.organizationUserService,
         );
         const response = await command.run(object, id, cmd);

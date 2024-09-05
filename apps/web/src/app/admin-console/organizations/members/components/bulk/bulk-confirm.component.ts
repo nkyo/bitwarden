@@ -6,6 +6,7 @@ import { OrganizationUserService } from "@bitwarden/common/admin-console/abstrac
 import { OrganizationUserBulkConfirmRequest } from "@bitwarden/common/admin-console/abstractions/organization-user/requests";
 import { OrganizationUserStatusType } from "@bitwarden/common/admin-console/enums";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
+import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
 import { SymmetricCryptoKey } from "@bitwarden/common/platform/models/domain/symmetric-crypto-key";
@@ -39,6 +40,7 @@ export class BulkConfirmComponent implements OnInit {
   constructor(
     @Inject(DIALOG_DATA) protected data: BulkConfirmDialogData,
     protected cryptoService: CryptoService,
+    protected encryptService: EncryptService,
     protected apiService: ApiService,
     private organizationUserService: OrganizationUserService,
     private i18nService: I18nService,
@@ -79,7 +81,7 @@ export class BulkConfirmComponent implements OnInit {
         if (publicKey == null) {
           continue;
         }
-        const encryptedKey = await this.cryptoService.rsaEncrypt(key.key, publicKey);
+        const encryptedKey = await this.encryptService.rsaEncrypt(key.key, publicKey);
         userIdsWithKeys.push({
           id: user.id,
           key: encryptedKey.encryptedString,
