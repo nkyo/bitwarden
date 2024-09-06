@@ -30,14 +30,16 @@ import {
   tap,
 } from "rxjs/operators";
 
+import {
+  OrganizationUserApiService,
+  OrganizationUserUserDetailsResponse,
+} from "@bitwarden/admin-console/common";
 import { SearchPipe } from "@bitwarden/angular/pipes/search.pipe";
 import { ModalService } from "@bitwarden/angular/services/modal.service";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
 import { SearchService } from "@bitwarden/common/abstractions/search.service";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
-import { OrganizationUserUserDetailsResponse } from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { EventType } from "@bitwarden/common/enums";
@@ -54,6 +56,7 @@ import { OrganizationId } from "@bitwarden/common/types/guid";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { CollectionService } from "@bitwarden/common/vault/abstractions/collection.service";
 import { TotpService } from "@bitwarden/common/vault/abstractions/totp.service";
+import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherRepromptType } from "@bitwarden/common/vault/enums/cipher-reprompt-type";
 import { TreeNode } from "@bitwarden/common/vault/models/domain/tree-node";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
@@ -214,7 +217,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     private totpService: TotpService,
     private apiService: ApiService,
     private collectionService: CollectionService,
-    private organizationUserService: OrganizationUserService,
+    private organizationUserApiService: OrganizationUserApiService,
     protected configService: ConfigService,
     private toastService: ToastService,
     private accountService: AccountService,
@@ -394,7 +397,7 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     // This will be passed into the usersCanManage call
     this.orgRevokedUsers = (
-      await this.organizationUserService.getAllUsers(await firstValueFrom(organizationId$))
+      await this.organizationUserApiService.getAllUsers(await firstValueFrom(organizationId$))
     ).data.filter((user: OrganizationUserUserDetailsResponse) => {
       return user.status === -1;
     });
@@ -786,14 +789,14 @@ export class VaultComponent implements OnInit, OnDestroy {
     }
   }
 
-  async addCipher() {
+  async addCipher(cipherType?: CipherType) {
     let collections: CollectionView[] = [];
 
     // Admins limited to only adding items to collections they have access to.
     collections = await firstValueFrom(this.editableCollections$);
 
     await this.editCipher(null, (comp) => {
-      comp.type = this.activeFilter.cipherType;
+      comp.type = cipherType || this.activeFilter.cipherType;
       comp.collections = collections;
       if (this.activeFilter.collectionId) {
         comp.collectionIds = [this.activeFilter.collectionId];
