@@ -15,10 +15,10 @@ export class IdentityConstraint<State extends object> implements StateConstraint
 
   readonly constraints: Readonly<Constraints<State>> = EMPTY_CONSTRAINTS;
 
-  normalize(state: State) {
+  adjust(state: State) {
     return state;
   }
-  finalize(state: State) {
+  fix(state: State) {
     return state;
   }
 }

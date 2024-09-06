@@ -26,7 +26,10 @@ import {
 
 import { SingleUserState } from "@bitwarden/common/platform/state";
 
+import { WithConstraints } from "../types";
+
 import { IdentityConstraint } from "./identity-state-constraint";
+import { isDynamic } from "./state-constraints-dependency";
 import { UserStateSubjectDependencies } from "./user-state-subject-dependencies";
 
 /**
@@ -89,15 +92,23 @@ export class UserStateSubject<State extends object, Dependencies = null>
     // normalize input in case this `UserStateSubject` is not the only
     // observer of the backing store
     const input$ = combineLatest([this.input, constraints$]).pipe(
-      map(([input, constraints]) => constraints.normalize(input)),
+      map(([input, constraints]) => {
+        const calibration = isDynamic(constraints) ? constraints.calibrate(input) : constraints;
+        const state = calibration.adjust(input);
+        return state;
+      }),
     );
 
     // when the output subscription completes, its last-emitted value
     // loops around to the input for finalization
-    const finalize$ = this.output.pipe(
+    const finalize$ = this.pipe(
       last(),
       combineLatestWith(constraints$),
-      map(([state, constraints]) => constraints.finalize(state)),
+      map(([output, constraints]) => {
+        const calibration = isDynamic(constraints) ? constraints.calibrate(output) : constraints;
+        const state = calibration.fix(output);
+        return state;
+      }),
     );
     const updates$ = concat(input$, finalize$);
 
@@ -112,7 +123,16 @@ export class UserStateSubject<State extends object, Dependencies = null>
     this.outputSubscription = this.state.state$
       .pipe(
         combineLatestWith(constraints$),
-        map(([state, constraints]) => constraints.normalize(state)),
+        map(([rawState, constraints]) => {
+          const calibration = isDynamic(constraints)
+            ? constraints.calibrate(rawState)
+            : constraints;
+          const state = calibration.adjust(rawState);
+          return {
+            constraints: calibration.constraints,
+            state,
+          };
+        }),
       )
       .subscribe(this.output);
     this.inputSubscription = combineLatest([updates$, when$, userIdAvailable$])
@@ -151,14 +171,19 @@ export class UserStateSubject<State extends object, Dependencies = null>
    * @returns the subscription
    */
   subscribe(observer?: Partial<Observer<State>> | ((value: State) => void) | null): Subscription {
-    return this.output.subscribe(observer);
+    return this.output.pipe(map((wc) => wc.state)).subscribe(observer);
   }
 
   // using subjects to ensure the right semantics are followed;
   // if greater efficiency becomes desirable, consider implementing
   // `SubjectLike` directly
   private input = new Subject<State>();
-  private readonly output = new ReplaySubject<State>(1);
+  private readonly output = new ReplaySubject<WithConstraints<State>>(1);
+
+  /** A stream containing settings and their last-applied constraints. */
+  get withConstraints$() {
+    return this.output.asObservable();
+  }
 
   private inputSubscription: Unsubscribable;
   private outputSubscription: Unsubscribable;

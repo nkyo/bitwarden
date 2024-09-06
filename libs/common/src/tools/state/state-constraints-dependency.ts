@@ -1,6 +1,6 @@
 import { Observable } from "rxjs";
 
-import { StateConstraints } from "../types";
+import { DynamicStateConstraints, StateConstraints } from "../types";
 
 /** A pattern for types that depend upon a dynamic set of constraints.
  *
@@ -15,5 +15,11 @@ export type StateConstraintsDependency<State> = {
    *  constraints change. The stream should not emit `null` or
    *  `undefined`.
    */
-  constraints$: Observable<StateConstraints<State>>;
+  constraints$: Observable<StateConstraints<State> | DynamicStateConstraints<State>>;
 };
+
+export function isDynamic<State>(
+  constraints: StateConstraints<State> | DynamicStateConstraints<State>,
+): constraints is DynamicStateConstraints<State> {
+  return constraints && "calibrate" in constraints;
+}
