@@ -88,7 +88,7 @@ export class WebVaultGeneratorDialogComponent {
   }
 
   /**
-   * Opens the vault generator dialog in a full screen dialog.
+   * Opens the vault generator dialog.
    */
   static open(dialogService: DialogService, config: DialogConfig<WebVaultGeneratorDialogParams>) {
     return dialogService.open<WebVaultGeneratorDialogResult, WebVaultGeneratorDialogParams>(
