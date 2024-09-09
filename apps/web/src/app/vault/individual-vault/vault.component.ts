@@ -83,7 +83,6 @@ import {
   AddEditCipherDialogCloseResult,
   AddEditCipherDialogResult,
   openAddEditCipherDialog,
-  AddEditComponentV2,
 } from "./add-edit-v2.component";
 import { AddEditComponent } from "./add-edit.component";
 import {
@@ -1008,9 +1007,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       }
     }
 
-    const component = (await this.editCipher(cipher, null, true)) as
-      | AddEditComponent
-      | AddEditComponentV2;
+    const component = await this.editCipher(cipher, null, true);
     component.cloneMode = true;
   }
 
