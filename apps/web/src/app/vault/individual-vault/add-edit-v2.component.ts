@@ -4,7 +4,6 @@ import { Component, Inject, OnInit, OnDestroy } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Subject } from "rxjs";
 
-import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -101,7 +100,6 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
    * @param dialogRef The reference to the dialog.
    * @param i18nService The internationalization service.
    * @param dialogService The dialog service.
-   * @param organizationService The organization service.
    * @param billingAccountProfileStateService The billing account profile state service.
    */
   constructor(
@@ -109,7 +107,6 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
     private dialogRef: DialogRef<AddEditCipherDialogCloseResult>,
     private i18nService: I18nService,
     private dialogService: DialogService,
-    private organizationService: OrganizationService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
   ) {
     this.billingAccountProfileStateService.hasPremiumFromAnySource$
@@ -128,11 +125,6 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
     this.cipherType = this.params.cipherType || this.params.cipherFormConfig?.cipherType;
     this.cloneMode = this.params.cloneMode || false;
     this.config = this.params.cipherFormConfig;
-
-    if (this.cipher && this.cipher.organizationId) {
-      this.organization = await this.organizationService.get(this.cipher.organizationId);
-    }
-
     this.headerText = this.setHeader(this.config?.mode, this.cipherType);
   }
 
