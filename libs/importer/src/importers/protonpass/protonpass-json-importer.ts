@@ -1,6 +1,8 @@
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { FieldType, SecureNoteType, CipherType } from "@bitwarden/common/vault/enums";
 import { CardView } from "@bitwarden/common/vault/models/view/card.view";
+import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
+import { IdentityView } from "@bitwarden/common/vault/models/view/identity.view";
 import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.view";
 
 import { ImportResult } from "../../models/import-result";
@@ -9,14 +11,122 @@ import { Importer } from "../importer";
 
 import {
   ProtonPassCreditCardItemContent,
+  ProtonPassIdentityItemContent,
+  ProtonPassIdentityItemExtraSection,
+  ProtonPassItemExtraField,
   ProtonPassItemState,
   ProtonPassJsonFile,
   ProtonPassLoginItemContent,
 } from "./types/protonpass-json-type";
 
 export class ProtonPassJsonImporter extends BaseImporter implements Importer {
+  private mappedItentityItemKeys = [
+    "fullName",
+    "firstName",
+    "middleName",
+    "lastName",
+    "email",
+    "phoneNumber",
+    "company",
+    "socialSecurityNumber",
+    "passportNumber",
+    "licenseNumber",
+    "organization",
+    "streetAddress",
+    "floor",
+    "county",
+    "city",
+    "stateOrProvince",
+    "zipOrPostalCode",
+    "countryOrRegion",
+  ];
+
+  private itentityItemExtraFieldsKeys = [
+    "extraPersonalDetails",
+    "extraAddressDetails",
+    "extraContactDetails",
+    "extraWorkDetails",
+    "extraSections",
+  ];
+
   constructor(private i18nService: I18nService) {
     super();
+  }
+
+  private processIdentityItemUnmappedAndExtraFields(
+    cipher: CipherView,
+    identityItem: ProtonPassIdentityItemContent,
+  ) {
+    Object.keys(identityItem).forEach((key) => {
+      if (
+        !this.mappedItentityItemKeys.includes(key) &&
+        !this.itentityItemExtraFieldsKeys.includes(key)
+      ) {
+        this.processKvp(
+          cipher,
+          key,
+          identityItem[key as keyof ProtonPassIdentityItemContent] as string,
+        );
+        return;
+      }
+
+      if (this.itentityItemExtraFieldsKeys.includes(key)) {
+        if (key !== "extraSections") {
+          const extraFields = identityItem[
+            key as keyof ProtonPassIdentityItemContent
+          ] as ProtonPassItemExtraField[];
+
+          extraFields?.forEach((extraField) => {
+            this.processKvp(
+              cipher,
+              extraField.fieldName,
+              extraField.data.content,
+              extraField.type === "hidden" ? FieldType.Hidden : FieldType.Text,
+            );
+          });
+        } else {
+          const extraSections = identityItem[
+            key as keyof ProtonPassIdentityItemContent
+          ] as ProtonPassIdentityItemExtraSection[];
+
+          extraSections?.forEach((extraSection) => {
+            extraSection.sectionFields?.forEach((extraField) => {
+              this.processKvp(
+                cipher,
+                extraField.fieldName,
+                extraField.data.content,
+                extraField.type === "hidden" ? FieldType.Hidden : FieldType.Text,
+              );
+            });
+          });
+        }
+      }
+    });
+  }
+
+  private processIdentityItemNames(
+    identity: IdentityView,
+    fullname: string | null,
+    firstname: string | null,
+    middlename: string | null,
+    lastname: string | null,
+  ) {
+    let mappedFirstName = firstname;
+    let mappedMiddleName = middlename;
+    let mappedLastName = lastname;
+
+    if (fullname) {
+      const parts = fullname.trim().split(/\s+/);
+
+      // Assign parts to first, middle, and last name based on the number of parts
+      mappedFirstName = parts[0] || firstname;
+      mappedLastName = parts.length > 1 ? parts[parts.length - 1] : lastname;
+      mappedMiddleName = parts.length > 2 ? parts.slice(1, -1).join(" ") : middlename;
+    }
+
+    identity.firstName = mappedFirstName;
+    identity.lastName = mappedLastName;
+    identity.middleName = mappedMiddleName;
   }
 
   parse(data: string): Promise<ImportResult> {
@@ -38,7 +148,6 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
         if (item.state == ProtonPassItemState.TRASHED) {
           continue;
         }
-        this.processFolder(result, vault.name);
 
         const cipher = this.initLoginCipher();
         cipher.name = this.getValueOrDefault(item.data.metadata.name, "--");
@@ -96,8 +205,50 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
 
             break;
           }
+          case "identity": {
+            const identityContent = item.data.content as ProtonPassIdentityItemContent;
+            cipher.type = CipherType.Identity;
+            cipher.identity = new IdentityView();
+
+            const address3 =
+              `${identityContent.floor ?? ""} ${identityContent.county ?? ""}`.trim();
+            this.processIdentityItemNames(
+              cipher.identity,
+              this.getValueOrDefault(identityContent.fullName),
+              this.getValueOrDefault(identityContent.firstName),
+              this.getValueOrDefault(identityContent.middleName),
+              this.getValueOrDefault(identityContent.lastName),
+            );
+            cipher.identity.email = this.getValueOrDefault(identityContent.email);
+            cipher.identity.phone = this.getValueOrDefault(identityContent.phoneNumber);
+            cipher.identity.company = this.getValueOrDefault(identityContent.company);
+            cipher.identity.ssn = this.getValueOrDefault(identityContent.socialSecurityNumber);
+            cipher.identity.passportNumber = this.getValueOrDefault(identityContent.passportNumber);
+            cipher.identity.licenseNumber = this.getValueOrDefault(identityContent.licenseNumber);
+            cipher.identity.address1 = this.getValueOrDefault(identityContent.organization);
+            cipher.identity.address2 = this.getValueOrDefault(identityContent.streetAddress);
+            cipher.identity.address3 = this.getValueOrDefault(address3);
+            cipher.identity.city = this.getValueOrDefault(identityContent.city);
+            cipher.identity.state = this.getValueOrDefault(identityContent.stateOrProvince);
+            cipher.identity.postalCode = this.getValueOrDefault(identityContent.zipOrPostalCode);
+            cipher.identity.country = this.getValueOrDefault(identityContent.countryOrRegion);
+            this.processIdentityItemUnmappedAndExtraFields(cipher, identityContent);
+
+            for (const extraField of item.data.extraFields) {
+              this.processKvp(
+                cipher,
+                extraField.fieldName,
+                extraField.data.content,
+                extraField.type === "hidden" ? FieldType.Hidden : FieldType.Text,
+              );
+            }
+            break;
+          }
+          default:
+            continue;
         }
 
+        this.processFolder(result, vault.name);
         this.cleanupCipher(cipher);
         result.ciphers.push(cipher);
       }
