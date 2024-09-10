@@ -2,11 +2,11 @@ import { Simplify } from "type-fest";
 
 /** Constraints that are shared by all primitive field types */
 type PrimitiveConstraint = {
-  /** presence indicates the field is required */
-  required?: true;
+  /** `true` indicates the field is required; otherwise the field is optional */
+  required?: boolean;
 
-  /** presence indicates changes to this field are prohibited */
-  readonly?: true;
+  /** `true` indicates the field is immutable; otherwise the field is mutable */
+  readonly?: boolean;
 };
 
 /** Constraints that are shared by string fields */
@@ -34,22 +34,45 @@ type NumberConstraints = {
   step?: number;
 };
 
+/** Constraints that are shared by boolean fields */
+type BooleanConstraint = {
+  /** When present, the boolean field must have the set value.
+   *  When absent or undefined, the boolean field's value is unconstrained.
+   */
+  requiredValue?: boolean;
+};
+
+/** Utility type that transforms a type T into its supported validators.
+ */
+export type Constraint<T> = PrimitiveConstraint &
+  (T extends string
+    ? StringConstraints
+    : T extends number
+      ? NumberConstraints
+      : T extends boolean
+        ? BooleanConstraint
+        : never);
+
 /** Utility type that transforms keys of T into their supported
  *  validators.
  */
 export type Constraints<T> = {
-  [Key in keyof T]?: Simplify<
-    PrimitiveConstraint &
-      (T[Key] extends string
-        ? StringConstraints
-        : T[Key] extends number
-          ? NumberConstraints
-          : never)
-  >;
+  [Key in keyof T]?: Simplify<Constraint<T[Key]>>;
 };
 
+/** Utility type that tracks whether a set of constraints was
+ *  produced by an active policy.
+ */
+export type PolicyConstraints<T> = {
+  /** When true, the constraints were derived from an active policy. */
+  policyInEffect?: boolean;
+} & Constraints<T>;
+
 /** utility type for methods that evaluate constraints generically. */
-export type AnyConstraint = PrimitiveConstraint & StringConstraints & NumberConstraints;
+export type AnyConstraint = PrimitiveConstraint &
+  StringConstraints &
+  NumberConstraints &
+  BooleanConstraint;
 
 /** Extends state message with constraints that apply to the message. */
 export type WithConstraints<State> = {

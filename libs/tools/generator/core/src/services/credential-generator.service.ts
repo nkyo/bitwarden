@@ -61,7 +61,7 @@ export class CredentialGeneratorService {
    *   this emits. Otherwise, a new credential is emitted when the settings
    *   update.
    */
-  generate$<Settings, Policy>(
+  generate$<Settings extends object, Policy>(
     configuration: Readonly<Configuration<Settings, Policy>>,
     dependencies?: Generate$Dependencies,
   ) {
@@ -96,7 +96,7 @@ export class CredentialGeneratorService {
    * @returns an observable that emits settings
    * @remarks the observable enforces policies on the settings
    */
-  settings$<Settings, Policy>(
+  settings$<Settings extends object, Policy>(
     configuration: Configuration<Settings, Policy>,
     dependencies?: Settings$Dependencies,
   ) {
@@ -135,7 +135,7 @@ export class CredentialGeneratorService {
    *  `dependencies.singleUserId$` becomes available.
    * @remarks the subject enforces policy for the settings
    */
-  async settings<Settings, Policy>(
+  async settings<Settings extends object, Policy>(
     configuration: Readonly<Configuration<Settings, Policy>>,
     dependencies: SingleUserDependency,
   ) {
