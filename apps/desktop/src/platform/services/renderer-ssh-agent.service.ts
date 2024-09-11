@@ -56,7 +56,7 @@ export class RendererSshAgentService implements OnDestroy {
 
           const activeAccountId = (await firstValueFrom(this.accountService.activeAccount$)).id;
           const isLocked =
-            (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ==
+            (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ===
             AuthenticationStatus.Locked;
           if (isLocked) {
             this.toastService.showToast({
@@ -67,7 +67,7 @@ export class RendererSshAgentService implements OnDestroy {
 
             const start = new Date();
             while (
-              (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ==
+              (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ===
               AuthenticationStatus.Locked
             ) {
               await new Promise((resolve) =>
