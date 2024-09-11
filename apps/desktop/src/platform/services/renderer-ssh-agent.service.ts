@@ -118,7 +118,7 @@ export class RendererSshAgentService implements OnDestroy {
           }
 
           const sshCiphers = ciphers.filter(
-            (cipher) => cipher.type == CipherType.SshKey && cipher.isDeleted == false,
+            (cipher) => cipher.type === CipherType.SshKey && !cipher.isDeleted,
           );
           const keys = sshCiphers.map((cipher) => {
             return {
