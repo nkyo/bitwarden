@@ -164,7 +164,7 @@ pub mod sshagent {
     pub struct PrivateKey {
         pub private_key: String,
         pub name: String,
-        pub uuid: String,
+        pub cipher_id: String,
     }
 
     #[napi(object)]
@@ -252,7 +252,7 @@ pub mod sshagent {
         bitwarden_agent_state.set_keys(
             new_keys
                 .iter()
-                .map(|k| (k.private_key.clone(), k.name.clone(), k.uuid.clone()))
+                .map(|k| (k.private_key.clone(), k.name.clone(), k.cipher_id.clone()))
                 .collect(),
         )
         .map_err(|e| napi::Error::from_reason(e.to_string()))?;

@@ -46,7 +46,7 @@ export namespace sshagent {
   export interface PrivateKey {
     privateKey: string
     name: string
-    uuid: string
+    cipherId: string
   }
   export interface SshKey {
     privateKey: string
