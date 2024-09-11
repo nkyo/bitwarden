@@ -685,8 +685,12 @@ export class VaultComponent implements OnInit, OnDestroy {
    * @returns The dialog reference.
    */
   async addCipherV2(cipherType?: CipherType) {
-    const config = await this.cipherFormConfigService.buildConfig("add", null, cipherType);
-    config.initialValues = {
+    const cipherFormConfig = await this.cipherFormConfigService.buildConfig(
+      "add",
+      null,
+      cipherType,
+    );
+    cipherFormConfig.initialValues = {
       organizationId:
         this.activeFilter.organizationId !== "MyVault" && this.activeFilter.organizationId != null
           ? (this.activeFilter.organizationId as OrganizationId)
@@ -700,12 +704,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     };
 
     return openAddEditCipherDialog(this.dialogService, {
-      data: {
-        cipher: null,
-        cipherType: cipherType || this.activeFilter.cipherType,
-        cloneMode: false,
-        cipherFormConfig: config,
-      },
+      data: cipherFormConfig,
     });
   }
 
@@ -713,11 +712,11 @@ export class VaultComponent implements OnInit, OnDestroy {
     this.go({ itemId: cipher?.id });
   }
 
-  async editCipher(cipher: CipherView, cipherType?: CipherType, cloneMode?: boolean) {
-    return this.editCipherId(cipher?.id, cipherType, cloneMode);
+  async editCipher(cipher: CipherView, cloneMode?: boolean) {
+    return this.editCipherId(cipher?.id, cloneMode);
   }
 
-  async editCipherId(id: string, cipherType?: CipherType, cloneMode?: boolean) {
+  async editCipherId(id: string, cloneMode?: boolean) {
     const cipher = await this.cipherService.get(id);
 
     if (
@@ -771,27 +770,14 @@ export class VaultComponent implements OnInit, OnDestroy {
    * @param cloneMode
    */
   private async editCipherIdV2(cipher: Cipher, cloneMode?: boolean) {
-    const activeUserId = await firstValueFrom(
-      this.accountService.activeAccount$.pipe(map((a) => a?.id)),
-    );
-
-    // Decrypt the cipher.
-    const cipherView = await cipher.decrypt(
-      await this.cipherService.getKeyForCipherKeyDecryption(cipher, activeUserId),
-    );
-
     const cipherFormConfig = await this.cipherFormConfigService.buildConfig(
-      "edit",
+      cloneMode ? "clone" : "edit",
       cipher.id as CipherId,
       cipher.type,
     );
 
     const dialogRef = openAddEditCipherDialog(this.dialogService, {
-      data: {
-        cipher: cipherView,
-        cloneMode: cloneMode,
-        cipherFormConfig,
-      },
+      data: cipherFormConfig,
     });
 
     const result: AddEditCipherDialogCloseResult = await firstValueFrom(dialogRef.closed);
@@ -1007,7 +993,7 @@ export class VaultComponent implements OnInit, OnDestroy {
       }
     }
 
-    const component = await this.editCipher(cipher, null, true);
+    const component = await this.editCipher(cipher, true);
     component.cloneMode = true;
   }
 

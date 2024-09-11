@@ -62,7 +62,6 @@ export interface AddEditCipherDialogCloseResult {
 export class AddEditComponentV2 implements OnInit, OnDestroy {
   config: CipherFormConfig;
   headerText: string;
-  cloneMode: boolean = false;
   protected destroy$ = new Subject<void>();
   canAccessAttachments: boolean = false;
 
@@ -75,7 +74,7 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
    * @param billingAccountProfileStateService The billing account profile state service.
    */
   constructor(
-    @Inject(DIALOG_DATA) public params: { cipherFormConfig: CipherFormConfig; cloneMode?: boolean },
+    @Inject(DIALOG_DATA) public params: CipherFormConfig,
     private dialogRef: DialogRef<AddEditCipherDialogCloseResult>,
     private i18nService: I18nService,
     private dialogService: DialogService,
@@ -92,8 +91,7 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
    * Lifecycle hook for component initialization.
    */
   async ngOnInit() {
-    this.cloneMode = this.params.cloneMode || false;
-    this.config = this.params.cipherFormConfig;
+    this.config = this.params;
     this.headerText = this.setHeader(this.config?.mode, this.config.cipherType);
   }
 
