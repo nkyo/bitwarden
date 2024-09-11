@@ -10,7 +10,7 @@ class AgentResponse {
   timestamp: Date;
 }
 
-export class SSHAgent {
+export class MainSshAgentService {
   SIGN_TIMEOUT = 60_000;
 
   private requestResponses: AgentResponse[] = [];
