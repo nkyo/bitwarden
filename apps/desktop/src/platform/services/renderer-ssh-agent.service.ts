@@ -6,6 +6,7 @@ import {
   firstValueFrom,
   map,
   Subject,
+  switchMap,
   takeUntil,
   timer,
 } from "rxjs";
@@ -47,8 +48,9 @@ export class RendererSshAgentService implements OnDestroy {
   ) {
     this.messageListener
       .messages$(new CommandDefinition("sshagent.signrequest"))
-      .subscribe((message: any) => {
-        (async () => {
+      .pipe(takeUntil(this.destroy$))
+      .pipe(
+        switchMap(async (message: any) => {
           const cipherId = message.cipherId;
           const messageId = message.messageId;
 
@@ -100,12 +102,9 @@ export class RendererSshAgentService implements OnDestroy {
           const result = await firstValueFrom(dialogRef.closed);
           await ipc.platform.sshAgent.signRequestResponse(messageId, result);
           ipc.platform.hideWindow();
-        })()
-          .then(() => {})
-          .catch((e) => {
-            this.logService.error("Error in SshAgent sign request: ", e);
-          });
-      });
+        }),
+      )
+      .subscribe();
 
     combineLatest([
       timer(0, this.SSH_REFRESH_INTERVAL),
