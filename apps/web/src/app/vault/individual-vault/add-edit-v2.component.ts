@@ -162,7 +162,7 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
  */
 export function openAddEditCipherDialog(
   dialogService: DialogService,
-  config: DialogConfig,
+  config: DialogConfig<CipherFormConfig>,
 ): DialogRef<AddEditCipherDialogCloseResult> {
   return dialogService.open(AddEditComponentV2, config);
 }
