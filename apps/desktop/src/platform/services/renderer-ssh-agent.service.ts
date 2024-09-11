@@ -99,10 +99,10 @@ export class SSHAgentService {
         return;
       }
 
-      const noteCiphers = ciphers.filter(
+      const sshCiphers = ciphers.filter(
         (cipher) => cipher.type == CipherType.SSHKey && cipher.isDeleted == false,
       );
-      const keys = noteCiphers.map((cipher) => {
+      const keys = sshCiphers.map((cipher) => {
         return {
           name: cipher.name,
           privateKey: cipher.sshKey.privateKey,
