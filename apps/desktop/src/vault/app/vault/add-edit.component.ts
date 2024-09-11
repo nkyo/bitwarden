@@ -1,7 +1,7 @@
 import { DatePipe } from "@angular/common";
 import { Component, NgZone, OnChanges, OnDestroy, OnInit, ViewChild } from "@angular/core";
 import { NgForm } from "@angular/forms";
-import { sshagent } from "desktop_native/napi";
+import { sshagent as sshAgent } from "desktop_native/napi";
 
 import { AddEditComponent as BaseAddEditComponent } from "@bitwarden/angular/vault/components/add-edit.component";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
@@ -143,8 +143,8 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
     );
   }
 
-  async generateSSHKey() {
-    const sshKey = await ipc.platform.sshagent.generateKey("ed25519");
+  async generateSshKey() {
+    const sshKey = await ipc.platform.sshAgent.generateKey("ed25519");
     this.cipher.sshKey.privateKey = sshKey.privateKey;
     this.cipher.sshKey.publicKey = sshKey.publicKey;
     this.cipher.sshKey.keyFingerprint = sshKey.keyFingerprint;
@@ -155,10 +155,10 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
     });
   }
 
-  async pasteSSHKey() {
+  async importSshKeyFromClipboard() {
     const key = await this.platformUtilsService.readFromClipboard();
-    const parsedKey = await ipc.platform.sshagent.importKey(key, "");
-    if (parsedKey == null || parsedKey.status == sshagent.SSHKeyImportStatus.ParsingError) {
+    const parsedKey = await ipc.platform.sshAgent.importKey(key, "");
+    if (parsedKey == null || parsedKey.status == sshAgent.SSHKeyImportStatus.ParsingError) {
       this.toastService.showToast({
         variant: "error",
         title: "",
@@ -166,8 +166,8 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
       });
       return;
     } else if (
-      parsedKey.status == sshagent.SSHKeyImportStatus.PasswordRequired ||
-      parsedKey.status == sshagent.SSHKeyImportStatus.WrongPassword
+      parsedKey.status == sshAgent.SSHKeyImportStatus.PasswordRequired ||
+      parsedKey.status == sshAgent.SSHKeyImportStatus.WrongPassword
     ) {
       this.toastService.showToast({
         variant: "error",
@@ -189,7 +189,7 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
 
   async typeChange() {
     if (this.cipher.type == CipherType.SSHKey) {
-      await this.generateSSHKey();
+      await this.generateSshKey();
     }
   }
 

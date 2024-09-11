@@ -63,7 +63,7 @@ export class SSHAgentService {
                   title: null,
                   message: this.i18nService.t("sshAgentUnlockTimeout"),
                 });
-                await ipc.platform.sshagent.signRequestResponse(id, false);
+                await ipc.platform.sshAgent.signRequestResponse(id, false);
                 return;
               }
             }
@@ -78,7 +78,7 @@ export class SSHAgentService {
             this.i18nService.t("unknownApplication"),
           );
           const result = await firstValueFrom(dialogRef.closed);
-          await ipc.platform.sshagent.signRequestResponse(id, result);
+          await ipc.platform.sshAgent.signRequestResponse(id, result);
           ipc.platform.hideWindow();
         })()
           .then(() => {})
@@ -89,13 +89,13 @@ export class SSHAgentService {
 
     setInterval(async () => {
       if ((await firstValueFrom(this.desktopSettingsService.sshAgentEnabled$)) == false) {
-        await ipc.platform.sshagent.setKeys([]);
+        await ipc.platform.sshAgent.setKeys([]);
         return;
       }
 
       const ciphers = await this.cipherService.getAllDecrypted();
       if (ciphers == null) {
-        await ipc.platform.sshagent.lock();
+        await ipc.platform.sshAgent.lock();
         return;
       }
 
@@ -109,7 +109,7 @@ export class SSHAgentService {
           uuid: cipher.id,
         };
       });
-      await ipc.platform.sshagent.setKeys(keys);
+      await ipc.platform.sshAgent.setKeys(keys);
     }, 1000);
   }
 }

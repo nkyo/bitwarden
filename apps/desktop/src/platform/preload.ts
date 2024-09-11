@@ -72,7 +72,7 @@ const clipboard = {
   write: (message: ClipboardWriteMessage) => ipcRenderer.invoke("clipboard.write", message),
 };
 
-const sshagent = {
+const sshAgent = {
   setKeys: (keys: { name: string; privateKey: string; uuid: string }[]): Promise<void> =>
     ipcRenderer.invoke("sshagent.setkeys", keys),
   signRequestResponse: async (id: number, accepted: boolean) => {
@@ -199,7 +199,7 @@ export default {
   passwords,
   biometric,
   clipboard,
-  sshagent,
+  sshAgent,
   powermonitor,
   nativeMessaging,
   crypto,
