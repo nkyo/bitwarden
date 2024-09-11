@@ -29,6 +29,8 @@ import { DesktopSettingsService } from "./desktop-settings.service";
 })
 export class RendererSshAgentService implements OnDestroy {
   SSH_REFRESH_INTERVAL = 1000;
+  SSH_REQUEST_TIMEOUT = 1000 * 60 * 5;
+  SSH_REQUEST_UNLOCK_POLLING_INTERVAL = 100;
 
   private destroy$ = new Subject<void>();
 
@@ -68,8 +70,10 @@ export class RendererSshAgentService implements OnDestroy {
               (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ==
               AuthenticationStatus.Locked
             ) {
-              await new Promise((resolve) => setTimeout(resolve, 100));
-              if (new Date().getTime() - start.getTime() > 1000 * 60 * 5) {
+              await new Promise((resolve) =>
+                setTimeout(resolve, this.SSH_REQUEST_UNLOCK_POLLING_INTERVAL),
+              );
+              if (new Date().getTime() - start.getTime() > this.SSH_REQUEST_TIMEOUT) {
                 this.logService.error("[Ssh Agent] Timeout waiting for unlock");
                 this.toastService.showToast({
                   variant: "error",
