@@ -41,6 +41,7 @@ import { Fido2CredentialView } from "@bitwarden/common/vault/models/view/fido2-c
 import { IdentityView } from "@bitwarden/common/vault/models/view/identity.view";
 import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
+import { parseYearMonthExpiry } from "@bitwarden/common/vault/utils";
 
 import { openUnlockPopout } from "../../auth/popup/utils/auth-popout-window";
 import { BrowserApi } from "../../platform/browser/browser-api";
@@ -1898,10 +1899,23 @@ export class OverlayBackground implements OverlayBackgroundInterface {
     const cardView = new CardView();
     cardView.cardholderName = card.cardholderName || "";
     cardView.number = card.number || "";
-    cardView.expMonth = card.expirationMonth || "";
-    cardView.expYear = card.expirationYear || "";
     cardView.code = card.cvv || "";
     cardView.brand = card.number ? CardView.getCardBrandByPatterns(card.number) : "";
+
+    // If there's a combined expiration date value and no individual month or year values,
+    // try to parse them from the combined value
+    if (
+      card.expirationDate &&
+      (card.expirationMonth == null || card.expirationMonth === "") &&
+      (card.expirationYear == null || card.expirationYear === "")
+    ) {
+      const [parsedYear, parsedMonth] = parseYearMonthExpiry(card.expirationDate);
+      cardView.expMonth = parsedMonth || "";
+      cardView.expYear = parsedYear || "";
+    } else {
+      cardView.expMonth = card.expirationMonth || "";
+      cardView.expYear = card.expirationYear || "";
+    }
 
     const cipherView = new CipherView();
     cipherView.name = "";

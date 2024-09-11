@@ -1,3 +1,5 @@
+import { CardExpiryDateDelimiters } from "@bitwarden/common/autofill/constants";
+
 export class AutoFillConstants {
   static readonly EmailFieldNames: string[] = [
     // English
@@ -300,7 +302,7 @@ export class CreditCardAutoFillConstants {
     "cb-type",
   ];
 
-  static readonly CardExpiryDateDelimiters: string[] = ["/", "-", ".", " "];
+  static readonly CardExpiryDateDelimiters = CardExpiryDateDelimiters;
 
   // Note, these are expressions of user-guidance for the expected expiry date format to be used
   static readonly CardExpiryDateFormats: CardExpiryDateFormat[] = [

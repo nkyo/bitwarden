@@ -1,5 +1,9 @@
 import { CardView } from "@bitwarden/common/vault/models/view/card.view";
-import { normalizeExpiryYearFormat, isCardExpired } from "@bitwarden/common/vault/utils";
+import {
+  normalizeExpiryYearFormat,
+  isCardExpired,
+  parseYearMonthExpiry,
+} from "@bitwarden/common/vault/utils";
 
 function getExpiryYearValueFormats(currentCentury: string) {
   return [
@@ -119,4 +123,146 @@ describe("isCardExpired", () => {
       });
     },
   );
+});
+
+const combinedDateTestValues = [
+  " 2024 / 05 ",
+  "05 2024",
+  "05	2024", // Tab whitespace character
+  "05 2024", // Em Quad
+  "05 2024", // Em Space
+  "05 2024", // En Quad
+  "05 2024", // En Space
+  "05 2024", // Figure Space
+  "05 2024", // Four-Per-Em Space
+  "05 2024", // Hair Space
+  "05　2024", // Ideographic Space
+  "05 2024", // Medium Mathematical Space
+  "05 2024", // No-Break Space
+  "05 2024", // ogham space mark
+  "05 2024", // Punctuation Space
+  "05 2024", // Six-Per-Em Space
+  "05 2024", // Thin Space
+  "05 2024", // Three-Per-Em Space
+  "05 24",
+  "05-2024",
+  "05-24",
+  "05.2024",
+  "05.24",
+  "05/2024",
+  "05/24",
+  "052024",
+  "0524",
+  "2024 05",
+  "2024 5",
+  "2024-05",
+  "2024-5",
+  "2024.05",
+  "2024.5",
+  "2024/05",
+  "2024/5",
+  "202405",
+  "20245",
+  "24 05",
+  "24 5",
+  "24-05",
+  "24-5",
+  "24.05",
+  "24.5",
+  "24/05",
+  "24/5",
+  "2405",
+  "5 2024",
+  "5 24",
+  "5-2024",
+  "5-24",
+  "5.2024",
+  "5.24",
+  "5/2024",
+  "5/24",
+  "52024",
+];
+const expectedParsedValue = ["2024", "5"];
+describe("parseYearMonthExpiry", () => {
+  it('returns "null" expiration year and month values when a value of "" is passed', () => {
+    expect(parseYearMonthExpiry("")).toStrictEqual([null, null]);
+  });
+
+  combinedDateTestValues.forEach((combinedDate) => {
+    it(`returns an expiration year value of "${expectedParsedValue[0]}" and month value of "${expectedParsedValue[1]}" when a value of "${combinedDate}" is passed`, () => {
+      expect(parseYearMonthExpiry(combinedDate)).toStrictEqual(expectedParsedValue);
+    });
+  });
+
+  it('returns an expiration year value of "2002" and month value of "2" when a value of "022" is passed', () => {
+    expect(parseYearMonthExpiry("022")).toStrictEqual(["2002", "2"]);
+  });
+
+  it('returns an expiration year value of "2002" and month value of "2" when a value of "202" is passed', () => {
+    expect(parseYearMonthExpiry("202")).toStrictEqual(["2002", "2"]);
+  });
+
+  it('returns an expiration year value of "2002" and month value of "1" when a value of "1/2/3/4" is passed', () => {
+    expect(parseYearMonthExpiry("1/2/3/4")).toStrictEqual(["2002", "1"]);
+  });
+
+  // Ambiguous input cases: we use try/catch for these cases as a workaround to accept either
+  // outcome (both are valid interpretations) in the event of any future code changes.
+  describe("ambiguous input cases", () => {
+    it('returns valid expiration year and month values when a value of "111" is passed', () => {
+      const testValue = "111";
+      const parsedValue = parseYearMonthExpiry(testValue);
+
+      expect(parsedValue[0]).toHaveLength(4);
+      expect(parsedValue[1]).toMatch(/^[\d]{1,2}$/);
+
+      try {
+        expect(parsedValue).toStrictEqual(["2011", "1"]);
+      } catch {
+        expect(parsedValue).toStrictEqual(["2001", "11"]);
+      }
+    });
+
+    it('returns valid expiration year and month values when a value of "212" is passed', () => {
+      const testValue = "212";
+      const parsedValue = parseYearMonthExpiry(testValue);
+
+      expect(parsedValue[0]).toHaveLength(4);
+      expect(parsedValue[1]).toMatch(/^[\d]{1,2}$/);
+
+      try {
+        expect(parsedValue).toStrictEqual(["2012", "2"]);
+      } catch {
+        expect(parsedValue).toStrictEqual(["2021", "2"]);
+      }
+    });
+
+    it('returns valid expiration year and month values when a value of "245" is passed', () => {
+      const testValue = "245";
+      const parsedValue = parseYearMonthExpiry(testValue);
+
+      expect(parsedValue[0]).toHaveLength(4);
+      expect(parsedValue[1]).toMatch(/^[\d]{1,2}$/);
+
+      try {
+        expect(parsedValue).toStrictEqual(["2045", "2"]);
+      } catch {
+        expect(parsedValue).toStrictEqual(["2024", "5"]);
+      }
+    });
+
+    it('returns valid expiration year and month values when a value of "524" is passed', () => {
+      const testValue = "524";
+      const parsedValue = parseYearMonthExpiry(testValue);
+
+      expect(parsedValue[0]).toHaveLength(4);
+      expect(parsedValue[1]).toMatch(/^[\d]{1,2}$/);
+
+      try {
+        expect(parsedValue).toStrictEqual(["2024", "5"]);
+      } catch {
+        expect(parsedValue).toStrictEqual(["2052", "4"]);
+      }
+    });
+  });
 });
