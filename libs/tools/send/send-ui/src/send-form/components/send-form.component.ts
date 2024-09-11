@@ -35,7 +35,6 @@ import { SendFormConfig } from "../abstractions/send-form-config.service";
 import { SendFormService } from "../abstractions/send-form.service";
 import { SendForm, SendFormContainer } from "../send-form-container";
 
-import { AdditionalOptionsSectionComponent } from "./options/options-section.component";
 import { SendTextDetailsComponent } from "./send-details/send-text-details.component";
 
 @Component({
@@ -58,7 +57,6 @@ import { SendTextDetailsComponent } from "./send-details/send-text-details.compo
     ReactiveFormsModule,
     SelectModule,
     NgIf,
-    AdditionalOptionsSectionComponent,
     SendTextDetailsComponent,
   ],
 })

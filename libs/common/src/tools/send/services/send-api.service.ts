@@ -135,7 +135,7 @@ export class SendApiService implements SendApiServiceAbstraction {
     return this.apiService.send("DELETE", "/sends/" + id, null, true, false);
   }
 
-  async save(sendData: [Send, EncArrayBuffer]): Promise<void> {
+  async save(sendData: [Send, EncArrayBuffer]): Promise<any> {
     const response = await this.upload(sendData);
 
     const data = new SendData(response);

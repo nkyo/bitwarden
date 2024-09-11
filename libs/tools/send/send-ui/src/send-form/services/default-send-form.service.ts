@@ -19,6 +19,6 @@ export class DefaultSendFormService implements SendFormService {
 
   async saveSend(send: SendView, file: File | ArrayBuffer, config: SendFormConfig) {
     const sendData = await this.sendService.encrypt(send, file, send.password, null);
-    await this.sendApiService.save(sendData);
+    return await this.sendApiService.save(sendData);
   }
 }
