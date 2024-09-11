@@ -513,7 +513,7 @@
                   appStopClick
                   appA11yTitle="{{ 'regenerateSSHKey' | i18n }}"
                   (click)="generateSSHKey()"
-                  *ngIf="!(!cipher.edit && editMode)"
+                  *ngIf="cipher.edit || !editMode"
                 >
                   <i class="bwi bwi-lg bwi-generate" aria-hidden="true"></i>
                 </button>
