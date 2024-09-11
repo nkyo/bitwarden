@@ -20,7 +20,7 @@ import {
 } from "./types/protonpass-json-type";
 
 export class ProtonPassJsonImporter extends BaseImporter implements Importer {
-  private mappedItentityItemKeys = [
+  private mappedIdentityItemKeys = [
     "fullName",
     "firstName",
     "middleName",
@@ -41,7 +41,7 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
     "countryOrRegion",
   ];
 
-  private itentityItemExtraFieldsKeys = [
+  private identityItemExtraFieldsKeys = [
     "extraPersonalDetails",
     "extraAddressDetails",
     "extraContactDetails",
@@ -59,8 +59,8 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
   ) {
     Object.keys(identityItem).forEach((key) => {
       if (
-        !this.mappedItentityItemKeys.includes(key) &&
-        !this.itentityItemExtraFieldsKeys.includes(key)
+        !this.mappedIdentityItemKeys.includes(key) &&
+        !this.identityItemExtraFieldsKeys.includes(key)
       ) {
         this.processKvp(
           cipher,
@@ -70,7 +70,7 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
         return;
       }
 
-      if (this.itentityItemExtraFieldsKeys.includes(key)) {
+      if (this.identityItemExtraFieldsKeys.includes(key)) {
         if (key !== "extraSections") {
           const extraFields = identityItem[
             key as keyof ProtonPassIdentityItemContent
@@ -210,8 +210,6 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
             cipher.type = CipherType.Identity;
             cipher.identity = new IdentityView();
 
-            const address3 =
-              `${identityContent.floor ?? ""} ${identityContent.county ?? ""}`.trim();
             this.processIdentityItemNames(
               cipher.identity,
               this.getValueOrDefault(identityContent.fullName),
@@ -225,9 +223,13 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
             cipher.identity.ssn = this.getValueOrDefault(identityContent.socialSecurityNumber);
             cipher.identity.passportNumber = this.getValueOrDefault(identityContent.passportNumber);
             cipher.identity.licenseNumber = this.getValueOrDefault(identityContent.licenseNumber);
+
+            const address3 =
+              `${identityContent.floor ?? ""} ${identityContent.county ?? ""}`.trim();
             cipher.identity.address1 = this.getValueOrDefault(identityContent.organization);
             cipher.identity.address2 = this.getValueOrDefault(identityContent.streetAddress);
             cipher.identity.address3 = this.getValueOrDefault(address3);
+
             cipher.identity.city = this.getValueOrDefault(identityContent.city);
             cipher.identity.state = this.getValueOrDefault(identityContent.stateOrProvince);
             cipher.identity.postalCode = this.getValueOrDefault(identityContent.zipOrPostalCode);

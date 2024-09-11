@@ -6,7 +6,6 @@ import { FieldType, CipherType } from "@bitwarden/common/vault/enums";
 
 import { ProtonPassJsonImporter } from "../src/importers";
 
-import { identityItemTestData } from "./test-data/protonpass-json/protonpass-identity.json";
 import { testData } from "./test-data/protonpass-json/protonpass.json";
 
 describe("Protonpass Json Importer", () => {
@@ -86,7 +85,7 @@ describe("Protonpass Json Importer", () => {
     // "My Secure Note" is assigned to folder "Personal"
     expect(result.folderRelationships[1]).toEqual([1, 0]);
     // "Other vault login" is assigned to folder "Test"
-    expect(result.folderRelationships[3]).toEqual([3, 1]);
+    expect(result.folderRelationships[4]).toEqual([4, 1]);
   });
 
   it("should create collections if part of an organization", async () => {
@@ -103,7 +102,7 @@ describe("Protonpass Json Importer", () => {
     // "My Secure Note" is assigned to folder "Personal"
     expect(result.collectionRelationships[1]).toEqual([1, 0]);
     // "Other vault login" is assigned to folder "Test"
-    expect(result.collectionRelationships[3]).toEqual([3, 1]);
+    expect(result.collectionRelationships[4]).toEqual([4, 1]);
   });
 
   it("should not add deleted items", async () => {
@@ -115,7 +114,7 @@ describe("Protonpass Json Importer", () => {
       expect(cipher.name).not.toBe("My Deleted Note");
     }
 
-    expect(ciphers.length).toBe(4);
+    expect(ciphers.length).toBe(5);
   });
 
   it("should set favorites", async () => {
@@ -129,22 +128,25 @@ describe("Protonpass Json Importer", () => {
   });
 
   it("should skip unsupported items", async () => {
-    const identityItemTestDataJson = JSON.stringify(identityItemTestData);
-    const result = await importer.parse(identityItemTestDataJson);
+    const testDataJson = JSON.stringify(testData);
+    const result = await importer.parse(testDataJson);
     expect(result != null).toBe(true);
 
     const ciphers = result.ciphers;
-    expect(ciphers.length).toBe(1);
-    expect(ciphers[0].type).toEqual(CipherType.Identity);
+    expect(ciphers.length).toBe(5);
+    expect(ciphers[4].type).toEqual(CipherType.Login);
   });
 
   it("should parse identity data", async () => {
-    const identityItemTestDataJson = JSON.stringify(identityItemTestData);
-    const result = await importer.parse(identityItemTestDataJson);
+    const testDataJson = JSON.stringify(testData);
+    const result = await importer.parse(testDataJson);
     expect(result != null).toBe(true);
 
-    const cipher = result.ciphers[0];
+    result.ciphers.shift();
+    result.ciphers.shift();
+    result.ciphers.shift();
 
+    const cipher = result.ciphers.shift();
     expect(cipher.type).toEqual(CipherType.Identity);
     expect(cipher.identity.firstName).toBe("Test");
     expect(cipher.identity.middleName).toBe("1");
