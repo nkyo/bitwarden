@@ -20,6 +20,8 @@ import { EventUploadService } from "@bitwarden/common/services/event/event-uploa
 import { VaultTimeoutService } from "@bitwarden/common/services/vault-timeout/vault-timeout.service";
 import { UserId } from "@bitwarden/common/types/guid";
 
+import { RendererSshAgentService } from "src/platform/services/renderer-ssh-agent.service";
+
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
 import { NativeMessagingService } from "../../services/native-messaging.service";
 
@@ -41,6 +43,7 @@ export class InitService {
     private encryptService: EncryptService,
     private userAutoUnlockKeyService: UserAutoUnlockKeyService,
     private accountService: AccountService,
+    private sshAgentService: RendererSshAgentService,
     @Inject(DOCUMENT) private document: Document,
   ) {}
 

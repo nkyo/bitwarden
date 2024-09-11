@@ -1,5 +1,14 @@
-import { Injectable } from "@angular/core";
-import { firstValueFrom } from "rxjs";
+import { Injectable, OnDestroy } from "@angular/core";
+import {
+  combineLatest,
+  concatMap,
+  filter,
+  firstValueFrom,
+  map,
+  Subject,
+  takeUntil,
+  timer,
+} from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
@@ -18,7 +27,11 @@ import { DesktopSettingsService } from "./desktop-settings.service";
 @Injectable({
   providedIn: "root",
 })
-export class RendererSshAgentService {
+export class RendererSshAgentService implements OnDestroy {
+  SSH_REFRESH_INTERVAL = 1000;
+
+  private destroy$ = new Subject<void>();
+
   constructor(
     private cipherService: CipherService,
     private logService: LogService,
@@ -87,29 +100,47 @@ export class RendererSshAgentService {
           });
       });
 
-    setInterval(async () => {
-      if ((await firstValueFrom(this.desktopSettingsService.sshAgentEnabled$)) == false) {
-        await ipc.platform.sshAgent.setKeys([]);
-        return;
-      }
+    combineLatest([
+      timer(0, this.SSH_REFRESH_INTERVAL),
+      this.desktopSettingsService.sshAgentEnabled$,
+    ])
+      .pipe(
+        filter(([_, sshAgentEnabled]) => sshAgentEnabled),
+        concatMap(async () => {
+          const ciphers = await this.cipherService.getAllDecrypted();
+          if (ciphers == null) {
+            await ipc.platform.sshAgent.lock();
+            return;
+          }
 
-      const ciphers = await this.cipherService.getAllDecrypted();
-      if (ciphers == null) {
-        await ipc.platform.sshAgent.lock();
-        return;
-      }
+          const sshCiphers = ciphers.filter(
+            (cipher) => cipher.type == CipherType.SshKey && cipher.isDeleted == false,
+          );
+          const keys = sshCiphers.map((cipher) => {
+            return {
+              name: cipher.name,
+              privateKey: cipher.sshKey.privateKey,
+              cipherId: cipher.id,
+            };
+          });
+          await ipc.platform.sshAgent.setKeys(keys);
+        }),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
 
-      const sshCiphers = ciphers.filter(
-        (cipher) => cipher.type == CipherType.SshKey && cipher.isDeleted == false,
-      );
-      const keys = sshCiphers.map((cipher) => {
-        return {
-          name: cipher.name,
-          privateKey: cipher.sshKey.privateKey,
-          cipherId: cipher.id,
-        };
-      });
-      await ipc.platform.sshAgent.setKeys(keys);
-    }, 1000);
+    // clear keys when ssh agent is disabled
+    this.desktopSettingsService.sshAgentEnabled$
+      .pipe(
+        filter((enabled) => !enabled),
+        map(() => ipc.platform.sshAgent.setKeys([])),
+        takeUntil(this.destroy$),
+      )
+      .subscribe();
+  }
+
+  ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

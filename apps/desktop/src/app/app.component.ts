@@ -55,7 +55,6 @@ import { PasswordGenerationServiceAbstraction } from "@bitwarden/generator-legac
 import { DeleteAccountComponent } from "../auth/delete-account.component";
 import { LoginApprovalComponent } from "../auth/login/login-approval.component";
 import { MenuAccount, MenuUpdateRequest } from "../main/menu/menu.updater";
-import { RendererSshAgentService } from "../platform/services/renderer-ssh-agent.service";
 import { PremiumComponent } from "../vault/app/accounts/premium.component";
 import { FolderAddEditComponent } from "../vault/app/vault/folder-add-edit.component";
 
@@ -151,7 +150,6 @@ export class AppComponent implements OnInit, OnDestroy {
     private stateEventRunnerService: StateEventRunnerService,
     private providerService: ProviderService,
     private accountService: AccountService,
-    private sshAgentService: RendererSshAgentService,
   ) {}
 
   ngOnInit() {
