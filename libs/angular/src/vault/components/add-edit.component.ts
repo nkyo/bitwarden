@@ -201,7 +201,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
     this.writeableCollections = await this.loadCollections();
     this.canUseReprompt = await this.passwordRepromptService.enabled();
 
-    const sshKeysEnabled = await this.configService.getFeatureFlag(FeatureFlag.SshKeyVaultItem);
+    const sshKeysEnabled = await this.configService.getFeatureFlag(FeatureFlag.SSHKeyVaultItem);
     if (this.platformUtilsService.getClientType() == ClientType.Desktop && sshKeysEnabled) {
       this.typeOptions.push({ name: this.i18nService.t("typeSshKey"), value: CipherType.SshKey });
     }
