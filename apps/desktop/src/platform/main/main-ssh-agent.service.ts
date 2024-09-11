@@ -5,7 +5,7 @@ import { MessagingService } from "@bitwarden/common/platform/abstractions/messag
 import { sshagent } from "@bitwarden/desktop-napi";
 
 class AgentResponse {
-  id: number;
+  requestId: number;
   accepted: boolean;
   timestamp: Date;
 }
@@ -25,7 +25,7 @@ export class MainSshAgentService {
   init() {
     // handle sign request passing to UI
     sshagent
-      .serve(async (err: Error, uuid: string) => {
+      .serve(async (err: Error, cipherId: string) => {
         // clear all old (> SIGN_TIMEOUT) requests
         this.requestResponses = this.requestResponses.filter(
           (response) => response.timestamp > new Date(Date.now() - this.SIGN_TIMEOUT),
@@ -34,13 +34,14 @@ export class MainSshAgentService {
         this.request_id += 1;
         const id_for_this_request = this.request_id;
         this.messagingService.send("sshagent.signrequest", {
-          uuid: uuid,
-          id: id_for_this_request,
+          cipherId,
+          requestId: id_for_this_request,
         });
 
         const start = Date.now();
         while (
-          this.requestResponses.filter((response) => response.id == id_for_this_request).length == 0
+          this.requestResponses.filter((response) => response.requestId == id_for_this_request)
+            .length == 0
         ) {
           await new Promise((res) => setTimeout(res, 100));
           if (Date.now() - start > this.SIGN_TIMEOUT) {
@@ -49,11 +50,11 @@ export class MainSshAgentService {
         }
 
         const response = this.requestResponses.find(
-          (response) => response.id == id_for_this_request,
+          (response) => response.requestId == id_for_this_request,
         );
 
         this.requestResponses = this.requestResponses.filter(
-          (response) => response.id != id_for_this_request,
+          (response) => response.requestId != id_for_this_request,
         );
         return response.accepted;
       })
@@ -67,7 +68,7 @@ export class MainSshAgentService {
 
     ipcMain.handle(
       "sshagent.setkeys",
-      async (event: any, keys: { name: string; privateKey: string; uuid: string }[]) => {
+      async (event: any, keys: { name: string; privateKey: string; cipherId: string }[]) => {
         if (this.agentState != null) {
           sshagent.setKeys(this.agentState, keys);
         }
@@ -75,8 +76,8 @@ export class MainSshAgentService {
     );
     ipcMain.handle(
       "sshagent.signrequestresponse",
-      async (event: any, { id, accepted }: { id: number; accepted: boolean }) => {
-        this.requestResponses.push({ id, accepted, timestamp: new Date() });
+      async (event: any, { requestId, accepted }: { requestId: number; accepted: boolean }) => {
+        this.requestResponses.push({ requestId, accepted, timestamp: new Date() });
       },
     );
     ipcMain.handle(

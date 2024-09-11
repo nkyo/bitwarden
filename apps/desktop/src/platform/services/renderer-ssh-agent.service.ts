@@ -34,8 +34,8 @@ export class RendererSshAgentService {
       .messages$(new CommandDefinition("sshagent.signrequest"))
       .subscribe((message: any) => {
         (async () => {
-          const cipherUuid = message.uuid;
-          const id = message.id;
+          const cipherId = message.uuid;
+          const messageId = message.id;
 
           ipc.platform.focusWindow();
 
@@ -63,14 +63,14 @@ export class RendererSshAgentService {
                   title: null,
                   message: this.i18nService.t("sshAgentUnlockTimeout"),
                 });
-                await ipc.platform.sshAgent.signRequestResponse(id, false);
+                await ipc.platform.sshAgent.signRequestResponse(messageId, false);
                 return;
               }
             }
           }
 
           const decryptedCiphers = await this.cipherService.getAllDecrypted();
-          const cipher = decryptedCiphers.find((cipher) => cipher.id == cipherUuid);
+          const cipher = decryptedCiphers.find((cipher) => cipher.id == cipherId);
 
           const dialogRef = ApproveSSHRequestComponent.open(
             this.dialogService,
@@ -78,7 +78,7 @@ export class RendererSshAgentService {
             this.i18nService.t("unknownApplication"),
           );
           const result = await firstValueFrom(dialogRef.closed);
-          await ipc.platform.sshAgent.signRequestResponse(id, result);
+          await ipc.platform.sshAgent.signRequestResponse(messageId, result);
           ipc.platform.hideWindow();
         })()
           .then(() => {})
@@ -106,7 +106,7 @@ export class RendererSshAgentService {
         return {
           name: cipher.name,
           privateKey: cipher.sshKey.privateKey,
-          uuid: cipher.id,
+          cipherId: cipher.id,
         };
       });
       await ipc.platform.sshAgent.setKeys(keys);

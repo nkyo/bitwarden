@@ -73,10 +73,10 @@ const clipboard = {
 };
 
 const sshAgent = {
-  setKeys: (keys: { name: string; privateKey: string; uuid: string }[]): Promise<void> =>
+  setKeys: (keys: { name: string; privateKey: string; cipherId: string }[]): Promise<void> =>
     ipcRenderer.invoke("sshagent.setkeys", keys),
-  signRequestResponse: async (id: number, accepted: boolean) => {
-    await ipcRenderer.invoke("sshagent.signrequestresponse", { id: id, accepted: accepted });
+  signRequestResponse: async (requestId: number, accepted: boolean) => {
+    await ipcRenderer.invoke("sshagent.signrequestresponse", { requestId, accepted });
   },
   generateKey: async (keyAlgorithm: string): Promise<ssh.SshKey> => {
     return await ipcRenderer.invoke("sshagent.generatekey", { keyAlgorithm });
