@@ -18,7 +18,7 @@ import { DesktopSettingsService } from "./desktop-settings.service";
 @Injectable({
   providedIn: "root",
 })
-export class SSHAgentService {
+export class RendererSshAgentService {
   constructor(
     private cipherService: CipherService,
     private logService: LogService,
