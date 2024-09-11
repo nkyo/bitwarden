@@ -1,8 +1,7 @@
 import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { CommonModule } from "@angular/common";
-import { Component, Inject, OnInit, OnDestroy } from "@angular/core";
+import { Component, Inject, OnInit } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
-import { Subject } from "rxjs";
 
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -59,10 +58,9 @@ export interface AddEditCipherDialogCloseResult {
   ],
   providers: [{ provide: CipherFormGenerationService, useClass: WebCipherFormGenerationService }],
 })
-export class AddEditComponentV2 implements OnInit, OnDestroy {
+export class AddEditComponentV2 implements OnInit {
   config: CipherFormConfig;
   headerText: string;
-  protected destroy$ = new Subject<void>();
   canAccessAttachments: boolean = false;
 
   /**
@@ -93,14 +91,6 @@ export class AddEditComponentV2 implements OnInit, OnDestroy {
   async ngOnInit() {
     this.config = this.params;
     this.headerText = this.setHeader(this.config?.mode, this.config.cipherType);
-  }
-
-  /**
-   * Lifecycle hook for component destruction.
-   */
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   /**
