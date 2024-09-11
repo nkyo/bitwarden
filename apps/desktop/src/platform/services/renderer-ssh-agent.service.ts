@@ -34,8 +34,8 @@ export class RendererSshAgentService {
       .messages$(new CommandDefinition("sshagent.signrequest"))
       .subscribe((message: any) => {
         (async () => {
-          const cipherId = message.uuid;
-          const messageId = message.id;
+          const cipherId = message.cipherId;
+          const messageId = message.messageId;
 
           ipc.platform.focusWindow();
 

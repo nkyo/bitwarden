@@ -3128,10 +3128,10 @@
   "invalidSSHKey": {
     "message": "The ssh key is invalid"
   },
-  "importSSHKeyFromClipboard": {
+  "importSshKeyFromClipboard": {
     "message": "Import key from clipboard"
   },
   "sshKeyPasted": {
-    "message": "SSH key imported sucessfully"
+    "message": "SSH key imported successfully"
   }
 }

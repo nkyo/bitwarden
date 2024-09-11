@@ -511,7 +511,7 @@
                   type="button"
                   class="row-btn"
                   appStopClick
-                  appA11yTitle="{{ 'regenerateSSHKey' | i18n }}"
+                  appA11yTitle="{{ 'regenerateSshKey' | i18n }}"
                   (click)="generateSSHKey()"
                   *ngIf="cipher.edit || !editMode"
                 >
@@ -520,8 +520,13 @@
               </div>
             </div>
             <div class="box-content-row box-content-row-flex" appBoxRow>
-              <button type="button" class="row-btn" appStopClick (click)="pasteSSHKey()">
-                Paste
+              <button
+                type="button"
+                class="row-btn"
+                appStopClick
+                (click)="importSshKeyFromClipboard()"
+              >
+                {{ "importSshKeyFromClipboard" | i18n }}
               </button>
             </div>
           </div>
