@@ -1,7 +1,9 @@
 import { MockProxy, mock } from "jest-mock-extended";
 
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
-import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
+import {
+  OrganizationUserApiService,
+  OrganizationUserResetPasswordDetailsResponse,
+} from "@bitwarden/admin-console/common";
 import { ListResponse } from "@bitwarden/common/models/response/list.response";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
@@ -16,19 +18,19 @@ describe("OrganizationAuthRequestService", () => {
   let organizationAuthRequestApiService: MockProxy<OrganizationAuthRequestApiService>;
   let cryptoService: MockProxy<CryptoService>;
   let encryptService: MockProxy<EncryptService>;
-  let organizationUserService: MockProxy<OrganizationUserService>;
+  let organizationUserApiService: MockProxy<OrganizationUserApiService>;
   let organizationAuthRequestService: OrganizationAuthRequestService;
 
   beforeEach(() => {
     organizationAuthRequestApiService = mock<OrganizationAuthRequestApiService>();
     cryptoService = mock<CryptoService>();
     encryptService = mock<EncryptService>();
-    organizationUserService = mock<OrganizationUserService>();
+    organizationUserApiService = mock<OrganizationUserApiService>();
     organizationAuthRequestService = new OrganizationAuthRequestService(
       organizationAuthRequestApiService,
       cryptoService,
       encryptService,
-      organizationUserService,
+      organizationUserApiService,
     );
   });
 
@@ -117,7 +119,7 @@ describe("OrganizationAuthRequestService", () => {
         OrganizationUserResetPasswordDetailsResponse,
       );
 
-      organizationUserService.getManyOrganizationUserAccountRecoveryDetails.mockResolvedValueOnce(
+      organizationUserApiService.getManyOrganizationUserAccountRecoveryDetails.mockResolvedValueOnce(
         organizationUserResetPasswordDetailsResponse,
       );
 
@@ -159,7 +161,7 @@ describe("OrganizationAuthRequestService", () => {
           encryptedPrivateKey: "encryptedPrivateKey",
         });
 
-      organizationUserService.getOrganizationUserResetPasswordDetails.mockResolvedValue(
+      organizationUserApiService.getOrganizationUserResetPasswordDetails.mockResolvedValue(
         organizationUserResetPasswordDetailsResponse,
       );
 

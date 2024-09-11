@@ -167,7 +167,7 @@ describe("Cipher Service", () => {
       );
 
       configService.checkServerMeetsVersionRequirement$.mockReturnValue(of(false));
-      setEncryptionKeyFlag(false);
+      configService.getFeatureFlag.mockResolvedValue(false);
 
       const spy = jest.spyOn(cipherFileUploadService, "upload");
 
@@ -299,16 +299,16 @@ describe("Cipher Service", () => {
     });
 
     describe("cipher.key", () => {
-      it("is null when enableCipherKeyEncryption flag is false", async () => {
-        setEncryptionKeyFlag(false);
+      it("is null when feature flag is false", async () => {
+        configService.getFeatureFlag.mockResolvedValue(false);
 
         const cipher = await cipherService.encrypt(cipherView, userId);
 
         expect(cipher.key).toBeNull();
       });
 
-      it("is defined when enableCipherKeyEncryption flag is true", async () => {
-        setEncryptionKeyFlag(true);
+      it("is defined when feature flag flag is true", async () => {
+        configService.getFeatureFlag.mockResolvedValue(true);
 
         const cipher = await cipherService.encrypt(cipherView, userId);
 
@@ -321,16 +321,16 @@ describe("Cipher Service", () => {
         jest.spyOn<any, string>(cipherService, "encryptCipherWithCipherKey");
       });
 
-      it("is not called when enableCipherKeyEncryption is false", async () => {
-        setEncryptionKeyFlag(false);
+      it("is not called when feature flag is false", async () => {
+        configService.getFeatureFlag.mockResolvedValue(false);
 
         await cipherService.encrypt(cipherView, userId);
 
         expect(cipherService["encryptCipherWithCipherKey"]).not.toHaveBeenCalled();
       });
 
-      it("is called when enableCipherKeyEncryption is true", async () => {
-        setEncryptionKeyFlag(true);
+      it("is called when feature flag is true", async () => {
+        configService.getFeatureFlag.mockResolvedValue(true);
 
         await cipherService.encrypt(cipherView, userId);
 
@@ -346,7 +346,7 @@ describe("Cipher Service", () => {
     let encryptedKey: EncString;
 
     beforeEach(() => {
-      setEncryptionKeyFlag(true);
+      configService.getFeatureFlag.mockResolvedValue(true);
       configService.checkServerMeetsVersionRequirement$.mockReturnValue(of(true));
 
       searchService.indexedEntityId$ = of(null);
@@ -399,9 +399,3 @@ describe("Cipher Service", () => {
     });
   });
 });
-
-function setEncryptionKeyFlag(value: boolean) {
-  process.env.FLAGS = JSON.stringify({
-    enableCipherKeyEncryption: value,
-  });
-}

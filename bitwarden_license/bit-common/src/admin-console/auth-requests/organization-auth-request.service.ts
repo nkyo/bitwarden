@@ -1,5 +1,7 @@
-import { OrganizationUserService } from "@bitwarden/common/admin-console/abstractions/organization-user/organization-user.service";
-import { OrganizationUserResetPasswordDetailsResponse } from "@bitwarden/common/admin-console/abstractions/organization-user/responses";
+import {
+  OrganizationUserApiService,
+  OrganizationUserResetPasswordDetailsResponse,
+} from "@bitwarden/admin-console/common";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { EncryptService } from "@bitwarden/common/platform/abstractions/encrypt.service";
 import { Utils } from "@bitwarden/common/platform/misc/utils";
@@ -15,7 +17,7 @@ export class OrganizationAuthRequestService {
     private organizationAuthRequestApiService: OrganizationAuthRequestApiService,
     private cryptoService: CryptoService,
     private encryptService: EncryptService,
-    private organizationUserService: OrganizationUserService,
+    private organizationUserApiService: OrganizationUserApiService,
   ) {}
 
   async listPendingRequests(organizationId: string): Promise<PendingAuthRequestView[]> {
@@ -32,7 +34,7 @@ export class OrganizationAuthRequestService {
   ): Promise<void> {
     const organizationUserIds = authRequests.map((r) => r.organizationUserId);
     const details =
-      await this.organizationUserService.getManyOrganizationUserAccountRecoveryDetails(
+      await this.organizationUserApiService.getManyOrganizationUserAccountRecoveryDetails(
         organizationId,
         organizationUserIds,
       );
@@ -63,7 +65,7 @@ export class OrganizationAuthRequestService {
   }
 
   async approvePendingRequest(organizationId: string, authRequest: PendingAuthRequestView) {
-    const details = await this.organizationUserService.getOrganizationUserResetPasswordDetails(
+    const details = await this.organizationUserApiService.getOrganizationUserResetPasswordDetails(
       organizationId,
       authRequest.organizationUserId,
     );

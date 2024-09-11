@@ -19,7 +19,7 @@ export class ServiceContainer extends OssServiceContainer {
       this.organizationAuthRequestApiService,
       this.cryptoService,
       this.encryptService,
-      this.organizationUserService,
+      this.organizationUserApiService,
     );
   }
 }
