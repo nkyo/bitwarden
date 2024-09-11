@@ -421,19 +421,19 @@
               </div>
               <div class="form-group">
                 <div class="checkbox">
-                  <label for="enableSSHAgent">
+                  <label for="enableSshAgent">
                     <input
-                      id="enableSSHAgent"
+                      id="enableSshAgent"
                       type="checkbox"
-                      aria-describedby="enableSSHAgentHelp"
-                      formControlName="enableSSHAgent"
-                      (change)="saveSSHAgent()"
+                      aria-describedby="enableSshAgentHelp"
+                      formControlName="enableSshAgent"
+                      (change)="saveSshAgent()"
                     />
-                    {{ "enableSSHAgent" | i18n }}
+                    {{ "enableSshAgent" | i18n }}
                   </label>
                 </div>
-                <small id="enableSSHAgentHelp" class="help-block">{{
-                  "enableSSHAgentDesc" | i18n
+                <small id="enableSshAgentHelp" class="help-block">{{
+                  "enableSshAgentDesc" | i18n
                 }}</small>
               </div>
               <div class="form-group" *ngIf="showDuckDuckGoIntegrationOption">

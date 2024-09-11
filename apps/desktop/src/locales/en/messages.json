@@ -26,8 +26,8 @@
   "typeSecureNote": {
     "message": "Secure note"
   },
-  "typeSSHKey": {
-    "message": "SSH key"
+  "typeSshKey": {
+    "message": "Ssh key"
   },
   "folders": {
     "message": "Folders"
@@ -202,22 +202,22 @@
     "message": "RSA 4096-Bit"
   },
   "sshKeyGenerated": {
-    "message": "A new SSH key was generated"
+    "message": "A new Ssh key was generated"
   },
   "sshAgentUnlockRequired": {
-    "message": "Please unlock your vault to approve the SSH key request."
+    "message": "Please unlock your vault to approve the Ssh key request."
   },
   "sshAgentUnlockTimeout": {
-    "message": "SSH key request timed out."
+    "message": "Ssh key request timed out."
   },
-  "enableSSHAgent": {
-    "message": "Enable SSH agent"
+  "enableSshAgent": {
+    "message": "Enable Ssh agent"
   },
-  "enableSSHAgentDesc": {
-    "message": "Enable the SSH agent to sign SSH requests right from your Bitwarden vault."
+  "enableSshAgentDesc": {
+    "message": "Enable the Ssh agent to sign Ssh requests right from your Bitwarden vault."
   },
-  "enableSSHAgentHelp": {
-    "message": "The SSH agent is a service targeted at developers that allows you to sign SSH requests directly from your Bitwarden vault."
+  "enableSshAgentHelp": {
+    "message": "The Ssh agent is a service targeted at developers that allows you to sign Ssh requests directly from your Bitwarden vault."
   },
   "premiumRequired": {
     "message": "Premium required"
@@ -439,11 +439,11 @@
   "copyPassword": {
     "message": "Copy password"
   },
-  "regenerateSSHKey": {
-    "message": "Regenerate SSH key"
+  "regenerateSshKey": {
+    "message": "Regenerate Ssh key"
   },
-  "copySSHPrivateKey": {
-    "message": "Copy SSH private key"
+  "copySshPrivateKey": {
+    "message": "Copy Ssh private key"
   },
   "copyUri": {
     "message": "Copy URI"
@@ -3114,7 +3114,7 @@
     "message": "Deny"
   },
   "sshkeyApprovalTitle": {
-    "message": "Confirm SSH key usage"
+    "message": "Confirm Ssh key usage"
   },
   "sshkeyApprovalMessageInfix": {
     "message": "is requesting access to"
@@ -3125,13 +3125,13 @@
   "sshKeyPasswordUnsupported": {
     "message": "Importing password protected ssh keys is not yet supported"
   },
-  "invalidSSHKey": {
+  "invalidSshKey": {
     "message": "The ssh key is invalid"
   },
   "importSshKeyFromClipboard": {
     "message": "Import key from clipboard"
   },
   "sshKeyPasted": {
-    "message": "SSH key imported successfully"
+    "message": "Ssh key imported successfully"
   }
 }

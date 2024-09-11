@@ -471,15 +471,15 @@
               />
             </div>
           </div>
-          <!-- SSH Key -->
-          <div *ngIf="cipher.type === cipherType.SSHKey">
+          <!-- Ssh Key -->
+          <div *ngIf="cipher.type === cipherType.SshKey">
             <div class="box-content-row box-content-row-flex" appBoxRow>
               <div class="row-main">
                 <label for="sshPrivateKey">{{ "sshPrivateKey" | i18n }}</label>
                 <input
                   id="sshPublicKey"
                   type="{{ showPrivateKey ? 'text' : 'password' }}"
-                  name="SSHKey.SSHPrivateKey"
+                  name="SshKey.SshPrivateKey"
                   [ngModel]="cipher.sshKey.privateKey"
                   readonly
                 />
@@ -489,8 +489,8 @@
                   type="button"
                   class="row-btn"
                   appStopClick
-                  appA11yTitle="{{ 'copySSHPrivateKey' | i18n }}"
-                  (click)="copy(this.cipher.sshKey.privateKey, 'sshPrivateKey', 'SSHPrivateKey')"
+                  appA11yTitle="{{ 'copySshPrivateKey' | i18n }}"
+                  (click)="copy(this.cipher.sshKey.privateKey, 'sshPrivateKey', 'SshPrivateKey')"
                 >
                   <i class="bwi bwi-lg bwi-clone" aria-hidden="true"></i>
                 </button>

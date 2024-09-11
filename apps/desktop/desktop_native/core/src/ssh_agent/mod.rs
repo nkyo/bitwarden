@@ -58,11 +58,11 @@ impl BitwardenDesktopAgent {
         };
         let cloned_agent_state = agent.clone();
         tokio::spawn(async move {
-            let env_path = std::env::var("BITWARDEN_SSH_AUTH_SOCK");
+            let env_path = std::env::var("BITWARDEN_Ssh_AUTH_SOCK");
             let ssh_path = match env_path {
                 Ok(path) => path,
                 Err(_) => {
-                    println!("[SSH Agent Native Module] BITWARDEN_SSH_AUTH_SOCK not set, using default path");
+                    println!("[Ssh Agent Native Module] BITWARDEN_Ssh_AUTH_SOCK not set, using default path");
                     my_home().unwrap().ok_or(Error::msg("Could not determine home directory")).unwrap()
                         .join(".bitwarden-ssh-agent.sock")
                         .to_str()
@@ -70,7 +70,7 @@ impl BitwardenDesktopAgent {
                         .to_string()
                 }
             };
-            println!("[SSH Agent Native Module] Starting SSH Agent server on {:?}", ssh_path);
+            println!("[Ssh Agent Native Module] Starting Ssh Agent server on {:?}", ssh_path);
             let sockname = std::path::Path::new(&ssh_path);
             let _ = std::fs::remove_file(sockname);
             match UnixListener::bind(sockname) {
@@ -85,10 +85,10 @@ impl BitwardenDesktopAgent {
                         cloned_cancellation_token
                     )
                     .await;
-                    println!("[SSH Agent Native Module] SSH Agent server exited");
+                    println!("[Ssh Agent Native Module] Ssh Agent server exited");
                 }
                 Err(e) => {
-                    eprintln!("[SSH Agent Native Module] Error while starting agent server: {}", e);
+                    eprintln!("[Ssh Agent Native Module] Error while starting agent server: {}", e);
                 }
             }
         });
@@ -146,7 +146,7 @@ impl BitwardenDesktopAgent {
                     );
                 }
                 Err(e) => {
-                    eprintln!("[SSH Agent Native Module] Error while parsing key: {}", e);
+                    eprintln!("[Ssh Agent Native Module] Error while parsing key: {}", e);
                 }
             }
         }

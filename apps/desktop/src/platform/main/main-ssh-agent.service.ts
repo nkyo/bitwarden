@@ -60,10 +60,10 @@ export class MainSshAgentService {
       })
       .then((agentState: sshagent.SshAgentState) => {
         this.agentState = agentState;
-        this.logService.info("SSH agent started");
+        this.logService.info("Ssh agent started");
       })
       .catch((e) => {
-        this.logService.error("SSH agent encountered an error: ", e);
+        this.logService.error("Ssh agent encountered an error: ", e);
       });
 
     ipcMain.handle(

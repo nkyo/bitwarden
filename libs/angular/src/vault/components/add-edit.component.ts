@@ -37,7 +37,7 @@ import { IdentityView } from "@bitwarden/common/vault/models/view/identity.view"
 import { LoginUriView } from "@bitwarden/common/vault/models/view/login-uri.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { SecureNoteView } from "@bitwarden/common/vault/models/view/secure-note.view";
-import { SSHKeyView } from "@bitwarden/common/vault/models/view/ssh-key.view";
+import { SshKeyView } from "@bitwarden/common/vault/models/view/ssh-key.view";
 import { DialogService } from "@bitwarden/components";
 import { PasswordRepromptService } from "@bitwarden/vault";
 
@@ -201,9 +201,9 @@ export class AddEditComponent implements OnInit, OnDestroy {
     this.writeableCollections = await this.loadCollections();
     this.canUseReprompt = await this.passwordRepromptService.enabled();
 
-    const sshKeysEnabled = await this.configService.getFeatureFlag(FeatureFlag.SSHKeyVaultItem);
+    const sshKeysEnabled = await this.configService.getFeatureFlag(FeatureFlag.SshKeyVaultItem);
     if (this.platformUtilsService.getClientType() == ClientType.Desktop && sshKeysEnabled) {
-      this.typeOptions.push({ name: this.i18nService.t("typeSSHKey"), value: CipherType.SSHKey });
+      this.typeOptions.push({ name: this.i18nService.t("typeSshKey"), value: CipherType.SshKey });
     }
   }
 
@@ -284,7 +284,7 @@ export class AddEditComponent implements OnInit, OnDestroy {
         this.cipher.identity = new IdentityView();
         this.cipher.secureNote = new SecureNoteView();
         this.cipher.secureNote.type = SecureNoteType.Generic;
-        this.cipher.sshKey = new SSHKeyView();
+        this.cipher.sshKey = new SshKeyView();
         this.cipher.reprompt = CipherRepromptType.None;
       }
     }

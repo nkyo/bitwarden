@@ -399,7 +399,7 @@
             <div *ngIf="cipher.identity.country">{{ cipher.identity.country }}</div>
           </div>
         </div>
-        <!-- SSH Key -->
+        <!-- Ssh Key -->
         <div *ngIf="cipher.sshKey">
           <div class="box-content-row box-content-row-flex" appBoxRow>
             <div class="row-main">
@@ -407,7 +407,7 @@
               <input
                 id="sshPublicKey"
                 type="text"
-                name="SSHKey.SSHPublicKey"
+                name="SshKey.SshPublicKey"
                 [ngModel]="cipher.sshKey.publicKey"
                 readonly
               />
@@ -417,8 +417,8 @@
                 type="button"
                 class="row-btn"
                 appStopClick
-                (click)="copy(cipher.sshKey.publicKey, 'sshPublicKey', 'SSHPublicKey')"
-                appA11yTitle="{{ 'generateSSHKey' | i18n }}"
+                (click)="copy(cipher.sshKey.publicKey, 'sshPublicKey', 'SshPublicKey')"
+                appA11yTitle="{{ 'generateSshKey' | i18n }}"
               >
                 <i class="bwi bwi-lg bwi-clone" aria-hidden="true"></i>
               </button>
@@ -430,7 +430,7 @@
               <input
                 id="sshKeyFingerprint"
                 type="text"
-                name="SSHKey.SSHKeyFingerprint"
+                name="SshKey.SshKeyFingerprint"
                 [ngModel]="cipher.sshKey.keyFingerprint"
                 readonly
               />
@@ -440,8 +440,8 @@
                 type="button"
                 class="row-btn"
                 appStopClick
-                (click)="copy(cipher.sshKey.keyFingerprint, 'sshFingerprint', 'SSHFingerprint')"
-                appA11yTitle="{{ 'generateSSHKey' | i18n }}"
+                (click)="copy(cipher.sshKey.keyFingerprint, 'sshFingerprint', 'SshFingerprint')"
+                appA11yTitle="{{ 'generateSshKey' | i18n }}"
               >
                 <i class="bwi bwi-lg bwi-clone" aria-hidden="true"></i>
               </button>

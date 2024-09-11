@@ -158,16 +158,16 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
   async importSshKeyFromClipboard() {
     const key = await this.platformUtilsService.readFromClipboard();
     const parsedKey = await ipc.platform.sshAgent.importKey(key, "");
-    if (parsedKey == null || parsedKey.status == sshAgent.SSHKeyImportStatus.ParsingError) {
+    if (parsedKey == null || parsedKey.status == sshAgent.SshKeyImportStatus.ParsingError) {
       this.toastService.showToast({
         variant: "error",
         title: "",
-        message: this.i18nService.t("invalidSSHKey"),
+        message: this.i18nService.t("invalidSshKey"),
       });
       return;
     } else if (
-      parsedKey.status == sshAgent.SSHKeyImportStatus.PasswordRequired ||
-      parsedKey.status == sshAgent.SSHKeyImportStatus.WrongPassword
+      parsedKey.status == sshAgent.SshKeyImportStatus.PasswordRequired ||
+      parsedKey.status == sshAgent.SshKeyImportStatus.WrongPassword
     ) {
       this.toastService.showToast({
         variant: "error",
@@ -188,7 +188,7 @@ export class AddEditComponent extends BaseAddEditComponent implements OnInit, On
   }
 
   async typeChange() {
-    if (this.cipher.type == CipherType.SSHKey) {
+    if (this.cipher.type == CipherType.SshKey) {
       await this.generateSshKey();
     }
   }

@@ -14,7 +14,7 @@ import {
 import { DialogService } from "@bitwarden/components/src/dialog";
 import { CipherFormGeneratorComponent } from "@bitwarden/vault";
 
-export interface ApproveSSHRequestParams {
+export interface ApproveSshRequestParams {
   cipherName: string;
   applicationName: string;
 }
@@ -35,17 +35,17 @@ export interface ApproveSSHRequestParams {
     FormFieldModule,
   ],
 })
-export class ApproveSSHRequestComponent {
-  approveSSHRequestForm = this.formBuilder.group({});
+export class ApproveSshRequestComponent {
+  approveSshRequestForm = this.formBuilder.group({});
 
   constructor(
-    @Inject(DIALOG_DATA) protected params: ApproveSSHRequestParams,
+    @Inject(DIALOG_DATA) protected params: ApproveSshRequestParams,
     private dialogRef: DialogRef<boolean>,
     private formBuilder: FormBuilder,
   ) {}
 
   static open(dialogService: DialogService, cipherName: string, applicationName: string) {
-    return dialogService.open<boolean, ApproveSSHRequestParams>(ApproveSSHRequestComponent, {
+    return dialogService.open<boolean, ApproveSshRequestParams>(ApproveSshRequestComponent, {
       data: {
         cipherName,
         applicationName,

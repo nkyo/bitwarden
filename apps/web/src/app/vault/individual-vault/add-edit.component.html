@@ -847,8 +847,8 @@
             </div>
           </div>
         </ng-container>
-        <!-- SSH Key -->
-        <ng-container *ngIf="cipher.type === cipherType.SSHKey">
+        <!-- Ssh Key -->
+        <ng-container *ngIf="cipher.type === cipherType.SshKey">
           <div class="row">
             <div class="col-12 form-group">
               <label for="sshKeyPublicKey">{{ "sshKeyPublicKey" | i18n }}</label>
@@ -857,7 +857,7 @@
                   id="sshKeyPublicKey"
                   class="form-control"
                   type="text"
-                  name="SSHKey.PublicKey"
+                  name="SshKey.PublicKey"
                   [(ngModel)]="cipher.sshKey.publicKey"
                   appInputVerbatim
                   disabled
@@ -867,7 +867,7 @@
                   <button
                     type="button"
                     class="btn btn-outline-secondary"
-                    appA11yTitle="{{ 'copySSHPublicKey' | i18n }}"
+                    appA11yTitle="{{ 'copySshPublicKey' | i18n }}"
                     (click)="copy(cipher.sshKey.publicKey, 'sshKeyPublicKey', 'PublicKey')"
                   >
                     <i class="bwi bwi-lg bwi-clone" aria-hidden="true"></i>
@@ -882,7 +882,7 @@
                   id="sshKeyFingerprint"
                   class="form-control"
                   type="text"
-                  name="SSHKey.Fingerprint"
+                  name="SshKey.Fingerprint"
                   [(ngModel)]="cipher.sshKey.keyFingerprint"
                   appInputVerbatim
                   disabled
@@ -892,7 +892,7 @@
                   <button
                     type="button"
                     class="btn btn-outline-secondary"
-                    appA11yTitle="{{ 'copySSHFingerprint' | i18n }}"
+                    appA11yTitle="{{ 'copySshFingerprint' | i18n }}"
                     (click)="copy(cipher.sshKey.keyFingerprint, 'sshKeyFingerprint', 'Fingerprint')"
                   >
                     <i class="bwi bwi-lg bwi-clone" aria-hidden="true"></i>

@@ -11,7 +11,7 @@ import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.servi
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { DialogService, ToastService } from "@bitwarden/components";
 
-import { ApproveSSHRequestComponent } from "../../platform/components/approve-ssh-request";
+import { ApproveSshRequestComponent } from "../../platform/components/approve-ssh-request";
 
 import { DesktopSettingsService } from "./desktop-settings.service";
 
@@ -57,7 +57,7 @@ export class RendererSshAgentService {
             ) {
               await new Promise((resolve) => setTimeout(resolve, 100));
               if (new Date().getTime() - start.getTime() > 1000 * 60 * 5) {
-                this.logService.error("[SSH Agent] Timeout waiting for unlock");
+                this.logService.error("[Ssh Agent] Timeout waiting for unlock");
                 this.toastService.showToast({
                   variant: "error",
                   title: null,
@@ -72,7 +72,7 @@ export class RendererSshAgentService {
           const decryptedCiphers = await this.cipherService.getAllDecrypted();
           const cipher = decryptedCiphers.find((cipher) => cipher.id == cipherId);
 
-          const dialogRef = ApproveSSHRequestComponent.open(
+          const dialogRef = ApproveSshRequestComponent.open(
             this.dialogService,
             cipher.name,
             this.i18nService.t("unknownApplication"),
@@ -83,7 +83,7 @@ export class RendererSshAgentService {
         })()
           .then(() => {})
           .catch((e) => {
-            this.logService.error("Error in SSHAgent sign request: ", e);
+            this.logService.error("Error in SshAgent sign request: ", e);
           });
       });
 
@@ -100,7 +100,7 @@ export class RendererSshAgentService {
       }
 
       const sshCiphers = ciphers.filter(
-        (cipher) => cipher.type == CipherType.SSHKey && cipher.isDeleted == false,
+        (cipher) => cipher.type == CipherType.SshKey && cipher.isDeleted == false,
       );
       const keys = sshCiphers.map((cipher) => {
         return {

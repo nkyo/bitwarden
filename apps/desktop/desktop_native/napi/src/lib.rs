@@ -168,7 +168,7 @@ pub mod sshagent {
     }
 
     #[napi(object)]
-    pub struct SSHKey {
+    pub struct SshKey {
         pub private_key: String,
         pub public_key: String,
         pub key_algorithm: String,
@@ -176,12 +176,12 @@ pub mod sshagent {
     }
 
     #[napi]
-    pub struct SSHAgentState {
+    pub struct SshAgentState {
         state: desktop_core::ssh_agent::BitwardenDesktopAgent,
     }
 
     #[napi]
-    pub enum SSHKeyImportStatus {
+    pub enum SshKeyImportStatus {
         // ssh key was parsed correctly and will be returned in the result
         Success,
         // ssh key was parsed correctly but is encrypted and requires a password
@@ -193,13 +193,13 @@ pub mod sshagent {
     }
 
     #[napi(object)]
-    pub struct SSHKeyImportResult {
-        pub status: SSHKeyImportStatus,
-        pub ssh_key: Option<SSHKey>,
+    pub struct SshKeyImportResult {
+        pub status: SshKeyImportStatus,
+        pub ssh_key: Option<SshKey>,
     }
 
     #[napi]
-    pub async fn serve(callback: ThreadsafeFunction<String, CalleeHandled>) -> napi::Result<SSHAgentState> {
+    pub async fn serve(callback: ThreadsafeFunction<String, CalleeHandled>) -> napi::Result<SshAgentState> {
         let (auth_request_tx, mut auth_request_rx) = tokio::sync::mpsc::channel::<String>(32);
         let (auth_response_tx, auth_response_rx) = tokio::sync::mpsc::channel::<bool>(32);
         tokio::spawn(async move {
@@ -212,13 +212,13 @@ pub mod sshagent {
                                 let _ = auth_response_tx.send(result).await;
                             },
                             Err(e) => {
-                                println!("[SSH Agent Native Module] calling UI callback promise was rejected: {}", e);
+                                println!("[Ssh Agent Native Module] calling UI callback promise was rejected: {}", e);
                                 let _ = auth_response_tx.send(false).await;
                             }
                         }
                     },
                     Err(e) => {
-                        println!("[SSH Agent Native Module] calling UI callback could not create promise: {}", e);
+                        println!("[Ssh Agent Native Module] calling UI callback could not create promise: {}", e);
                         let _ = auth_response_tx.send(false).await;
                     }
                 }
@@ -227,7 +227,7 @@ pub mod sshagent {
 
         match  desktop_core::ssh_agent::BitwardenDesktopAgent::start_server(auth_request_tx, Arc::new(Mutex::new(auth_response_rx))).await {
             Ok(state) => {
-                Ok(SSHAgentState {
+                Ok(SshAgentState {
                     state
                 })
             },
@@ -238,7 +238,7 @@ pub mod sshagent {
     }
 
     #[napi]
-    pub fn stop(agent_state: &mut SSHAgentState) -> napi::Result<()> {
+    pub fn stop(agent_state: &mut SshAgentState) -> napi::Result<()> {
         let bitwarden_agent_state = &mut agent_state.state;
         bitwarden_agent_state.stop();
         Ok(())
@@ -246,7 +246,7 @@ pub mod sshagent {
 
     #[napi]
     pub fn set_keys(
-        agent_state: &mut SSHAgentState,
+        agent_state: &mut SshAgentState,
         new_keys: Vec<PrivateKey>) -> napi::Result<()> {
         let bitwarden_agent_state = &mut agent_state.state;
         bitwarden_agent_state.set_keys(
@@ -260,27 +260,27 @@ pub mod sshagent {
     }
 
     #[napi]
-    pub fn lock(agent_state: &mut SSHAgentState) -> napi::Result<()> {
+    pub fn lock(agent_state: &mut SshAgentState) -> napi::Result<()> {
         let bitwarden_agent_state = &mut agent_state.state;
         bitwarden_agent_state.lock().map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
     #[napi]
-    pub fn import_key(encoded_key: String, password: String) -> napi::Result<SSHKeyImportResult> {
+    pub fn import_key(encoded_key: String, password: String) -> napi::Result<SshKeyImportResult> {
         let private_key = ssh_key::private::PrivateKey::from_openssh(&encoded_key);
         let private_key = match private_key {
             Ok(k) => k,
             Err(_) => {
-                return Ok(SSHKeyImportResult {
-                    status: SSHKeyImportStatus::ParsingError,
+                return Ok(SshKeyImportResult {
+                    status: SshKeyImportStatus::ParsingError,
                     ssh_key: None,
                 });
             }
         };
 
         if private_key.is_encrypted() && password.is_empty() {
-            return Ok(SSHKeyImportResult {
-                status: SSHKeyImportStatus::PasswordRequired,
+            return Ok(SshKeyImportResult {
+                status: SshKeyImportStatus::PasswordRequired,
                 ssh_key: None,
             });
         }
@@ -288,8 +288,8 @@ pub mod sshagent {
             match private_key.decrypt(password.as_bytes()) {
                 Ok(k) => k,
                 Err(_) => {
-                    return Ok(SSHKeyImportResult {
-                        status: SSHKeyImportStatus::WrongPassword,
+                    return Ok(SshKeyImportResult {
+                        status: SshKeyImportStatus::WrongPassword,
                         ssh_key: None,
                     });
                 }
@@ -303,9 +303,9 @@ pub mod sshagent {
         let private_key_openssh_string = private_key_openssh.to_string();
         let fingerprint = private_key.fingerprint(HashAlg::Sha256);
         let fingerprint_string = fingerprint.to_string();
-        Ok(SSHKeyImportResult {
-            status: SSHKeyImportStatus::Success,
-            ssh_key: Some(SSHKey {
+        Ok(SshKeyImportResult {
+            status: SshKeyImportStatus::Success,
+            ssh_key: Some(SshKey {
                 private_key: private_key_openssh_string,
                 public_key: public_key_base64,
                 key_algorithm: private_key.algorithm().to_string(),
@@ -315,7 +315,7 @@ pub mod sshagent {
     }
 
     #[napi]
-    pub async fn generate_keypair(key_algorithm: String) -> napi::Result<SSHKey> {
+    pub async fn generate_keypair(key_algorithm: String) -> napi::Result<SshKey> {
         // sourced from cryptographically secure entropy source, with sources for all targets: https://docs.rs/getrandom
         // if it cannot be securely sourced, this will panic instead of leading to a weak key
         let mut rng: ChaCha8Rng = ChaCha8Rng::from_entropy();
@@ -349,7 +349,7 @@ pub mod sshagent {
                 let private_key_openssh_string = private_key_openssh.to_string();
                 let fingerprint = key.fingerprint(HashAlg::Sha256);
                 let fingerprint_string = fingerprint.to_string();
-                Ok(SSHKey {
+                Ok(SshKey {
                     private_key: private_key_openssh_string,
                     public_key: public_key_base64,
                     key_algorithm: key_algorithm.to_string(),

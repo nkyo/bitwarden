@@ -1593,8 +1593,8 @@
   "typeIdentity": {
     "message": "Identity"
   },
-  "typeSSHKey": {
-    "message": "SSH key"
+  "typeSshKey": {
+    "message": "Ssh key"
   },
   "newItemHeader": {
     "message": "New $TYPE$",
