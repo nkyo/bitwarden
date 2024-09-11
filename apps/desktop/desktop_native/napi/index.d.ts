@@ -54,14 +54,14 @@ export namespace sshagent {
     keyAlgorithm: string
     keyFingerprint: string
   }
-  export const enum SSHKeyImportStatus {
+  export const enum SshKeyImportStatus {
     Success = 0,
     PasswordRequired = 1,
     WrongPassword = 2,
     ParsingError = 3
   }
   export interface SshKeyImportResult {
-    status: SSHKeyImportStatus
+    status: SshKeyImportStatus
     sshKey?: SshKey
   }
   export function serve(callback: (err: Error | null, arg: string) => any): Promise<SshAgentState>
@@ -70,8 +70,7 @@ export namespace sshagent {
   export function lock(agentState: SshAgentState): void
   export function importKey(encodedKey: string, password: string): SshKeyImportResult
   export function generateKeypair(keyAlgorithm: string): Promise<SshKey>
-  export type SSHAgentState = SshAgentState
-    export class SshAgentState {   }
+  export class SshAgentState {   }
 }
 export namespace processisolations {
   export function disableCoredumps(): Promise<void>

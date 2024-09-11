@@ -20,9 +20,8 @@ import { EventUploadService } from "@bitwarden/common/services/event/event-uploa
 import { VaultTimeoutService } from "@bitwarden/common/services/vault-timeout/vault-timeout.service";
 import { UserId } from "@bitwarden/common/types/guid";
 
-import { RendererSshAgentService } from "src/platform/services/renderer-ssh-agent.service";
-
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
+import { RendererSshAgentService } from "../../platform/services/renderer-ssh-agent.service";
 import { NativeMessagingService } from "../../services/native-messaging.service";
 
 @Injectable()

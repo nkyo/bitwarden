@@ -27,7 +27,7 @@
     "message": "Secure note"
   },
   "typeSshKey": {
-    "message": "Ssh key"
+    "message": "SSH key"
   },
   "folders": {
     "message": "Folders"
@@ -202,19 +202,19 @@
     "message": "RSA 4096-Bit"
   },
   "sshKeyGenerated": {
-    "message": "A new Ssh key was generated"
+    "message": "A new SSH key was generated"
   },
   "sshAgentUnlockRequired": {
     "message": "Please unlock your vault to approve the Ssh key request."
   },
   "sshAgentUnlockTimeout": {
-    "message": "Ssh key request timed out."
+    "message": "SSH key request timed out."
   },
   "enableSshAgent": {
-    "message": "Enable Ssh agent"
+    "message": "Enable SSH agent"
   },
   "enableSshAgentDesc": {
-    "message": "Enable the Ssh agent to sign Ssh requests right from your Bitwarden vault."
+    "message": "Enable the SSH agent to sign Ssh requests right from your Bitwarden vault."
   },
   "enableSshAgentHelp": {
     "message": "The Ssh agent is a service targeted at developers that allows you to sign Ssh requests directly from your Bitwarden vault."
@@ -3114,7 +3114,7 @@
     "message": "Deny"
   },
   "sshkeyApprovalTitle": {
-    "message": "Confirm Ssh key usage"
+    "message": "Confirm SSH key usage"
   },
   "sshkeyApprovalMessageInfix": {
     "message": "is requesting access to"
@@ -3123,15 +3123,15 @@
     "message": "An application"
   },
   "sshKeyPasswordUnsupported": {
-    "message": "Importing password protected ssh keys is not yet supported"
+    "message": "Importing password protected SSH keys is not yet supported"
   },
   "invalidSshKey": {
-    "message": "The ssh key is invalid"
+    "message": "The SSH key is invalid"
   },
   "importSshKeyFromClipboard": {
     "message": "Import key from clipboard"
   },
   "sshKeyPasted": {
-    "message": "Ssh key imported successfully"
+    "message": "SSH key imported successfully"
   }
 }

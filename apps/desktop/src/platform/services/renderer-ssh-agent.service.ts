@@ -29,7 +29,7 @@ import { DesktopSettingsService } from "./desktop-settings.service";
 })
 export class RendererSshAgentService implements OnDestroy {
   SSH_REFRESH_INTERVAL = 1000;
-  SSH_REQUEST_TIMEOUT = 1000 * 60 * 5;
+  SSH_VAULT_UNLOCK_REQUEST_TIMEOUT = 1000 * 60 * 5;
   SSH_REQUEST_UNLOCK_POLLING_INTERVAL = 100;
 
   private destroy$ = new Subject<void>();
@@ -65,24 +65,27 @@ export class RendererSshAgentService implements OnDestroy {
               message: this.i18nService.t("sshAgentUnlockRequired"),
             });
 
-            const start = new Date();
-            while (
-              (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ===
-              AuthenticationStatus.Locked
-            ) {
-              await new Promise((resolve) =>
-                setTimeout(resolve, this.SSH_REQUEST_UNLOCK_POLLING_INTERVAL),
-              );
-              if (new Date().getTime() - start.getTime() > this.SSH_REQUEST_TIMEOUT) {
-                this.logService.error("[Ssh Agent] Timeout waiting for unlock");
-                this.toastService.showToast({
-                  variant: "error",
-                  title: null,
-                  message: this.i18nService.t("sshAgentUnlockTimeout"),
-                });
-                await ipc.platform.sshAgent.signRequestResponse(messageId, false);
-                return;
-              }
+            const unlocked = firstValueFrom(
+              this.authService
+                .authStatusFor$(activeAccountId)
+                .pipe(filter((status) => status === AuthenticationStatus.Unlocked)),
+            );
+            const timeout = new Promise((_, reject) =>
+              setTimeout(reject, this.SSH_VAULT_UNLOCK_REQUEST_TIMEOUT),
+            );
+
+            try {
+              await Promise.race([unlocked, timeout]);
+            } catch (error) {
+              this.logService.error(error);
+              this.logService.error("[Ssh Agent] Timeout waiting for unlock");
+              this.toastService.showToast({
+                variant: "error",
+                title: null,
+                message: this.i18nService.t("sshAgentUnlockTimeout"),
+              });
+              await ipc.platform.sshAgent.signRequestResponse(messageId, false);
+              return;
             }
           }
 
