@@ -9,10 +9,10 @@ import { SendView } from "@bitwarden/common/tools/send/models/view/send.view";
 import { SendFormConfig } from "../../abstractions/send-form-config.service";
 import { SendFormContainer } from "../../send-form-container";
 
-export interface BaseSendDetailsForm {
+export type BaseSendDetailsForm = FormGroup<{
   name: FormControl<string>;
   selectedDeletionDatePreset: FormControl<string | number>;
-}
+}>;
 
 // Value = hours
 export enum DatePreset {
@@ -36,9 +36,9 @@ export interface DatePresetSelectOption {
 })
 export class BaseSendDetailsComponent implements OnInit {
   @Input() config: SendFormConfig;
-  @Input() originalSendView: SendView;
+  @Input() originalSendView?: SendView;
 
-  sendDetailsForm: FormGroup<BaseSendDetailsForm>;
+  sendDetailsForm: BaseSendDetailsForm;
   customDeletionDateOption: DatePresetSelectOption | null = null;
   datePresetOptions: DatePresetSelectOption[] = [];
 
@@ -52,7 +52,7 @@ export class BaseSendDetailsComponent implements OnInit {
     this.sendDetailsForm = this.formBuilder.group({
       name: new FormControl("", Validators.required),
       selectedDeletionDatePreset: new FormControl(DatePreset.SevenDays || "", Validators.required),
-    }) as FormGroup<BaseSendDetailsForm>;
+    });
 
     this.sendDetailsForm.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       this.sendFormContainer.patchSend((send) => {

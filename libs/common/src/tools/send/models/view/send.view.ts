@@ -26,6 +26,7 @@ export class SendView implements View {
   password: string = null;
   disabled = false;
   hideEmail = false;
+  hideText = false;
 
   constructor(s?: Send) {
     if (!s) {
