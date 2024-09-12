@@ -182,13 +182,13 @@ pub mod sshagent {
 
     #[napi]
     pub enum SshKeyImportStatus {
-        // ssh key was parsed correctly and will be returned in the result
+        /// ssh key was parsed correctly and will be returned in the result
         Success,
-        // ssh key was parsed correctly but is encrypted and requires a password
+        /// ssh key was parsed correctly but is encrypted and requires a password
         PasswordRequired,
-        // ssh key was parsed correctly, and a password was provided when calling the import, but it was incorrect
+        /// ssh key was parsed correctly, and a password was provided when calling the import, but it was incorrect
         WrongPassword,
-        // ssh key could not be parsed, either due to an incorrect / unsupported format (pkcs#8) or key type (ecdsa), or because the input is not an ssh key
+        /// ssh key could not be parsed, either due to an incorrect / unsupported format (pkcs#8) or key type (ecdsa), or because the input is not an ssh key
         ParsingError,
     }
 
