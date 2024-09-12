@@ -9,6 +9,7 @@ import { ImportResult } from "../../models/import-result";
 import { BaseImporter } from "../base-importer";
 import { Importer } from "../importer";
 
+import { processNames } from "./protonpass-import-utils";
 import {
   ProtonPassCreditCardItemContent,
   ProtonPassIdentityItemContent,
@@ -104,31 +105,6 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
     });
   }
 
-  private processIdentityItemNames(
-    identity: IdentityView,
-    fullname: string | null,
-    firstname: string | null,
-    middlename: string | null,
-    lastname: string | null,
-  ) {
-    let mappedFirstName = firstname;
-    let mappedMiddleName = middlename;
-    let mappedLastName = lastname;
-
-    if (fullname) {
-      const parts = fullname.trim().split(/\s+/);
-
-      // Assign parts to first, middle, and last name based on the number of parts
-      mappedFirstName = parts[0] || firstname;
-      mappedLastName = parts.length > 1 ? parts[parts.length - 1] : lastname;
-      mappedMiddleName = parts.length > 2 ? parts.slice(1, -1).join(" ") : middlename;
-    }
-
-    identity.firstName = mappedFirstName;
-    identity.lastName = mappedLastName;
-    identity.middleName = mappedMiddleName;
-  }
-
   parse(data: string): Promise<ImportResult> {
     const result = new ImportResult();
     const results: ProtonPassJsonFile = JSON.parse(data);
@@ -210,13 +186,16 @@ export class ProtonPassJsonImporter extends BaseImporter implements Importer {
             cipher.type = CipherType.Identity;
             cipher.identity = new IdentityView();
 
-            this.processIdentityItemNames(
-              cipher.identity,
+            const { mappedFirstName, mappedMiddleName, mappedLastName } = processNames(
               this.getValueOrDefault(identityContent.fullName),
               this.getValueOrDefault(identityContent.firstName),
               this.getValueOrDefault(identityContent.middleName),
               this.getValueOrDefault(identityContent.lastName),
             );
+            cipher.identity.firstName = mappedFirstName;
+            cipher.identity.middleName = mappedMiddleName;
+            cipher.identity.lastName = mappedLastName;
+
             cipher.identity.email = this.getValueOrDefault(identityContent.email);
             cipher.identity.phone = this.getValueOrDefault(identityContent.phoneNumber);
             cipher.identity.company = this.getValueOrDefault(identityContent.company);
