@@ -50,10 +50,8 @@ export class SendTextDetailsComponent implements OnInit {
     private formBuilder: FormBuilder,
     protected sendFormContainer: SendFormContainer,
   ) {
-    // Subscribe to form value changes and update the parent SendView accordingly
     this.sendTextDetailsForm.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       this.sendFormContainer.patchSend((send) => {
-        // Update the send object with the form values
         return Object.assign(send, {
           text: {
             text: value.text,
@@ -65,7 +63,6 @@ export class SendTextDetailsComponent implements OnInit {
   }
 
   ngOnInit() {
-    // Define the nested form group for `text`
     this.baseSendTextDetailsForm = this.formBuilder.group({
       text: new FormControl("", Validators.required),
       hidden: new FormControl(false),
@@ -73,10 +70,8 @@ export class SendTextDetailsComponent implements OnInit {
 
     this.sendTextDetailsForm = Object.assign(this.baseSendTextDetailsForm, this.sendDetailsForm);
 
-    // Register this form with the parent form
     this.sendFormContainer.registerChildForm("sendTextDetailsForm", this.sendTextDetailsForm);
 
-    // If editing or cloning an existing SendView, populate the form
     if (this.originalSendView) {
       this.baseSendTextDetailsForm.patchValue({
         text: this.originalSendView.text?.text || "",

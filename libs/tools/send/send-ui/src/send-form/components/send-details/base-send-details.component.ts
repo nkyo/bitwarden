@@ -48,7 +48,6 @@ export class BaseSendDetailsComponent implements OnInit {
     protected i18nService: I18nService,
     protected datePipe: DatePipe,
   ) {
-    // Initialize the form
     this.sendDetailsForm = this.formBuilder.group({
       name: new FormControl("", Validators.required),
       selectedDeletionDatePreset: new FormControl(DatePreset.SevenDays || "", Validators.required),
