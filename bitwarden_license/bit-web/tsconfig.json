@@ -33,17 +33,13 @@
   },
   "files": [
     "../../apps/web/src/polyfills.ts",
-    "../../apps/web/src/main.ts",
     "../../apps/web/src/theme.ts",
 
-    "../../bitwarden_license/bit-web/src/main.ts"
+    "../../bitwarden_license/bit-web/src/main.ts",
+    "../../apps/web/src/main.ts" // Needed since we are using web's app.component
   ],
   "include": [
     "../../apps/web/src/connectors/*.ts",
-    "../../apps/web/src/**/*.stories.ts",
-    "../../apps/web/src/**/*.spec.ts",
-    "../../libs/common/src/platform/services/**/*.worker.ts",
-
-    "src/**/*.stories.ts"
+    "../../libs/common/src/platform/services/**/*.worker.ts"
   ]
 }
