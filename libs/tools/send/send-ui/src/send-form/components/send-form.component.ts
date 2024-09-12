@@ -35,7 +35,7 @@ import { SendFormConfig } from "../abstractions/send-form-config.service";
 import { SendFormService } from "../abstractions/send-form.service";
 import { SendForm, SendFormContainer } from "../send-form-container";
 
-import { SendTextDetailsComponent } from "./send-details/send-text-details.component";
+import { SendDetailsComponent } from "./send-details/send-details.component";
 
 @Component({
   selector: "tools-send-form",
@@ -57,7 +57,7 @@ import { SendTextDetailsComponent } from "./send-details/send-text-details.compo
     ReactiveFormsModule,
     SelectModule,
     NgIf,
-    SendTextDetailsComponent,
+    SendDetailsComponent,
   ],
 })
 export class SendFormComponent implements AfterViewInit, OnInit, OnChanges, SendFormContainer {

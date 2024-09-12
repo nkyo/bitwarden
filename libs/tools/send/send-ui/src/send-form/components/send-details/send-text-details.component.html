@@ -1,38 +1,9 @@
-<bit-section [formGroup]="sendTextDetailsForm">
-  <bit-section-header>
-    <h2 bitTypography="h5">{{ "sendDetails" | i18n }}</h2>
-  </bit-section-header>
-
-  <bit-card>
-    <bit-form-field>
-      <bit-label>{{ "name" | i18n }}</bit-label>
-      <input bitInput type="text" formControlName="name" />
-    </bit-form-field>
-
-    <bit-form-field>
-      <bit-label>{{ "sendTypeTextToShare" | i18n }}</bit-label>
-      <textarea bitInput id="text" rows="6" formControlName="textToShare"></textarea>
-      <bit-hint>{{ "sendTextDesc" | i18n }}</bit-hint>
-    </bit-form-field>
-    <bit-form-control>
-      <input bitCheckbox type="checkbox" formControlName="hideTextByDefault" />
-      <bit-label>{{ "hideTextByDefault" | i18n }}</bit-label>
-    </bit-form-control>
-
-    <bit-form-field>
-      <bit-label>{{ "deletionDate" | i18n }}</bit-label>
-      <bit-select
-        id="deletionDate"
-        name="SelectedDeletionDatePreset"
-        formControlName="selectedDeletionDatePreset"
-      >
-        <bit-option
-          *ngFor="let o of datePresetOptions"
-          [value]="o.value"
-          [label]="o.name"
-        ></bit-option>
-      </bit-select>
-      <bit-hint>{{ "deletionDateDescV2" | i18n }}</bit-hint>
-    </bit-form-field>
-  </bit-card>
-</bit-section>
+<bit-form-field>
+  <bit-label>{{ "sendTypeTextToShare" | i18n }}</bit-label>
+  <textarea bitInput id="text" rows="6" formControlName="textToShare"></textarea>
+  <bit-hint>{{ "sendTextDesc" | i18n }}</bit-hint>
+</bit-form-field>
+<bit-form-control>
+  <input bitCheckbox type="checkbox" formControlName="hideTextByDefault" />
+  <bit-label>{{ "hideTextByDefault" | i18n }}</bit-label>
+</bit-form-control>
