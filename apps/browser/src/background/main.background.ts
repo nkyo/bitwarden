@@ -609,8 +609,6 @@ export default class MainBackground {
       migrationRunner,
     );
 
-    this.themeStateService = new DefaultThemeStateService(this.globalStateProvider);
-
     this.masterPasswordService = new MasterPasswordService(
       this.stateProvider,
       this.stateService,
@@ -782,6 +780,11 @@ export default class MainBackground {
       this.logService,
       this.stateProvider,
       this.authService,
+    );
+
+    this.themeStateService = new DefaultThemeStateService(
+      this.globalStateProvider,
+      this.configService,
     );
 
     this.bulkEncryptService = new FallbackBulkEncryptService(this.encryptService);
