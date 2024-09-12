@@ -11,8 +11,7 @@ import {
   TypographyModule,
   IconButtonModule,
 } from "@bitwarden/components";
-
-import { TotpCaptureService } from "../../cipher-form";
+import { TotpCaptureService } from "@bitwarden/vault";
 
 @Component({
   selector: "app-autofill-options-view",
