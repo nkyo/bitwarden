@@ -165,6 +165,11 @@ pub mod sshagent {
     use ssh_key::{rand_core::SeedableRng, Algorithm, HashAlg, LineEnding};
     use tokio::{self, sync::Mutex};
 
+    #[napi]
+    pub struct SshAgentState {
+        state: desktop_core::ssh_agent::BitwardenDesktopAgent,
+    }
+
     #[napi(object)]
     pub struct PrivateKey {
         pub private_key: String,
@@ -180,9 +185,15 @@ pub mod sshagent {
         pub key_fingerprint: String,
     }
 
-    #[napi]
-    pub struct SshAgentState {
-        state: desktop_core::ssh_agent::BitwardenDesktopAgent,
+    impl From<desktop_core::ssh_agent::importer::SshKey> for SshKey {
+        fn from(key: desktop_core::ssh_agent::importer::SshKey) -> Self {
+            SshKey {
+                private_key: key.private_key,
+                public_key: key.public_key,
+                key_algorithm: key.key_algorithm,
+                key_fingerprint: key.key_fingerprint,
+            }
+        }
     }
 
     #[napi]
@@ -197,10 +208,38 @@ pub mod sshagent {
         ParsingError,
     }
 
+    impl From<desktop_core::ssh_agent::importer::SshKeyImportStatus> for SshKeyImportStatus {
+        fn from(status: desktop_core::ssh_agent::importer::SshKeyImportStatus) -> Self {
+            match status {
+                desktop_core::ssh_agent::importer::SshKeyImportStatus::Success => {
+                    SshKeyImportStatus::Success
+                }
+                desktop_core::ssh_agent::importer::SshKeyImportStatus::PasswordRequired => {
+                    SshKeyImportStatus::PasswordRequired
+                }
+                desktop_core::ssh_agent::importer::SshKeyImportStatus::WrongPassword => {
+                    SshKeyImportStatus::WrongPassword
+                }
+                desktop_core::ssh_agent::importer::SshKeyImportStatus::ParsingError => {
+                    SshKeyImportStatus::ParsingError
+                }
+            }
+        }
+    }
+
     #[napi(object)]
     pub struct SshKeyImportResult {
         pub status: SshKeyImportStatus,
         pub ssh_key: Option<SshKey>,
+    }
+
+    impl From<desktop_core::ssh_agent::importer::SshKeyImportResult> for SshKeyImportResult {
+        fn from(result: desktop_core::ssh_agent::importer::SshKeyImportResult) -> Self {
+            SshKeyImportResult {
+                status: result.status.into(),
+                ssh_key: result.ssh_key.map(|k| k.into()),
+            }
+        }
     }
 
     #[napi]
@@ -276,110 +315,17 @@ pub mod sshagent {
 
     #[napi]
     pub fn import_key(encoded_key: String, password: String) -> napi::Result<SshKeyImportResult> {
-        let private_key = ssh_key::private::PrivateKey::from_openssh(&encoded_key);
-        let private_key = match private_key {
-            Ok(k) => k,
-            Err(_) => {
-                return Ok(SshKeyImportResult {
-                    status: SshKeyImportStatus::ParsingError,
-                    ssh_key: None,
-                });
-            }
-        };
-
-        if private_key.is_encrypted() && password.is_empty() {
-            return Ok(SshKeyImportResult {
-                status: SshKeyImportStatus::PasswordRequired,
-                ssh_key: None,
-            });
-        }
-        let private_key = if private_key.is_encrypted() {
-            match private_key.decrypt(password.as_bytes()) {
-                Ok(k) => k,
-                Err(_) => {
-                    return Ok(SshKeyImportResult {
-                        status: SshKeyImportStatus::WrongPassword,
-                        ssh_key: None,
-                    });
-                }
-            }
-        } else {
-            private_key
-        };
-        let public_key = private_key.public_key();
-        let public_key_base64 = public_key.to_string();
-        let private_key_openssh = private_key
-            .to_openssh(LineEnding::LF)
-            .or_else(|e| Err(napi::Error::from_reason(e.to_string())))?;
-        let private_key_openssh_string = private_key_openssh.to_string();
-        let fingerprint = private_key.fingerprint(HashAlg::Sha256);
-        let fingerprint_string = fingerprint.to_string();
-        Ok(SshKeyImportResult {
-            status: SshKeyImportStatus::Success,
-            ssh_key: Some(SshKey {
-                private_key: private_key_openssh_string,
-                public_key: public_key_base64,
-                key_algorithm: private_key.algorithm().to_string(),
-                key_fingerprint: fingerprint_string,
-            }),
-        })
+        let result = desktop_core::ssh_agent::importer::import_key(encoded_key, password)
+            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        Ok(result.into())
     }
 
     #[napi]
     pub async fn generate_keypair(key_algorithm: String) -> napi::Result<SshKey> {
-        // sourced from cryptographically secure entropy source, with sources for all targets: https://docs.rs/getrandom
-        // if it cannot be securely sourced, this will panic instead of leading to a weak key
-        let mut rng: ChaCha8Rng = ChaCha8Rng::from_entropy();
-
-        let key = match key_algorithm.as_str() {
-            "ed25519" => ssh_key::PrivateKey::random(&mut rng, Algorithm::Ed25519)
-                .or_else(|e| Err(napi::Error::from_reason(e.to_string()))),
-            "rsa2048" | "rsa3072" | "rsa4096" => {
-                let bits = match key_algorithm.as_str() {
-                    "rsa2048" => 2048,
-                    "rsa3072" => 3072,
-                    "rsa4096" => 4096,
-                    _ => Err(napi::Error::from_reason(
-                        "Unsupported RSA key size".to_string(),
-                    ))?,
-                };
-                let rsa_keypair: Result<ssh_key::private::RsaKeypair, Error> =
-                    ssh_key::private::RsaKeypair::random(&mut rng, bits)
-                        .or_else(|e| Err(napi::Error::from_reason(e.to_string()))?);
-                let rsa_keypair = rsa_keypair?;
-                let private_key = ssh_key::PrivateKey::new(
-                    ssh_key::private::KeypairData::from(rsa_keypair),
-                    "".to_string(),
-                )
-                .or_else(|e| Err(napi::Error::from_reason(e.to_string())));
-                private_key
-            }
-            _ => {
-                return Err(napi::Error::from_reason(
-                    "Unsupported key algorithm".to_string(),
-                ))
-            }
-        };
-
-        match key {
-            Ok(key) => {
-                let public_key = key.public_key();
-                let public_key_base64 = public_key.to_string();
-                let private_key_openssh = key
-                    .to_openssh(LineEnding::LF)
-                    .or_else(|e| Err(napi::Error::from_reason(e.to_string())))?;
-                let private_key_openssh_string = private_key_openssh.to_string();
-                let fingerprint = key.fingerprint(HashAlg::Sha256);
-                let fingerprint_string = fingerprint.to_string();
-                Ok(SshKey {
-                    private_key: private_key_openssh_string,
-                    public_key: public_key_base64,
-                    key_algorithm: key_algorithm.to_string(),
-                    key_fingerprint: fingerprint_string,
-                })
-            }
-            Err(e) => Err(napi::Error::from_reason(e.to_string())),
-        }
+        desktop_core::ssh_agent::generator::generate_keypair(key_algorithm)
+            .await
+            .map_err(|e| napi::Error::from_reason(e.to_string()))
+            .map(|k| k.into())
     }
 }
 

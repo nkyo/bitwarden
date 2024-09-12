@@ -1,10 +1,12 @@
-use std::{collections::HashMap, sync::{Arc, RwLock}};
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 
 use bitwarden_russh::ssh_agent;
 use homedir::my_home;
-use tokio_util::sync::CancellationToken;
 use tokio::{net::UnixListener, sync::Mutex};
-
+use tokio_util::sync::CancellationToken;
 
 use super::BitwardenDesktopAgent;
 
@@ -36,7 +38,7 @@ impl BitwardenDesktopAgent {
                         .join(".bitwarden-ssh-agent.sock")
                         .to_str()
                         .expect("Path should be valid")
-                        .to_string()
+                        .to_owned()
                 }
             };
 

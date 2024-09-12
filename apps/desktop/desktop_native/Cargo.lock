@@ -668,6 +668,7 @@ dependencies = [
  "libsecret",
  "pin-project",
  "rand",
+ "rand_chacha",
  "retry",
  "russh-cryptovec",
  "scopeguard",

@@ -2,9 +2,12 @@ use async_stream::stream;
 use futures::stream::{Stream, StreamExt};
 pub mod namedpipelistenerstream;
 
-use std::{collections::HashMap, sync::{Arc, RwLock}};
-use tokio_util::sync::CancellationToken;
+use std::{
+    collections::HashMap,
+    sync::{Arc, RwLock},
+};
 use tokio::{net::UnixListener, sync::Mutex};
+use tokio_util::sync::CancellationToken;
 
 impl BitwardenDesktopAgent {
     pub async fn start_server(
