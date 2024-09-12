@@ -176,6 +176,7 @@ export class AppComponent implements OnDestroy, OnInit {
             break;
           }
           case "premiumRequired": {
+            // console.log("premiumRequired called from app.component.ts");
             const premiumConfirmed = await this.dialogService.openSimpleDialog({
               title: { key: "premiumRequired" },
               content: { key: "premiumRequiredDesc" },

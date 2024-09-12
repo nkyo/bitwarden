@@ -1,12 +1,11 @@
 import { CommonModule, DatePipe } from "@angular/common";
 import { Component, inject, Input } from "@angular/core";
-import { Router } from "@angular/router";
 import { Observable, shareReplay } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
+import { PremiumUpgradeService } from "@bitwarden/common/billing/abstractions/organizations/premium-upgrade.service.abstraction";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
-import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
   CardComponent,
@@ -60,9 +59,8 @@ export class LoginCredentialsViewComponent {
 
   constructor(
     private billingAccountProfileStateService: BillingAccountProfileStateService,
-    private router: Router,
     private i18nService: I18nService,
-    protected messagingService: MessagingService,
+    private premiumUpgradeService: PremiumUpgradeService,
   ) {}
 
   get fido2CredentialCreationDateValue(): string {
@@ -75,17 +73,9 @@ export class LoginCredentialsViewComponent {
   }
 
   async getPremium() {
-    /**
-     * Use the messaging service to trigger the upgrade organization dialog in the web vault.
-     */
-    this.messagingService.send("upgradeOrganization", {
-      organizationId: this.cipher.organizationId,
-    });
-
-    /**
-     * Use the router to trigger the upgrade organization overlay in the browser extension.
-     */
-    await this.router.navigate(["/premium"]);
+    // console.log("getPremium LoginCredentialsViewComponent");
+    // console.log(this.premiumUpgradeService);
+    await this.premiumUpgradeService.getPremium();
   }
 
   pwToggleValue(evt: boolean) {
