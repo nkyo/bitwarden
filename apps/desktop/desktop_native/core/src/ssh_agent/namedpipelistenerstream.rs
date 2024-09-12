@@ -1,7 +1,14 @@
-use std::{io, pin::Pin, task::{Context, Poll}};
+use std::{
+    io,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
 use futures::Stream;
-use tokio::{net::windows::named_pipe::{NamedPipeServer, ServerOptions}, select};
+use tokio::{
+    net::windows::named_pipe::{NamedPipeServer, ServerOptions},
+    select,
+};
 use tokio_util::sync::CancellationToken;
 
 const PIPE_NAME: &str = r"\\.\pipe\openssh-ssh-agent";
@@ -15,7 +22,10 @@ impl NamedPipeServerStream {
     pub fn new(cancellation_token: CancellationToken) -> Self {
         let (tx, rx) = tokio::sync::mpsc::channel(16);
         tokio::spawn(async move {
-            println!("[SSH Agent Native Module] Creating named pipe server on {}", PIPE_NAME);
+            println!(
+                "[SSH Agent Native Module] Creating named pipe server on {}",
+                PIPE_NAME
+            );
             let mut listener = ServerOptions::new().create(PIPE_NAME).unwrap();
             loop {
                 println!("[SSH Agent Native Module] Waiting for connection");
@@ -32,9 +42,7 @@ impl NamedPipeServerStream {
                 }
             }
         });
-        Self {
-            rx,
-        }
+        Self { rx }
     }
 }
 

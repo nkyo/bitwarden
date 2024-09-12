@@ -12,17 +12,17 @@ use std::sync::RwLock;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
+use bitwarden_russh::encoding;
 use bitwarden_russh::msg;
 use bitwarden_russh::ssh_agent;
-use bitwarden_russh::encoding;
 
 #[cfg(windows)]
 pub mod namedpipelistenerstream;
 
 #[cfg(unix)]
-use tokio::net::UnixListener;
-#[cfg(unix)]
 use homedir::my_home;
+#[cfg(unix)]
+use tokio::net::UnixListener;
 
 #[derive(Clone)]
 pub struct BitwardenDesktopAgent {
@@ -32,19 +32,20 @@ pub struct BitwardenDesktopAgent {
     get_ui_response_rx: Arc<Mutex<tokio::sync::mpsc::Receiver<bool>>>,
 }
 
-
 impl ssh_agent::Agent for BitwardenDesktopAgent {
     async fn confirm(&self, ssh_key: Key) -> bool {
         // make sure we will recv our response by locking the channel
         let mut rx_channel = self.get_ui_response_rx.lock().await;
-        self.show_ui_request_tx.send(ssh_key.cipher_uuid).await.unwrap();
+        self.show_ui_request_tx
+            .send(ssh_key.cipher_uuid)
+            .await
+            .unwrap();
         let res = rx_channel.recv().await.unwrap();
         res
     }
 }
 
 impl BitwardenDesktopAgent {
-
     #[cfg(unix)]
     pub async fn start_server(
         auth_request_tx: tokio::sync::mpsc::Sender<String>,
@@ -63,14 +64,21 @@ impl BitwardenDesktopAgent {
                 Ok(path) => path,
                 Err(_) => {
                     println!("[SSH Agent Native Module] BITWARDEN_SSH_AUTH_SOCK not set, using default path");
-                    my_home().unwrap().ok_or(Error::msg("Could not determine home directory")).unwrap()
+                    my_home()
+                        .unwrap()
+                        .ok_or(Error::msg("Could not determine home directory"))
+                        .unwrap()
                         .join(".bitwarden-ssh-agent.sock")
                         .to_str()
-                        .ok_or(Error::msg("Could not determine home directory")).unwrap()
+                        .ok_or(Error::msg("Could not determine home directory"))
+                        .unwrap()
                         .to_string()
                 }
             };
-            println!("[SSH Agent Native Module] Starting SSH Agent server on {:?}", ssh_path);
+            println!(
+                "[SSH Agent Native Module] Starting SSH Agent server on {:?}",
+                ssh_path
+            );
             let sockname = std::path::Path::new(&ssh_path);
             let _ = std::fs::remove_file(sockname);
             match UnixListener::bind(sockname) {
@@ -82,13 +90,16 @@ impl BitwardenDesktopAgent {
                         wrapper,
                         cloned_agent_state,
                         cloned_keystore,
-                        cloned_cancellation_token
+                        cloned_cancellation_token,
                     )
                     .await;
                     println!("[SSH Agent Native Module] SSH Agent server exited");
                 }
                 Err(e) => {
-                    eprintln!("[SSH Agent Native Module] Error while starting agent server: {}", e);
+                    eprintln!(
+                        "[SSH Agent Native Module] Error while starting agent server: {}",
+                        e
+                    );
                 }
             }
         });
@@ -112,7 +123,9 @@ impl BitwardenDesktopAgent {
             get_ui_response_rx: auth_response_rx,
             cancellation_token: CancellationToken::new(),
         };
-        let stream = namedpipelistenerstream::NamedPipeServerStream::new(agent_state.cancellation_token.clone());
+        let stream = namedpipelistenerstream::NamedPipeServerStream::new(
+            agent_state.cancellation_token.clone(),
+        );
 
         let cloned_agent_state = agent_state.clone();
         tokio::spawn(async move {
@@ -121,14 +134,16 @@ impl BitwardenDesktopAgent {
                 cloned_agent_state.clone(),
                 cloned_agent_state.keystore.clone(),
                 cloned_agent_state.cancellation_token.clone(),
-            ).await;
+            )
+            .await;
         });
         Ok(agent_state)
     }
 
     pub fn set_keys(
         &mut self,
-        new_keys: Vec<(String, String, String)>) -> Result<(), anyhow::Error> {
+        new_keys: Vec<(String, String, String)>,
+    ) -> Result<(), anyhow::Error> {
         let keystore = &mut self.keystore;
         keystore.0.write().unwrap().clear();
 
@@ -156,20 +171,26 @@ impl BitwardenDesktopAgent {
 
     pub fn lock(&mut self) -> Result<(), anyhow::Error> {
         let keystore = &mut self.keystore;
-        keystore.0.write().unwrap().iter_mut().for_each(|(_public_key, key)| {
-            key.private_key = None;
-        });
+        keystore
+            .0
+            .write()
+            .unwrap()
+            .iter_mut()
+            .for_each(|(_public_key, key)| {
+                key.private_key = None;
+            });
         Ok(())
     }
 }
 
 fn parse_key_safe(pem: &str) -> Result<ssh_key::private::PrivateKey, anyhow::Error> {
     match ssh_key::private::PrivateKey::from_openssh(pem) {
-        Ok(key) => {
-            match key.public_key().to_bytes() {
-                Ok(_) => Ok(key),
-                Err(e) => Err(anyhow::Error::msg(format!("Failed to parse public key: {}", e))),
-            }
+        Ok(key) => match key.public_key().to_bytes() {
+            Ok(_) => Ok(key),
+            Err(e) => Err(anyhow::Error::msg(format!(
+                "Failed to parse public key: {}",
+                e
+            ))),
         },
         Err(e) => Err(anyhow::Error::msg(format!("Failed to parse key: {}", e))),
     }

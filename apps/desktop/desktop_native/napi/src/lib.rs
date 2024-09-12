@@ -51,12 +51,16 @@ pub mod biometrics {
         hwnd: napi::bindgen_prelude::Buffer,
         message: String,
     ) -> napi::Result<bool> {
-        Biometric::prompt(hwnd.into(), message).await.map_err(|e| napi::Error::from_reason(e.to_string()))
+        Biometric::prompt(hwnd.into(), message)
+            .await
+            .map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
     #[napi]
     pub async fn available() -> napi::Result<bool> {
-        Biometric::available().await.map_err(|e| napi::Error::from_reason(e.to_string()))
+        Biometric::available()
+            .await
+            .map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
     #[napi]
@@ -154,7 +158,8 @@ pub mod sshagent {
 
     use napi::{
         bindgen_prelude::Promise,
-        threadsafe_function::{ErrorStrategy::CalleeHandled, ThreadsafeFunction}, Error,
+        threadsafe_function::{ErrorStrategy::CalleeHandled, ThreadsafeFunction},
+        Error,
     };
     use rand_chacha::ChaCha8Rng;
     use ssh_key::{rand_core::SeedableRng, Algorithm, HashAlg, LineEnding};
@@ -199,22 +204,23 @@ pub mod sshagent {
     }
 
     #[napi]
-    pub async fn serve(callback: ThreadsafeFunction<String, CalleeHandled>) -> napi::Result<SshAgentState> {
+    pub async fn serve(
+        callback: ThreadsafeFunction<String, CalleeHandled>,
+    ) -> napi::Result<SshAgentState> {
         let (auth_request_tx, mut auth_request_rx) = tokio::sync::mpsc::channel::<String>(32);
         let (auth_response_tx, auth_response_rx) = tokio::sync::mpsc::channel::<bool>(32);
         tokio::spawn(async move {
             while let Some(message) = auth_request_rx.recv().await {
-                let promise_result: Result<Promise<bool>, napi::Error> = callback.call_async(Ok(message)).await;
+                let promise_result: Result<Promise<bool>, napi::Error> =
+                    callback.call_async(Ok(message)).await;
                 match promise_result {
-                    Ok(promise_result) => {
-                        match promise_result.await {
-                            Ok(result) => {
-                                let _ = auth_response_tx.send(result).await;
-                            },
-                            Err(e) => {
-                                println!("[SSH Agent Native Module] calling UI callback promise was rejected: {}", e);
-                                let _ = auth_response_tx.send(false).await;
-                            }
+                    Ok(promise_result) => match promise_result.await {
+                        Ok(result) => {
+                            let _ = auth_response_tx.send(result).await;
+                        }
+                        Err(e) => {
+                            println!("[SSH Agent Native Module] calling UI callback promise was rejected: {}", e);
+                            let _ = auth_response_tx.send(false).await;
                         }
                     },
                     Err(e) => {
@@ -225,15 +231,14 @@ pub mod sshagent {
             }
         });
 
-        match  desktop_core::ssh_agent::BitwardenDesktopAgent::start_server(auth_request_tx, Arc::new(Mutex::new(auth_response_rx))).await {
-            Ok(state) => {
-                Ok(SshAgentState {
-                    state
-                })
-            },
-            Err(e) => {
-                Err(napi::Error::from_reason(e.to_string()))
-            }
+        match desktop_core::ssh_agent::BitwardenDesktopAgent::start_server(
+            auth_request_tx,
+            Arc::new(Mutex::new(auth_response_rx)),
+        )
+        .await
+        {
+            Ok(state) => Ok(SshAgentState { state }),
+            Err(e) => Err(napi::Error::from_reason(e.to_string())),
         }
     }
 
@@ -247,22 +252,26 @@ pub mod sshagent {
     #[napi]
     pub fn set_keys(
         agent_state: &mut SshAgentState,
-        new_keys: Vec<PrivateKey>) -> napi::Result<()> {
+        new_keys: Vec<PrivateKey>,
+    ) -> napi::Result<()> {
         let bitwarden_agent_state = &mut agent_state.state;
-        bitwarden_agent_state.set_keys(
-            new_keys
-                .iter()
-                .map(|k| (k.private_key.clone(), k.name.clone(), k.cipher_id.clone()))
-                .collect(),
-        )
-        .map_err(|e| napi::Error::from_reason(e.to_string()))?;
+        bitwarden_agent_state
+            .set_keys(
+                new_keys
+                    .iter()
+                    .map(|k| (k.private_key.clone(), k.name.clone(), k.cipher_id.clone()))
+                    .collect(),
+            )
+            .map_err(|e| napi::Error::from_reason(e.to_string()))?;
         Ok(())
     }
 
     #[napi]
     pub fn lock(agent_state: &mut SshAgentState) -> napi::Result<()> {
         let bitwarden_agent_state = &mut agent_state.state;
-        bitwarden_agent_state.lock().map_err(|e| napi::Error::from_reason(e.to_string()))
+        bitwarden_agent_state
+            .lock()
+            .map_err(|e| napi::Error::from_reason(e.to_string()))
     }
 
     #[napi]
@@ -299,7 +308,9 @@ pub mod sshagent {
         };
         let public_key = private_key.public_key();
         let public_key_base64 = public_key.to_string();
-        let private_key_openssh = private_key.to_openssh(LineEnding::LF).or_else(|e| Err(napi::Error::from_reason(e.to_string())))?;
+        let private_key_openssh = private_key
+            .to_openssh(LineEnding::LF)
+            .or_else(|e| Err(napi::Error::from_reason(e.to_string())))?;
         let private_key_openssh_string = private_key_openssh.to_string();
         let fingerprint = private_key.fingerprint(HashAlg::Sha256);
         let fingerprint_string = fingerprint.to_string();
@@ -321,17 +332,26 @@ pub mod sshagent {
         let mut rng: ChaCha8Rng = ChaCha8Rng::from_entropy();
 
         let key = match key_algorithm.as_str() {
-            "ed25519" => ssh_key::PrivateKey::random(&mut rng, Algorithm::Ed25519).or_else(|e| Err(napi::Error::from_reason(e.to_string()))),
+            "ed25519" => ssh_key::PrivateKey::random(&mut rng, Algorithm::Ed25519)
+                .or_else(|e| Err(napi::Error::from_reason(e.to_string()))),
             "rsa2048" | "rsa3072" | "rsa4096" => {
                 let bits = match key_algorithm.as_str() {
                     "rsa2048" => 2048,
                     "rsa3072" => 3072,
                     "rsa4096" => 4096,
-                    _ => Err(napi::Error::from_reason("Unsupported RSA key size".to_string()))?,
+                    _ => Err(napi::Error::from_reason(
+                        "Unsupported RSA key size".to_string(),
+                    ))?,
                 };
-                let rsa_keypair: Result<ssh_key::private::RsaKeypair, Error> = ssh_key::private::RsaKeypair::random(&mut rng, bits).or_else(|e| Err(napi::Error::from_reason(e.to_string()))?);
+                let rsa_keypair: Result<ssh_key::private::RsaKeypair, Error> =
+                    ssh_key::private::RsaKeypair::random(&mut rng, bits)
+                        .or_else(|e| Err(napi::Error::from_reason(e.to_string()))?);
                 let rsa_keypair = rsa_keypair?;
-                let private_key = ssh_key::PrivateKey::new(ssh_key::private::KeypairData::from(rsa_keypair), "".to_string()).or_else(|e| Err(napi::Error::from_reason(e.to_string())));
+                let private_key = ssh_key::PrivateKey::new(
+                    ssh_key::private::KeypairData::from(rsa_keypair),
+                    "".to_string(),
+                )
+                .or_else(|e| Err(napi::Error::from_reason(e.to_string())));
                 private_key
             }
             _ => {
@@ -345,7 +365,9 @@ pub mod sshagent {
             Ok(key) => {
                 let public_key = key.public_key();
                 let public_key_base64 = public_key.to_string();
-                let private_key_openssh = key.to_openssh(LineEnding::LF).or_else(|e| Err(napi::Error::from_reason(e.to_string())))?;
+                let private_key_openssh = key
+                    .to_openssh(LineEnding::LF)
+                    .or_else(|e| Err(napi::Error::from_reason(e.to_string())))?;
                 let private_key_openssh_string = private_key_openssh.to_string();
                 let fingerprint = key.fingerprint(HashAlg::Sha256);
                 let fingerprint_string = fingerprint.to_string();
@@ -355,11 +377,10 @@ pub mod sshagent {
                     key_algorithm: key_algorithm.to_string(),
                     key_fingerprint: fingerprint_string,
                 })
-            },
+            }
             Err(e) => Err(napi::Error::from_reason(e.to_string())),
         }
     }
-
 }
 
 #[napi]
