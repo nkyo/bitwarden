@@ -703,9 +703,23 @@ export class VaultComponent implements OnInit, OnDestroy {
       folderId: this.activeFilter.folderId,
     };
 
-    return openAddEditCipherDialog(this.dialogService, {
+    // Open the dialog.
+    const dialogRef = openAddEditCipherDialog(this.dialogService, {
       data: cipherFormConfig,
     });
+
+    // Wait for the dialog to close.
+    const result: AddEditCipherDialogCloseResult = await lastValueFrom(dialogRef.closed);
+
+    // Refresh the vault to show the new cipher.
+    if (result?.action === AddEditCipherDialogResult.Added) {
+      this.refresh();
+      this.go({ itemId: result.id, action: "view" });
+      return;
+    }
+
+    // If the dialog was closed by any other action navigate back to the vault.
+    this.go({ cipherId: null, itemId: null, action: null });
   }
 
   async navigateToCipher(cipher: CipherView) {
@@ -782,15 +796,36 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     const result: AddEditCipherDialogCloseResult = await firstValueFrom(dialogRef.closed);
 
+    /**
+     * Refresh the vault if the dialog was closed by adding, editing, or deleting a cipher.
+     */
     if (
-      result.action === AddEditCipherDialogResult.Added ||
-      result.action === AddEditCipherDialogResult.Edited ||
-      result.action === AddEditCipherDialogResult.Deleted
+      result?.action === AddEditCipherDialogResult.Edited ||
+      result?.action === AddEditCipherDialogResult.Deleted
     ) {
       this.refresh();
     }
 
-    this.go({ cipherId: null, itemId: null });
+    /**
+     * View the cipher if the dialog was closed by editing the cipher.
+     */
+    if (result?.action === AddEditCipherDialogResult.Edited) {
+      this.go({ itemId: cipher.id, action: "view" });
+      return;
+    }
+
+    /**
+     * Navigate to the vault if the dialog was closed by deleting the cipher.
+     */
+    if (result?.action === AddEditCipherDialogResult.Deleted) {
+      this.go({ cipherId: null, itemId: null, action: null });
+      return;
+    }
+
+    /**
+     * Navigate to the vault if the dialog was closed by any other action.
+     */
+    this.go({ cipherId: null, itemId: null, action: null });
   }
 
   /**

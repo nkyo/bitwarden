@@ -7,6 +7,7 @@ import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abs
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherId } from "@bitwarden/common/types/guid";
 import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
+import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { AsyncActionsModule, DialogModule, DialogService, ItemModule } from "@bitwarden/components";
 import {
   CipherAttachmentsComponent,
@@ -36,7 +37,14 @@ export enum AddEditCipherDialogResult {
  * The close result of the AddEditCipherDialogV2 component.
  */
 export interface AddEditCipherDialogCloseResult {
+  /**
+   * The action that was taken.
+   */
   action: AddEditCipherDialogResult;
+  /**
+   * The ID of the cipher that was edited, added, or deleted.
+   */
+  id?: CipherId;
 }
 
 /**
@@ -139,6 +147,20 @@ export class AddEditComponentV2 implements OnInit {
         },
       },
     );
+  }
+
+  /**
+   * Handles the event when a cipher is saved.
+   * @param cipherView The cipher view that was saved.
+   */
+  async onCipherSaved(cipherView: CipherView) {
+    this.dialogRef.close({
+      action:
+        this.config.mode === "add"
+          ? AddEditCipherDialogResult.Added
+          : AddEditCipherDialogResult.Edited,
+      id: cipherView.id as CipherId,
+    });
   }
 }
 
