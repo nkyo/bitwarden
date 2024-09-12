@@ -30,8 +30,7 @@ impl BitwardenDesktopAgent {
 
                     let ssh_agent_directory = match my_home() {
                         Ok(Some(home)) => home,
-                        Ok(None) => PathBuf::from("/tmp/"),
-                        Err(_) => PathBuf::from("/tmp/"),
+                        _ => PathBuf::from("/tmp/"),
                     };
                     ssh_agent_directory
                         .join(".bitwarden-ssh-agent.sock")
