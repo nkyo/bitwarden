@@ -91,7 +91,9 @@ export type DynamicStateConstraints<State> = {
   /** Creates constraints with data derived from the input state
    *  @param state the state from which the constraints are initialized.
    *  @remarks this is useful for calculating constraints that
-   *   depend upon values from the input state.
+   *   depend upon values from the input state. You should not send these
+   *   constraints to the UI, because that would prevent the UI from
+   *   offering less restrictive constraints.
    */
   calibrate: (state: State) => StateConstraints<State>;
 };

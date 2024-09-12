@@ -1,5 +1,6 @@
 import { DefaultPasswordBoundaries, DefaultPasswordGenerationOptions, Policies } from "../data";
 
+import { AtLeastOne } from "./constraints";
 import { DynamicPasswordPolicyConstraints } from "./dynamic-password-policy-constraints";
 
 describe("DynamicPasswordPolicyConstraints", () => {
@@ -115,7 +116,25 @@ describe("DynamicPasswordPolicyConstraints", () => {
       expect(calibrated.constraints.special).toEqual(dynamic.constraints.special);
     });
 
-    it("outputs the minLowercase constraint when the state's lowercase flag is true", () => {
+    it.each([[true], [false], [undefined]])(
+      "outputs at least 1 constraint when the state's lowercase flag is true and useLowercase is %p",
+      (useLowercase) => {
+        const dynamic = new DynamicPasswordPolicyConstraints({
+          ...Policies.Password.disabledValue,
+          useLowercase,
+        });
+        const state = {
+          ...DefaultPasswordGenerationOptions,
+          lowercase: true,
+        };
+
+        const calibrated = dynamic.calibrate(state);
+
+        expect(calibrated.constraints.minLowercase).toEqual(AtLeastOne);
+      },
+    );
+
+    it("outputs the `minLowercase` constraint when the state's lowercase flag is true and policy is disabled", () => {
       const dynamic = new DynamicPasswordPolicyConstraints(Policies.Password.disabledValue);
       const state = {
         ...DefaultPasswordGenerationOptions,
@@ -124,7 +143,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
 
       const calibrated = dynamic.calibrate(state);
 
-      expect(calibrated.constraints.minLowercase).toEqual(dynamic.constraints.minLowercase);
+      expect(calibrated.constraints.minLowercase).toEqual(AtLeastOne);
     });
 
     it("disables the minLowercase constraint when the state's lowercase flag is false", () => {
@@ -139,17 +158,23 @@ describe("DynamicPasswordPolicyConstraints", () => {
       expect(calibrated.constraints.minLowercase).toBeUndefined();
     });
 
-    it("outputs the minUppercase constraint when the state's uppercase flag is true", () => {
-      const dynamic = new DynamicPasswordPolicyConstraints(Policies.Password.disabledValue);
-      const state = {
-        ...DefaultPasswordGenerationOptions,
-        uppercase: true,
-      };
+    it.each([[true], [false], [undefined]])(
+      "outputs at least 1 constraint when the state's uppercase flag is true and useUppercase is %p",
+      (useUppercase) => {
+        const dynamic = new DynamicPasswordPolicyConstraints({
+          ...Policies.Password.disabledValue,
+          useUppercase,
+        });
+        const state = {
+          ...DefaultPasswordGenerationOptions,
+          uppercase: true,
+        };
 
-      const calibrated = dynamic.calibrate(state);
+        const calibrated = dynamic.calibrate(state);
 
-      expect(calibrated.constraints.minUppercase).toEqual(dynamic.constraints.minUppercase);
-    });
+        expect(calibrated.constraints.minUppercase).toEqual(AtLeastOne);
+      },
+    );
 
     it("disables the minUppercase constraint when the state's uppercase flag is false", () => {
       const dynamic = new DynamicPasswordPolicyConstraints(Policies.Password.disabledValue);
