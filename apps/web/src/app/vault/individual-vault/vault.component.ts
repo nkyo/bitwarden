@@ -799,10 +799,7 @@ export class VaultComponent implements OnInit, OnDestroy {
     /**
      * Refresh the vault if the dialog was closed by adding, editing, or deleting a cipher.
      */
-    if (
-      result?.action === AddEditCipherDialogResult.Edited ||
-      result?.action === AddEditCipherDialogResult.Deleted
-    ) {
+    if (result?.action === AddEditCipherDialogResult.Edited) {
       this.refresh();
     }
 
@@ -811,14 +808,6 @@ export class VaultComponent implements OnInit, OnDestroy {
      */
     if (result?.action === AddEditCipherDialogResult.Edited) {
       this.go({ itemId: cipher.id, action: "view" });
-      return;
-    }
-
-    /**
-     * Navigate to the vault if the dialog was closed by deleting the cipher.
-     */
-    if (result?.action === AddEditCipherDialogResult.Deleted) {
-      this.go({ cipherId: null, itemId: null, action: null });
       return;
     }
 
@@ -873,8 +862,9 @@ export class VaultComponent implements OnInit, OnDestroy {
     const result: ViewCipherDialogCloseResult = await lastValueFrom(dialogRef.closed);
 
     // If the dialog was closed by deleting the cipher, refresh the vault.
-    if (result?.action === ViewCipherDialogResult.deleted) {
+    if (result?.action === ViewCipherDialogResult.Deleted) {
       this.refresh();
+      this.go({ cipherId: null, itemId: null, action: null });
     }
 
     // If the dialog was closed by any other action (close button, escape key, etc), navigate back to the vault.

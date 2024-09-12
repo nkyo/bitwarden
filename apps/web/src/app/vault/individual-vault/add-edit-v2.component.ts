@@ -28,7 +28,6 @@ import { AttachmentsV2Component } from "./attachments-v2.component";
  */
 export enum AddEditCipherDialogResult {
   Edited = "edited",
-  Deleted = "deleted",
   Added = "added",
   Canceled = "canceled",
 }

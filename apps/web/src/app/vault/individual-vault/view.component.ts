@@ -29,8 +29,8 @@ export interface ViewCipherDialogParams {
 }
 
 export enum ViewCipherDialogResult {
-  edited = "edited",
-  deleted = "deleted",
+  Edited = "edited",
+  Deleted = "deleted",
 }
 
 export interface ViewCipherDialogCloseResult {
@@ -125,7 +125,7 @@ export class ViewComponent implements OnInit, OnDestroy {
       this.logService.error(e);
     }
 
-    this.dialogRef.close({ action: ViewCipherDialogResult.deleted });
+    this.dialogRef.close({ action: ViewCipherDialogResult.Deleted });
   };
 
   /**
@@ -144,7 +144,7 @@ export class ViewComponent implements OnInit, OnDestroy {
    * Method to handle cipher editing. Called when a user clicks the edit button.
    */
   async edit(): Promise<void> {
-    this.dialogRef.close({ action: ViewCipherDialogResult.edited });
+    this.dialogRef.close({ action: ViewCipherDialogResult.Edited });
     await this.router.navigate([], {
       queryParams: {
         itemId: this.cipher.id,
