@@ -50,6 +50,15 @@ export class SendTextDetailsComponent implements OnInit {
     private formBuilder: FormBuilder,
     protected sendFormContainer: SendFormContainer,
   ) {
+    this.baseSendTextDetailsForm = this.formBuilder.group({
+      text: new FormControl("", Validators.required),
+      hidden: new FormControl(false),
+    });
+
+    this.sendTextDetailsForm = Object.assign(this.baseSendTextDetailsForm, this.sendDetailsForm);
+
+    this.sendFormContainer.registerChildForm("sendTextDetailsForm", this.sendTextDetailsForm);
+
     this.sendTextDetailsForm.valueChanges.pipe(takeUntilDestroyed()).subscribe((value) => {
       this.sendFormContainer.patchSend((send) => {
         return Object.assign(send, {
@@ -63,15 +72,6 @@ export class SendTextDetailsComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.baseSendTextDetailsForm = this.formBuilder.group({
-      text: new FormControl("", Validators.required),
-      hidden: new FormControl(false),
-    });
-
-    this.sendTextDetailsForm = Object.assign(this.baseSendTextDetailsForm, this.sendDetailsForm);
-
-    this.sendFormContainer.registerChildForm("sendTextDetailsForm", this.sendTextDetailsForm);
-
     if (this.originalSendView) {
       this.baseSendTextDetailsForm.patchValue({
         text: this.originalSendView.text?.text || "",
