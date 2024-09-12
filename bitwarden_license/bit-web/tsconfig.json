@@ -36,7 +36,7 @@
     "../../apps/web/src/theme.ts",
 
     "../../bitwarden_license/bit-web/src/main.ts",
-    "../../apps/web/src/main.ts" // Needed since we are using web's app.component
+    "../../apps/web/src/main.ts"
   ],
   "include": [
     "../../apps/web/src/connectors/*.ts",
