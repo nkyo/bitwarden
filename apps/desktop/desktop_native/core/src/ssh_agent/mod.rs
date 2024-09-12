@@ -12,8 +12,6 @@ use std::sync::RwLock;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-use bitwarden_russh::encoding;
-use bitwarden_russh::msg;
 use bitwarden_russh::ssh_agent;
 
 #[cfg(windows)]
@@ -39,8 +37,11 @@ impl ssh_agent::Agent for BitwardenDesktopAgent {
         self.show_ui_request_tx
             .send(ssh_key.cipher_uuid)
             .await
-            .unwrap();
-        let res = rx_channel.recv().await.unwrap();
+            .expect("Should send request to ui");
+        let res = rx_channel
+            .recv()
+            .await
+            .expect("Should receive response from ui");
         res
     }
 }
@@ -51,6 +52,8 @@ impl BitwardenDesktopAgent {
         auth_request_tx: tokio::sync::mpsc::Sender<String>,
         auth_response_rx: Arc<Mutex<tokio::sync::mpsc::Receiver<bool>>>,
     ) -> Result<Self, anyhow::Error> {
+        use std::path::PathBuf;
+
         let agent = BitwardenDesktopAgent {
             keystore: ssh_agent::KeyStore(Arc::new(RwLock::new(HashMap::new()))),
             cancellation_token: CancellationToken::new(),
@@ -59,22 +62,24 @@ impl BitwardenDesktopAgent {
         };
         let cloned_agent_state = agent.clone();
         tokio::spawn(async move {
-            let env_path = std::env::var("BITWARDEN_SSH_AUTH_SOCK");
-            let ssh_path = match env_path {
+            let ssh_path = match std::env::var("BITWARDEN_SSH_AUTH_SOCK") {
                 Ok(path) => path,
                 Err(_) => {
                     println!("[SSH Agent Native Module] BITWARDEN_SSH_AUTH_SOCK not set, using default path");
-                    my_home()
-                        .unwrap()
-                        .ok_or(Error::msg("Could not determine home directory"))
-                        .unwrap()
+
+                    let ssh_agent_directory = match my_home() {
+                        Ok(Some(home)) => home,
+                        Ok(None) => PathBuf::from("/tmp/"),
+                        Err(_) => PathBuf::from("/tmp/"),
+                    };
+                    ssh_agent_directory
                         .join(".bitwarden-ssh-agent.sock")
                         .to_str()
-                        .ok_or(Error::msg("Could not determine home directory"))
-                        .unwrap()
+                        .expect("Path should be valid")
                         .to_string()
                 }
             };
+
             println!(
                 "[SSH Agent Native Module] Starting SSH Agent server on {:?}",
                 ssh_path
@@ -109,7 +114,11 @@ impl BitwardenDesktopAgent {
 
     pub fn stop(&self) {
         self.cancellation_token.cancel();
-        self.keystore.0.write().unwrap().clear();
+        self.keystore
+            .0
+            .write()
+            .expect("RwLock is not poisoned")
+            .clear();
     }
 
     #[cfg(windows)]
@@ -145,13 +154,16 @@ impl BitwardenDesktopAgent {
         new_keys: Vec<(String, String, String)>,
     ) -> Result<(), anyhow::Error> {
         let keystore = &mut self.keystore;
-        keystore.0.write().unwrap().clear();
+        keystore.0.write().expect("RwLock is not poisoned").clear();
 
         for (key, name, uuid) in new_keys.iter() {
             match parse_key_safe(&key) {
                 Ok(private_key) => {
-                    let public_key_bytes = private_key.public_key().to_bytes().unwrap();
-                    keystore.0.write().unwrap().insert(
+                    let public_key_bytes = private_key
+                        .public_key()
+                        .to_bytes()
+                        .expect("Cipher private key is always correctly parsed");
+                    keystore.0.write().expect("RwLock is not poisoned").insert(
                         public_key_bytes,
                         Key {
                             private_key: Some(private_key),
@@ -174,7 +186,7 @@ impl BitwardenDesktopAgent {
         keystore
             .0
             .write()
-            .unwrap()
+            .expect("RwLock is not poisoned")
             .iter_mut()
             .for_each(|(_public_key, key)| {
                 key.private_key = None;
