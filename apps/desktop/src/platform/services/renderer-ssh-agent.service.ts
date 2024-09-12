@@ -28,7 +28,7 @@ import { DesktopSettingsService } from "./desktop-settings.service";
 @Injectable({
   providedIn: "root",
 })
-export class RendererSshAgentService implements OnDestroy {
+export class SshAgentService implements OnDestroy {
   SSH_REFRESH_INTERVAL = 1000;
   SSH_VAULT_UNLOCK_REQUEST_TIMEOUT = 1000 * 60 * 5;
   SSH_REQUEST_UNLOCK_POLLING_INTERVAL = 100;

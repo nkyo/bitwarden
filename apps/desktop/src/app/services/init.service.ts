@@ -21,7 +21,7 @@ import { VaultTimeoutService } from "@bitwarden/common/services/vault-timeout/va
 import { UserId } from "@bitwarden/common/types/guid";
 
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
-import { RendererSshAgentService } from "../../platform/services/renderer-ssh-agent.service";
+import { SshAgentService } from "../../platform/services/renderer-ssh-agent.service";
 import { NativeMessagingService } from "../../services/native-messaging.service";
 
 @Injectable()
@@ -42,7 +42,7 @@ export class InitService {
     private encryptService: EncryptService,
     private userAutoUnlockKeyService: UserAutoUnlockKeyService,
     private accountService: AccountService,
-    private sshAgentService: RendererSshAgentService,
+    private sshAgentService: SshAgentService,
     @Inject(DOCUMENT) private document: Document,
   ) {}
 

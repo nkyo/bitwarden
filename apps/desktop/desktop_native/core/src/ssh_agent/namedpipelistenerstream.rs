@@ -15,17 +15,17 @@ impl NamedPipeServerStream {
     pub fn new(cancellation_token: CancellationToken) -> Self {
         let (tx, rx) = tokio::sync::mpsc::channel(16);
         tokio::spawn(async move {
-            println!("[Ssh Agent Native Module] Creating named pipe server on {}", PIPE_NAME);
+            println!("[SSH Agent Native Module] Creating named pipe server on {}", PIPE_NAME);
             let mut listener = ServerOptions::new().create(PIPE_NAME).unwrap();
             loop {
-                println!("[Ssh Agent Native Module] Waiting for connection");
+                println!("[SSH Agent Native Module] Waiting for connection");
                 select! {
                     _ = cancellation_token.cancelled() => {
-                        println!("[Ssh Agent Native Module] Cancellation token triggered, stopping named pipe server");
+                        println!("[SSH Agent Native Module] Cancellation token triggered, stopping named pipe server");
                         break;
                     }
                     _ = listener.connect() => {
-                        println!("[Ssh Agent Native Module] Incoming connection");
+                        println!("[SSH Agent Native Module] Incoming connection");
                         tx.send(listener).await.unwrap();
                         listener = ServerOptions::new().create(PIPE_NAME).unwrap();
                     }

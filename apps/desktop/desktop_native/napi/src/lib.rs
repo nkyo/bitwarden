@@ -212,13 +212,13 @@ pub mod sshagent {
                                 let _ = auth_response_tx.send(result).await;
                             },
                             Err(e) => {
-                                println!("[Ssh Agent Native Module] calling UI callback promise was rejected: {}", e);
+                                println!("[SSH Agent Native Module] calling UI callback promise was rejected: {}", e);
                                 let _ = auth_response_tx.send(false).await;
                             }
                         }
                     },
                     Err(e) => {
-                        println!("[Ssh Agent Native Module] calling UI callback could not create promise: {}", e);
+                        println!("[SSH Agent Native Module] calling UI callback could not create promise: {}", e);
                         let _ = auth_response_tx.send(false).await;
                     }
                 }
