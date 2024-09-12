@@ -1,26 +1,14 @@
 use std::sync::Arc;
 
-use anyhow::Error;
-#[cfg(windows)]
-use async_stream::stream;
-#[cfg(windows)]
-use futures::stream::{Stream, StreamExt};
-
-use ssh_agent::Key;
-use std::collections::HashMap;
-use std::sync::RwLock;
 use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
 
-use bitwarden_russh::ssh_agent;
+use bitwarden_russh::ssh_agent::{self, Key};
 
-#[cfg(windows)]
-pub mod namedpipelistenerstream;
-
-#[cfg(unix)]
-use homedir::my_home;
-#[cfg(unix)]
-use tokio::net::UnixListener;
+#[cfg_attr(target_os = "windows", path = "windows.rs")]
+#[cfg_attr(target_os = "macos", path = "unix.rs")]
+#[cfg_attr(target_os = "linux", path = "unix.rs")]
+mod platform_ssh_agent;
 
 #[derive(Clone)]
 pub struct BitwardenDesktopAgent {
@@ -47,71 +35,6 @@ impl ssh_agent::Agent for BitwardenDesktopAgent {
 }
 
 impl BitwardenDesktopAgent {
-    #[cfg(unix)]
-    pub async fn start_server(
-        auth_request_tx: tokio::sync::mpsc::Sender<String>,
-        auth_response_rx: Arc<Mutex<tokio::sync::mpsc::Receiver<bool>>>,
-    ) -> Result<Self, anyhow::Error> {
-        use std::path::PathBuf;
-
-        let agent = BitwardenDesktopAgent {
-            keystore: ssh_agent::KeyStore(Arc::new(RwLock::new(HashMap::new()))),
-            cancellation_token: CancellationToken::new(),
-            show_ui_request_tx: auth_request_tx,
-            get_ui_response_rx: auth_response_rx,
-        };
-        let cloned_agent_state = agent.clone();
-        tokio::spawn(async move {
-            let ssh_path = match std::env::var("BITWARDEN_SSH_AUTH_SOCK") {
-                Ok(path) => path,
-                Err(_) => {
-                    println!("[SSH Agent Native Module] BITWARDEN_SSH_AUTH_SOCK not set, using default path");
-
-                    let ssh_agent_directory = match my_home() {
-                        Ok(Some(home)) => home,
-                        Ok(None) => PathBuf::from("/tmp/"),
-                        Err(_) => PathBuf::from("/tmp/"),
-                    };
-                    ssh_agent_directory
-                        .join(".bitwarden-ssh-agent.sock")
-                        .to_str()
-                        .expect("Path should be valid")
-                        .to_string()
-                }
-            };
-
-            println!(
-                "[SSH Agent Native Module] Starting SSH Agent server on {:?}",
-                ssh_path
-            );
-            let sockname = std::path::Path::new(&ssh_path);
-            let _ = std::fs::remove_file(sockname);
-            match UnixListener::bind(sockname) {
-                Ok(listener) => {
-                    let wrapper = tokio_stream::wrappers::UnixListenerStream::new(listener);
-                    let cloned_keystore = cloned_agent_state.keystore.clone();
-                    let cloned_cancellation_token = cloned_agent_state.cancellation_token.clone();
-                    let _ = ssh_agent::serve(
-                        wrapper,
-                        cloned_agent_state,
-                        cloned_keystore,
-                        cloned_cancellation_token,
-                    )
-                    .await;
-                    println!("[SSH Agent Native Module] SSH Agent server exited");
-                }
-                Err(e) => {
-                    eprintln!(
-                        "[SSH Agent Native Module] Error while starting agent server: {}",
-                        e
-                    );
-                }
-            }
-        });
-
-        Ok(agent)
-    }
-
     pub fn stop(&self) {
         self.cancellation_token.cancel();
         self.keystore
@@ -119,34 +42,6 @@ impl BitwardenDesktopAgent {
             .write()
             .expect("RwLock is not poisoned")
             .clear();
-    }
-
-    #[cfg(windows)]
-    pub async fn start_server(
-        auth_request_tx: tokio::sync::mpsc::Sender<String>,
-        auth_response_rx: Arc<Mutex<tokio::sync::mpsc::Receiver<bool>>>,
-    ) -> Result<Self, anyhow::Error> {
-        let agent_state = BitwardenDesktopAgent {
-            keystore: ssh_agent::KeyStore(Arc::new(RwLock::new(HashMap::new()))),
-            show_ui_request_tx: auth_request_tx,
-            get_ui_response_rx: auth_response_rx,
-            cancellation_token: CancellationToken::new(),
-        };
-        let stream = namedpipelistenerstream::NamedPipeServerStream::new(
-            agent_state.cancellation_token.clone(),
-        );
-
-        let cloned_agent_state = agent_state.clone();
-        tokio::spawn(async move {
-            let _ = ssh_agent::serve(
-                stream,
-                cloned_agent_state.clone(),
-                cloned_agent_state.keystore.clone(),
-                cloned_agent_state.cancellation_token.clone(),
-            )
-            .await;
-        });
-        Ok(agent_state)
     }
 
     pub fn set_keys(
