@@ -1,0 +1,23 @@
+<div class="box" *ngIf="type === sendType.File && (editMode || showFileSelector)">
+  <div class="box-content no-hover">
+    <div class="box-content-row" *ngIf="editMode">
+      <label for="file">{{ "file" | i18n }}</label>
+      <div class="row-main">
+        {{ originalSendView.file.fileName }} ({{ originalSendView.file.sizeName }})
+      </div>
+    </div>
+    <div class="box-content-row" *ngIf="showFileSelector">
+      <label for="file">{{ "file" | i18n }}</label>
+      <input
+        type="file"
+        id="file"
+        formControlName="file"
+        aria-describedby="fileHelp"
+        [readonly]="disableSend"
+      />
+    </div>
+  </div>
+  <div id="fileHelp" class="box-footer" *ngIf="showFileSelector">
+    {{ "sendFileDesc" | i18n }} {{ "maxFileSize" | i18n }}
+  </div>
+</div>

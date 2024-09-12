@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from "@angular/common";
-import { Component, OnInit } from "@angular/core";
+import { Component, Input, OnInit } from "@angular/core";
 import { FormBuilder, ReactiveFormsModule } from "@angular/forms";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
@@ -19,6 +19,7 @@ import {
 import { SendFormContainer } from "../../send-form-container";
 
 import { BaseSendDetailsComponent } from "./base-send-details.component";
+import { SendFileDetailsComponent } from "./send-file-details.component";
 import { SendTextDetailsComponent } from "./send-text-details.component";
 
 @Component({
@@ -34,6 +35,7 @@ import { SendTextDetailsComponent } from "./send-text-details.component";
     FormFieldModule,
     ReactiveFormsModule,
     SendTextDetailsComponent,
+    SendFileDetailsComponent,
     IconButtonModule,
     CheckboxModule,
     CommonModule,
@@ -41,6 +43,11 @@ import { SendTextDetailsComponent } from "./send-text-details.component";
   ],
 })
 export class SendDetailsComponent extends BaseSendDetailsComponent implements OnInit {
+  /**
+   * Whether to show the file selector.
+   */
+  @Input({ required: true }) showFileSelector: boolean;
+
   FileSendType = SendType.File;
   TextSendType = SendType.Text;
 

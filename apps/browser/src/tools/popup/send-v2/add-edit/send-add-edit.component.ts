@@ -21,6 +21,7 @@ import { SendFormModule } from "../../../../../../../libs/tools/send/send-ui/src
 import { PopupFooterComponent } from "../../../../platform/popup/layout/popup-footer.component";
 import { PopupHeaderComponent } from "../../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "../../../../platform/popup/layout/popup-page.component";
+import { FilePopoutUtilsService } from "../../services/file-popout-utils.service";
 
 /**
  * Helper class to parse query parameters for the AddEdit route.
@@ -76,12 +77,19 @@ export class SendAddEditComponent {
    */
   config: SendFormConfig;
 
+  /**
+   * Whether to show the file selector.
+   */
+  showFileSelector = false;
+
   constructor(
     private route: ActivatedRoute,
     private location: Location,
     private i18nService: I18nService,
     private addEditFormConfigService: SendFormConfigService,
+    private filePopoutUtilsService: FilePopoutUtilsService,
   ) {
+    this.showFileSelector = !this.filePopoutUtilsService.showFilePopoutMessage(window);
     this.subscribeToParams();
   }
 

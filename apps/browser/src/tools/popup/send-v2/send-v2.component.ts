@@ -5,6 +5,7 @@ import { RouterLink } from "@angular/router";
 import { combineLatest } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
+import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { SendType } from "@bitwarden/common/tools/send/enums/send-type";
 import { ButtonModule, Icons, NoItemsModule } from "@bitwarden/components";
 import {
@@ -64,6 +65,7 @@ export class SendV2Component implements OnInit, OnDestroy {
   constructor(
     protected sendItemsService: SendItemsService,
     protected sendListFiltersService: SendListFiltersService,
+    protected platformUtilsService: PlatformUtilsService,
   ) {
     combineLatest([
       this.sendItemsService.emptyList$,
