@@ -41,7 +41,7 @@ export interface AddEditCipherDialogCloseResult {
    */
   action: AddEditCipherDialogResult;
   /**
-   * The ID of the cipher that was edited, added, or deleted.
+   * The ID of the cipher that was edited or added.
    */
   id?: CipherId;
 }
