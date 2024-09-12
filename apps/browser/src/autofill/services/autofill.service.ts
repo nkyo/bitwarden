@@ -6,7 +6,10 @@ import { AccountInfo, AccountService } from "@bitwarden/common/auth/abstractions
 import { AuthService } from "@bitwarden/common/auth/abstractions/auth.service";
 import { UserVerificationService } from "@bitwarden/common/auth/abstractions/user-verification/user-verification.service.abstraction";
 import { AuthenticationStatus } from "@bitwarden/common/auth/enums/authentication-status";
-import { AutofillOverlayVisibility } from "@bitwarden/common/autofill/constants";
+import {
+  AutofillOverlayVisibility,
+  CardExpiryDateDelimiters,
+} from "@bitwarden/common/autofill/constants";
 import { AutofillSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/autofill-settings.service";
 import { DomainSettingsService } from "@bitwarden/common/autofill/services/domain-settings.service";
 import { UserNotificationSettingsServiceAbstraction } from "@bitwarden/common/autofill/services/user-notification-settings.service";
@@ -1397,8 +1400,7 @@ export default class AutofillService implements AutofillServiceInterface {
     if (expectedExpiryDateFormat) {
       const { Month, MonthShort, Year } = expiryDateFormatPatterns;
 
-      const expiryDateDelimitersPattern =
-        "\\" + CreditCardAutoFillConstants.CardExpiryDateDelimiters.join("\\");
+      const expiryDateDelimitersPattern = "\\" + CardExpiryDateDelimiters.join("\\");
 
       // assign the delimiter from the expected format string
       delimiter =
@@ -1450,8 +1452,7 @@ export default class AutofillService implements AutofillServiceInterface {
     let expectedDateFormat = null;
     let dateFormatPatterns = null;
 
-    const expiryDateDelimitersPattern =
-      "\\" + CreditCardAutoFillConstants.CardExpiryDateDelimiters.join("\\");
+    const expiryDateDelimitersPattern = "\\" + CardExpiryDateDelimiters.join("\\");
 
     CreditCardAutoFillConstants.CardExpiryDateFormats.find((dateFormat) => {
       dateFormatPatterns = dateFormat;
