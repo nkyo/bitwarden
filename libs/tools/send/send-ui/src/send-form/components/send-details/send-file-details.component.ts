@@ -81,11 +81,7 @@ export class SendFileDetailsComponent implements OnInit {
       return;
     }
     this.fileName = file.name;
-    this.sendFormContainer.patchSend((send) => {
-      return Object.assign(send, {
-        file,
-      });
-    });
+    this.sendFormContainer.onFileSelected(file);
   };
 
   ngOnInit() {

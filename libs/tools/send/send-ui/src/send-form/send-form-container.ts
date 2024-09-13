@@ -39,5 +39,7 @@ export abstract class SendFormContainer {
     group: Exclude<SendForm[K], undefined>,
   ): void;
 
+  abstract onFileSelected(file: File): void;
+
   abstract patchSend(updateFn: (current: SendView) => SendView): void;
 }
