@@ -72,8 +72,8 @@ export class LoginCredentialsViewComponent {
     return `${dateCreated} ${creationDate}`;
   }
 
-  async getPremium() {
-    await this.premiumUpgradeService.promptForPremium();
+  async getPremium(organizationId?: string) {
+    await this.premiumUpgradeService.promptForPremium(organizationId);
   }
 
   pwToggleValue(evt: boolean) {

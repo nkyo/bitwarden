@@ -3,5 +3,5 @@
  * It ensures that PremiumUpgradePromptService contains a promptForPremium method.
  */
 export abstract class PremiumUpgradePromptService {
-  abstract promptForPremium(): Promise<void>;
+  abstract promptForPremium(organizationId?: string): Promise<void>;
 }

@@ -8,22 +8,19 @@ import { PremiumUpgradePromptService } from "../../../../../../libs/common/src/v
  */
 @Injectable()
 export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePromptService {
-  constructor(
-    private messagingService: MessagingService,
-    private organizationId?: string,
-  ) {}
+  constructor(private messagingService: MessagingService) {}
 
-  async promptForPremium() {
+  async promptForPremium(organizationId?: string) {
     /**
      * Use the messaging service to trigger the premium required dialog in the web vault.
      * If the organizationId is not set, then we are in the individual vault and should sent the premiumRequired message.
      */
-    if (this.organizationId) {
-      await this.messagingService.send("upgradeOrganization", {
-        organizationId: this.organizationId,
+    if (organizationId) {
+      this.messagingService.send("upgradeOrganization", {
+        organizationId: organizationId,
       });
     } else {
-      await this.messagingService.send("premiumRequired");
+      this.messagingService.send("premiumRequired");
     }
   }
 }
