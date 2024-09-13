@@ -47,7 +47,6 @@ export class SshAgentService implements OnDestroy {
   ) {
     this.messageListener
       .messages$(new CommandDefinition("sshagent.signrequest"))
-      .pipe(takeUntil(this.destroy$))
       .pipe(
         switchMap(async (message: any) => {
           const cipherId = message.cipherId;
@@ -102,6 +101,7 @@ export class SshAgentService implements OnDestroy {
           await ipc.platform.sshAgent.signRequestResponse(messageId, result);
           ipc.platform.hideWindow();
         }),
+        takeUntil(this.destroy$),
       )
       .subscribe();
 
