@@ -4,7 +4,6 @@ import {
   concatMap,
   filter,
   firstValueFrom,
-  map,
   Subject,
   switchMap,
   takeUntil,
@@ -111,8 +110,12 @@ export class SshAgentService implements OnDestroy {
       this.desktopSettingsService.sshAgentEnabled$,
     ])
       .pipe(
-        filter(([_, sshAgentEnabled]) => sshAgentEnabled),
-        concatMap(async () => {
+        concatMap(async ([, enabled]) => {
+          if (!enabled) {
+            await ipc.platform.sshAgent.setKeys([]);
+            return;
+          }
+
           const ciphers = await this.cipherService.getAllDecrypted();
           if (ciphers == null) {
             await ipc.platform.sshAgent.lock();
@@ -131,15 +134,6 @@ export class SshAgentService implements OnDestroy {
           });
           await ipc.platform.sshAgent.setKeys(keys);
         }),
-        takeUntil(this.destroy$),
-      )
-      .subscribe();
-
-    // clear keys when ssh agent is disabled
-    this.desktopSettingsService.sshAgentEnabled$
-      .pipe(
-        filter((enabled) => !enabled),
-        map(() => ipc.platform.sshAgent.setKeys([])),
         takeUntil(this.destroy$),
       )
       .subscribe();
