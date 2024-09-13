@@ -54,7 +54,7 @@ impl BitwardenDesktopAgent {
         let keystore = &mut self.keystore;
         keystore.0.write().expect("RwLock is not poisoned").clear();
 
-        for (key, name, uuid) in new_keys.iter() {
+        for (key, name, cipher_id) in new_keys.iter() {
             match parse_key_safe(&key) {
                 Ok(private_key) => {
                     let public_key_bytes = private_key
@@ -66,7 +66,7 @@ impl BitwardenDesktopAgent {
                         Key {
                             private_key: Some(private_key),
                             name: name.clone(),
-                            cipher_uuid: uuid.clone(),
+                            cipher_uuid: cipher_id.clone(),
                         },
                     );
                 }
