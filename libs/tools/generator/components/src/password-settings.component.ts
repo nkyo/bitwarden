@@ -27,7 +27,7 @@ const Controls = Object.freeze({
 /** Options group for passwords */
 @Component({
   standalone: true,
-  selector: "bit-password-settings",
+  selector: "tools-password-settings",
   templateUrl: "password-settings.component.html",
   imports: [DependenciesModule],
 })

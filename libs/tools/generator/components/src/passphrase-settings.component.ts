@@ -23,7 +23,7 @@ const Controls = Object.freeze({
 /** Options group for passphrases */
 @Component({
   standalone: true,
-  selector: "bit-passphrase-settings",
+  selector: "tools-passphrase-settings",
   templateUrl: "passphrase-settings.component.html",
   imports: [DependenciesModule],
 })
