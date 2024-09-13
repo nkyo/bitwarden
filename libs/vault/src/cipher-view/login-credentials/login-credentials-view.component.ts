@@ -4,7 +4,7 @@ import { Observable, shareReplay } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
-import { PremiumUpgradeService } from "@bitwarden/common/billing/abstractions/organizations/premium-upgrade.service.abstraction";
+import { PremiumUpgradePromptService } from "../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -60,7 +60,7 @@ export class LoginCredentialsViewComponent {
   constructor(
     private billingAccountProfileStateService: BillingAccountProfileStateService,
     private i18nService: I18nService,
-    private premiumUpgradeService: PremiumUpgradeService,
+    private premiumUpgradeService: PremiumUpgradePromptService,
   ) {}
 
   get fido2CredentialCreationDateValue(): string {
@@ -75,7 +75,7 @@ export class LoginCredentialsViewComponent {
   async getPremium() {
     // console.log("getPremium LoginCredentialsViewComponent");
     // console.log(this.premiumUpgradeService);
-    await this.premiumUpgradeService.getPremium();
+    await this.premiumUpgradeService.promptForPremium();
   }
 
   pwToggleValue(evt: boolean) {

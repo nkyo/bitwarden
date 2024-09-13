@@ -1,12 +1,11 @@
 import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { CommonModule } from "@angular/common";
-import { Component, Inject, OnInit, EventEmitter, OnDestroy, Injector } from "@angular/core";
+import { Component, Inject, OnInit, EventEmitter, OnDestroy } from "@angular/core";
 import { Router } from "@angular/router";
 import { Subject } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { PremiumUpgradePromptService } from "@bitwarden/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -20,9 +19,10 @@ import {
   ToastService,
 } from "@bitwarden/components";
 
+import { PremiumUpgradePromptService } from "../../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { CipherViewComponent } from "../../../../../../libs/vault/src/cipher-view/cipher-view.component";
 import { SharedModule } from "../../shared/shared.module";
-import { WebVaultPremiumUpgradePromptService } from "@bitwarden/common/src/vault/services/web-premium-upgrade.service";
+import { WebVaultPremiumUpgradePromptService } from "../services/web-premium-upgrade-prompt.service";
 
 export interface ViewCipherDialogParams {
   cipher: CipherView;
@@ -187,16 +187,4 @@ export function openViewCipherDialog(
   config: DialogConfig<ViewCipherDialogParams>,
 ): DialogRef<ViewCipherDialogCloseResult> {
   return dialogService.open(ViewComponent, config);
-}
-
-/**
- * Factory function to create the premium upgrade service based on whether an organization is present.
- * @param component The component instance.
- * @param injector The injector.
- * @returns The premium upgrade service.
- */
-export function premiumUpgradeServiceFactory(component: ViewComponent, injector: Injector) {
-  return component.organization
-    ? injector.get(WebOrganizationPremiumUpgradeService)
-    : injector.get(WebIndividualPremiumUpgradeService);
 }

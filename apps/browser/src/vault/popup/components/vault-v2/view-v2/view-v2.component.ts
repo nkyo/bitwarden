@@ -29,17 +29,21 @@ import { TotpCaptureService } from "@bitwarden/vault";
 import { CipherViewComponent } from "../../../../../../../../libs/vault/src/cipher-view";
 import { PopOutComponent } from "../../../../../platform/popup/components/pop-out.component";
 import { BrowserTotpCaptureService } from "../../../services/browser-totp-capture.service";
-
+import { BrowserPremiumUpgradePromptService } from "../../../services/browser-premium-upgrade-prompt.service";
 import { PopupFooterComponent } from "./../../../../../platform/popup/layout/popup-footer.component";
 import { PopupHeaderComponent } from "./../../../../../platform/popup/layout/popup-header.component";
 import { PopupPageComponent } from "./../../../../../platform/popup/layout/popup-page.component";
 import { VaultPopupAutofillService } from "./../../../services/vault-popup-autofill.service";
+import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
 
 @Component({
   selector: "app-view-v2",
   templateUrl: "view-v2.component.html",
   standalone: true,
-  providers: [{ provide: TotpCaptureService, useClass: BrowserTotpCaptureService }],
+  providers: [
+    { provide: TotpCaptureService, useClass: BrowserTotpCaptureService },
+    { provide: PremiumUpgradePromptService, useClass: BrowserPremiumUpgradePromptService },
+  ],
   imports: [
     CommonModule,
     SearchModule,
