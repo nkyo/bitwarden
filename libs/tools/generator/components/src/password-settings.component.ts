@@ -100,40 +100,37 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     this.generatorService
       .policy$(Generators.Password, { userId$: singleUserId$ })
       .pipe(takeUntil(this.destroyed$))
-      .subscribe((policy) => {
+      .subscribe(({ constraints }) => {
         this.settings
           .get(Controls.length)
-          .setValidators(toValidators(Controls.length, Generators.Password, policy));
+          .setValidators(toValidators(Controls.length, Generators.Password, constraints));
 
         this.settings
           .get(Controls.minNumber)
-          .setValidators(toValidators(Controls.minNumber, Generators.Password, policy));
+          .setValidators(toValidators(Controls.minNumber, Generators.Password, constraints));
 
         this.settings
           .get(Controls.minSpecial)
-          .setValidators(toValidators(Controls.minSpecial, Generators.Password, policy));
+          .setValidators(toValidators(Controls.minSpecial, Generators.Password, constraints));
 
         // forward word boundaries to the template (can't do it through the rx form)
-        // FIXME: move the boundary logic fully into the policy evaluator
-        this.minLength = policy.length?.min ?? Generators.Password.settings.constraints.length.min;
-        this.maxLength = policy.length?.max ?? Generators.Password.settings.constraints.length.max;
-        this.minMinNumber =
-          policy.minNumber?.min ?? Generators.Password.settings.constraints.minNumber.min;
-        this.maxMinNumber =
-          policy.minNumber?.max ?? Generators.Password.settings.constraints.minNumber.max;
-        this.minMinSpecial =
-          policy.minSpecial?.min ?? Generators.Password.settings.constraints.minSpecial.min;
-        this.maxMinSpecial =
-          policy.minSpecial?.max ?? Generators.Password.settings.constraints.minSpecial.max;
+        this.minLength =
+          constraints.length?.min ?? Generators.Password.settings.constraints.length.min;
+        this.maxLength =
+          constraints.length?.max ?? Generators.Password.settings.constraints.length.max;
+        this.minMinNumber = constraints.minNumber.min;
+        this.maxMinNumber = constraints.minNumber.max;
+        this.minMinSpecial = constraints.minSpecial.min;
+        this.maxMinSpecial = constraints.minSpecial.max;
 
         const toggles = [
-          [Controls.length, policy.length.min < policy.length.max],
-          [Controls.uppercase, !policy.policy.useUppercase],
-          [Controls.lowercase, !policy.policy.useLowercase],
-          [Controls.numbers, !policy.policy.useNumbers],
-          [Controls.special, !policy.policy.useSpecial],
-          [Controls.minNumber, policy.minNumber.min < policy.minNumber.max],
-          [Controls.minSpecial, policy.minSpecial.min < policy.minSpecial.max],
+          [Controls.length, constraints.length.min < constraints.length.max],
+          [Controls.uppercase, !constraints.uppercase.readonly],
+          [Controls.lowercase, !constraints.lowercase.readonly],
+          [Controls.numbers, !constraints.number.readonly],
+          [Controls.special, !constraints.special.readonly],
+          [Controls.minNumber, constraints.minNumber.min < constraints.minNumber.max],
+          [Controls.minSpecial, constraints.minSpecial.min < constraints.minSpecial.max],
         ] as [keyof typeof Controls, boolean][];
 
         for (const [control, enabled] of toggles) {

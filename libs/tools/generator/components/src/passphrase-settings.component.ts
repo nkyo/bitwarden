@@ -81,24 +81,21 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
     this.generatorService
       .policy$(Generators.Passphrase, { userId$: singleUserId$ })
       .pipe(takeUntil(this.destroyed$))
-      .subscribe((policy) => {
+      .subscribe(({ constraints }) => {
         this.settings
           .get(Controls.numWords)
-          .setValidators(toValidators(Controls.numWords, Generators.Passphrase, policy));
+          .setValidators(toValidators(Controls.numWords, Generators.Passphrase, constraints));
 
         this.settings
           .get(Controls.wordSeparator)
-          .setValidators(toValidators(Controls.wordSeparator, Generators.Passphrase, policy));
+          .setValidators(toValidators(Controls.wordSeparator, Generators.Passphrase, constraints));
 
         // forward word boundaries to the template (can't do it through the rx form)
-        // FIXME: move the boundary logic fully into the policy evaluator
-        this.minNumWords =
-          policy.numWords?.min ?? Generators.Passphrase.settings.constraints.numWords.min;
-        this.maxNumWords =
-          policy.numWords?.max ?? Generators.Passphrase.settings.constraints.numWords.max;
+        this.minNumWords = constraints.numWords.min;
+        this.maxNumWords = constraints.numWords.max;
 
-        this.toggleEnabled(Controls.capitalize, !policy.policy.capitalize);
-        this.toggleEnabled(Controls.includeNumber, !policy.policy.includeNumber);
+        this.toggleEnabled(Controls.capitalize, !constraints.capitalize.readonly);
+        this.toggleEnabled(Controls.includeNumber, !constraints.includeNumber.readonly);
       });
 
     // now that outputs are set up, connect inputs

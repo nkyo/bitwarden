@@ -1,6 +1,7 @@
 import { PolicyType } from "@bitwarden/common/admin-console/enums";
 
 import {
+  DynamicPasswordPolicyConstraints,
   passphraseLeastPrivilege,
   passwordLeastPrivilege,
   PassphraseGeneratorOptionsEvaluator,
@@ -23,7 +24,9 @@ const PASSPHRASE = Object.freeze({
   }),
   combine: passphraseLeastPrivilege,
   createEvaluator: (policy) => new PassphraseGeneratorOptionsEvaluator(policy),
-  createEvaluatorV2: (policy) => new PassphraseGeneratorOptionsEvaluator(policy),
+  toConstraints: (_policy) => {
+    throw new Error("TODO: Implement passphrase constraints");
+  },
 } as PolicyConfiguration<PassphraseGeneratorPolicy, PassphraseGenerationOptions>);
 
 const PASSWORD = Object.freeze({
@@ -39,7 +42,7 @@ const PASSWORD = Object.freeze({
   }),
   combine: passwordLeastPrivilege,
   createEvaluator: (policy) => new PasswordGeneratorOptionsEvaluator(policy),
-  createEvaluatorV2: (policy) => new PasswordGeneratorOptionsEvaluator(policy),
+  toConstraints: (policy) => new DynamicPasswordPolicyConstraints(policy),
 } as PolicyConfiguration<PasswordGeneratorPolicy, PasswordGenerationOptions>);
 
 /** Policy configurations */
