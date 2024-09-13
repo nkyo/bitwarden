@@ -94,8 +94,8 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
         this.minNumWords = constraints.numWords.min;
         this.maxNumWords = constraints.numWords.max;
 
-        this.toggleEnabled(Controls.capitalize, !constraints.capitalize.readonly);
-        this.toggleEnabled(Controls.includeNumber, !constraints.includeNumber.readonly);
+        this.toggleEnabled(Controls.capitalize, !constraints.capitalize?.readonly);
+        this.toggleEnabled(Controls.includeNumber, !constraints.includeNumber?.readonly);
       });
 
     // now that outputs are set up, connect inputs
@@ -110,9 +110,9 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
 
   private toggleEnabled(setting: keyof typeof Controls, enabled: boolean) {
     if (enabled) {
-      this.settings.get(setting).enable();
+      this.settings.get(setting).enable({ emitEvent: false });
     } else {
-      this.settings.get(setting).disable();
+      this.settings.get(setting).disable({ emitEvent: false });
     }
   }
 

@@ -96,7 +96,6 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     // the first emission is the current value; subsequent emissions are updates
     settings.pipe(skip(1), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
 
-    ///
     this.generatorService
       .policy$(Generators.Password, { userId$: singleUserId$ })
       .pipe(takeUntil(this.destroyed$))
@@ -125,10 +124,10 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
 
         const toggles = [
           [Controls.length, constraints.length.min < constraints.length.max],
-          [Controls.uppercase, !constraints.uppercase.readonly],
-          [Controls.lowercase, !constraints.lowercase.readonly],
-          [Controls.numbers, !constraints.number.readonly],
-          [Controls.special, !constraints.special.readonly],
+          [Controls.uppercase, !constraints.uppercase?.readonly],
+          [Controls.lowercase, !constraints.lowercase?.readonly],
+          [Controls.numbers, !constraints.number?.readonly],
+          [Controls.special, !constraints.special?.readonly],
           [Controls.minNumber, constraints.minNumber.min < constraints.minNumber.max],
           [Controls.minSpecial, constraints.minSpecial.min < constraints.minSpecial.max],
         ] as [keyof typeof Controls, boolean][];
@@ -173,9 +172,9 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
 
   private toggleEnabled(setting: keyof typeof Controls, enabled: boolean) {
     if (enabled) {
-      this.settings.get(setting).enable();
+      this.settings.get(setting).enable({ emitEvent: false });
     } else {
-      this.settings.get(setting).disable();
+      this.settings.get(setting).disable({ emitEvent: false });
     }
   }
 
