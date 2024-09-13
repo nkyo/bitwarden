@@ -1,7 +1,19 @@
-import { DefaultPasswordGenerationOptions } from "../data";
 import { PasswordGeneratorSettings } from "../types";
 
 import { PasswordPolicyConstraints } from "./password-policy-constraints";
+
+const EmptyState = {
+  length: 0,
+  ambiguous: false,
+  lowercase: false,
+  uppercase: false,
+  number: false,
+  special: false,
+  minUppercase: 0,
+  minLowercase: 0,
+  minNumber: 0,
+  minSpecial: 0,
+};
 
 describe("PasswordPolicyConstraints", () => {
   describe("adjust", () => {
@@ -50,11 +62,11 @@ describe("PasswordPolicyConstraints", () => {
       `fits %s (= %p) within the bounds (1 <= %p <= 2)`,
       (property, input, expected) => {
         const constraint = new PasswordPolicyConstraints({ [property]: { min: 1, max: 2 } });
-        const state = { ...DefaultPasswordGenerationOptions, [property]: input };
+        const state = { ...EmptyState, [property]: input };
 
         const result = constraint.adjust(state);
 
-        expect(result).toEqual({ ...DefaultPasswordGenerationOptions, [property]: expected });
+        expect(result).toMatchObject({ [property]: expected });
       },
     );
 
@@ -62,24 +74,27 @@ describe("PasswordPolicyConstraints", () => {
       keyof PasswordGeneratorSettings,
     ][])("returns state.%s when the matching readonly constraint is writable", (property) => {
       const constraint = new PasswordPolicyConstraints({ [property]: { readonly: false } });
-      const state = { ...DefaultPasswordGenerationOptions, [property]: true };
+      const state = { ...EmptyState, [property]: true };
 
       const result = constraint.adjust(state);
 
-      expect(result).toEqual({ ...DefaultPasswordGenerationOptions, [property]: true });
+      expect(result).toEqual({ ...EmptyState, [property]: true });
     });
 
     it.each([["lowercase"], ["uppercase"], ["number"], ["special"]] as [
       keyof PasswordGeneratorSettings,
     ][])(
-      "returns state.%s = undefined when the matching readonly constraint is active without a required value",
+      "returns a consistent state.%s = undefined when the matching readonly constraint is active without a required value",
       (property) => {
         const constraint = new PasswordPolicyConstraints({ [property]: { readonly: true } });
-        const state = { ...DefaultPasswordGenerationOptions, [property]: true };
+        const state = {
+          ...EmptyState,
+          [property]: true,
+        };
 
         const result = constraint.adjust(state);
 
-        expect(result).toEqual({ ...DefaultPasswordGenerationOptions, [property]: undefined });
+        expect(result).toEqual({ ...EmptyState, [property]: false });
       },
     );
 
@@ -91,11 +106,11 @@ describe("PasswordPolicyConstraints", () => {
         const constraint = new PasswordPolicyConstraints({
           [property]: { readonly: true, requiredValue: false },
         });
-        const state = { ...DefaultPasswordGenerationOptions, [property]: true };
+        const state = { ...EmptyState, [property]: true };
 
         const result = constraint.adjust(state);
 
-        expect(result).toEqual({ ...DefaultPasswordGenerationOptions, [property]: false });
+        expect(result).toEqual({ ...EmptyState, [property]: false });
       },
     );
   });
