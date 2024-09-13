@@ -81,7 +81,7 @@ export class CipherReportComponent implements OnDestroy {
     if (filterId === 0) {
       cipherCount = this.allCiphers.length;
     } else if (filterId === 1) {
-      cipherCount = this.allCiphers.filter((c: any) => c.orgFilterStatus === null).length;
+      cipherCount = this.allCiphers.filter((c) => c.organizationId === null).length;
     } else {
       this.organizations.filter((org: Organization) => {
         if (org.id === filterId) {
@@ -89,9 +89,7 @@ export class CipherReportComponent implements OnDestroy {
           return org;
         }
       });
-      cipherCount = this.allCiphers.filter(
-        (c: any) => c.orgFilterStatus === orgFilterStatus,
-      ).length;
+      cipherCount = this.allCiphers.filter((c) => c.organizationId === orgFilterStatus).length;
     }
     return cipherCount;
   }
@@ -101,9 +99,9 @@ export class CipherReportComponent implements OnDestroy {
     if (status === 0) {
       this.dataSource.filter = null;
     } else if (status === 1) {
-      this.dataSource.filter = (c: any) => c.orgFilterStatus == null;
+      this.dataSource.filter = (c: CipherView) => c.organizationId == null;
     } else {
-      this.dataSource.filter = (c: any) => c.orgFilterStatus === status;
+      this.dataSource.filter = (c: CipherView) => c.organizationId === status;
     }
   }
 
@@ -183,9 +181,7 @@ export class CipherReportComponent implements OnDestroy {
   protected filterCiphersByOrg(ciphersList: CipherView[]) {
     this.allCiphers = [...ciphersList];
 
-    this.ciphers = ciphersList.map((ciph: any) => {
-      ciph.orgFilterStatus = ciph.organizationId;
-
+    this.ciphers = ciphersList.map((ciph) => {
       if (this.filterStatus.indexOf(ciph.organizationId) === -1 && ciph.organizationId != null) {
         this.filterStatus.push(ciph.organizationId);
       } else if (this.filterStatus.indexOf(1) === -1 && ciph.organizationId == null) {
@@ -193,7 +189,6 @@ export class CipherReportComponent implements OnDestroy {
       }
       return ciph;
     });
-
     this.dataSource.data = this.ciphers;
 
     if (this.filterStatus.length > 2) {
