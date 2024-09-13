@@ -1,6 +1,6 @@
 import { DIALOG_DATA, DialogConfig, DialogRef } from "@angular/cdk/dialog";
 import { CommonModule } from "@angular/common";
-import { Component, Inject, OnInit, EventEmitter, OnDestroy , Injector } from "@angular/core";
+import { Component, Inject, OnInit, EventEmitter, OnDestroy, Injector } from "@angular/core";
 import { Router } from "@angular/router";
 import { Subject } from "rxjs";
 
@@ -23,7 +23,7 @@ import {
 } from "@bitwarden/components";
 
 import { CipherViewComponent } from "../../../../../../libs/vault/src/cipher-view/cipher-view.component";
-import { WebIndividualPremiumUpgradeService , WebOrganizationPremiumUpgradeService } from "../../billing/services";
+import { WebVaultPremiumUpgradeService } from "../services/web-premium-upgrade.service";
 import { SharedModule } from "../../shared/shared.module";
 
 export interface ViewCipherDialogParams {
@@ -47,27 +47,13 @@ export interface ViewCipherDialogCloseResult {
   templateUrl: "view.component.html",
   standalone: true,
   imports: [CipherViewComponent, CommonModule, AsyncActionsModule, DialogModule, SharedModule],
-  providers: [
-    WebIndividualPremiumUpgradeService,
-    WebOrganizationPremiumUpgradeService,
-    {
-      provide: PremiumUpgradeService,
-      useFactory: (injector: Injector, component: ViewComponent) => {
-        return component.organization
-          ? injector.get(WebOrganizationPremiumUpgradeService)
-          : injector.get(WebIndividualPremiumUpgradeService);
-      },
-      deps: [Injector, ViewComponent],
-    },
-  ],
+  providers: [{ provide: PremiumUpgradeService, useClass: WebVaultPremiumUpgradeService }],
 })
 export class ViewComponent implements OnInit, OnDestroy {
   cipher: CipherView;
   onDeletedCipher = new EventEmitter<CipherView>();
   cipherTypeString: string;
-  cipherEditUrl: string;
   organization: Organization;
-  restrictProviderAccess = false;
 
   protected destroy$ = new Subject<void>();
 
@@ -82,7 +68,6 @@ export class ViewComponent implements OnInit, OnDestroy {
     private toastService: ToastService,
     private organizationService: OrganizationService,
     private router: Router,
-    private configService: ConfigService,
   ) {}
 
   /**
@@ -94,9 +79,6 @@ export class ViewComponent implements OnInit, OnDestroy {
     if (this.cipher.organizationId) {
       this.organization = await this.organizationService.get(this.cipher.organizationId);
     }
-    this.restrictProviderAccess = await this.configService.getFeatureFlag(
-      FeatureFlag.RestrictProviderAccess,
-    );
   }
 
   /**
@@ -147,7 +129,7 @@ export class ViewComponent implements OnInit, OnDestroy {
    * Helper method to delete cipher.
    */
   protected async deleteCipher(): Promise<void> {
-    const asAdmin = this.organization?.canEditAllCiphers(this.restrictProviderAccess);
+    const asAdmin = this.organization?.canEditAllCiphers;
     if (this.cipher.isDeleted) {
       await this.cipherService.deleteWithServer(this.cipher.id, asAdmin);
     } else {
