@@ -1,17 +1,18 @@
-import { Injectable } from "@angular/core";
+// import { Injectable } from "@angular/core";
 
-import { PremiumUpgradeService } from "@bitwarden/common/src/billing/abstractions/organizations/premium-upgrade.service.abstraction";
 import { MessagingService } from "@bitwarden/common/src/platform/abstractions/messaging.service";
 import { OrganizationId } from "@bitwarden/common/src/types/guid";
 
-@Injectable()
-export class WebVaultPremiumUpgradeService implements PremiumUpgradeService {
+import { PremiumUpgradePromptService } from "../abstractions/premium-upgrade-prompt.service";
+
+// @Injectable()
+export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePromptService {
   constructor(
     private messagingService: MessagingService,
     private organizationId: OrganizationId,
   ) {}
 
-  async getPremium() {
+  async promptForPremium() {
     // console.log("getPremium WebOrganizationPremiumUpgradeService");
     /**
      * Use the messaging service to trigger the premium required dialog in the web vault.

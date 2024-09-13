@@ -6,7 +6,7 @@ import { Subject } from "rxjs";
 
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
-import { PremiumUpgradeService } from "@bitwarden/common/billing/abstractions/organizations/premium-upgrade.service.abstraction";
+import { PremiumUpgradePromptService } from "@bitwarden/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -22,7 +22,7 @@ import {
 
 import { CipherViewComponent } from "../../../../../../libs/vault/src/cipher-view/cipher-view.component";
 import { SharedModule } from "../../shared/shared.module";
-import { WebVaultPremiumUpgradeService } from "../services/web-premium-upgrade.service";
+import { WebVaultPremiumUpgradePromptService } from "@bitwarden/common/src/vault/services/web-premium-upgrade.service";
 
 export interface ViewCipherDialogParams {
   cipher: CipherView;
@@ -45,7 +45,9 @@ export interface ViewCipherDialogCloseResult {
   templateUrl: "view.component.html",
   standalone: true,
   imports: [CipherViewComponent, CommonModule, AsyncActionsModule, DialogModule, SharedModule],
-  providers: [{ provide: PremiumUpgradeService, useClass: WebVaultPremiumUpgradeService }],
+  providers: [
+    { provide: PremiumUpgradePromptService, useClass: WebVaultPremiumUpgradePromptService },
+  ],
 })
 export class ViewComponent implements OnInit, OnDestroy {
   cipher: CipherView;
