@@ -199,7 +199,6 @@ export class SendFormComponent implements AfterViewInit, OnInit, OnChanges, Send
       return;
     }
 
-    // TODO: Add file handling
     await this.addEditFormService.saveSend(this.updatedSendView, null, this.config);
 
     this.toastService.showToast({

@@ -1097,6 +1097,9 @@
   "file": {
     "message": "File"
   },
+  "fileToShare": {
+    "message": "File to share"
+  },
   "selectFile": {
     "message": "Select a file"
   },
@@ -4343,7 +4346,7 @@
   },
   "enterprisePolicyRequirementsApplied": {
     "message": "Enterprise policy requirements have been applied to this setting"
-  }, 
+  },
   "fileSavedToDevice": {
     "message": "File saved to device. Manage from your device downloads."
   },

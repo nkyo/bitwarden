@@ -1,23 +1,31 @@
-<div class="box" *ngIf="type === sendType.File && (editMode || showFileSelector)">
-  <div class="box-content no-hover">
-    <div class="box-content-row" *ngIf="editMode">
-      <label for="file">{{ "file" | i18n }}</label>
-      <div class="row-main">
-        {{ originalSendView.file.fileName }} ({{ originalSendView.file.sizeName }})
-      </div>
-    </div>
-    <div class="box-content-row" *ngIf="showFileSelector">
-      <label for="file">{{ "file" | i18n }}</label>
-      <input
-        type="file"
-        id="file"
-        formControlName="file"
-        aria-describedby="fileHelp"
-        [readonly]="disableSend"
-      />
-    </div>
-  </div>
-  <div id="fileHelp" class="box-footer" *ngIf="showFileSelector">
-    {{ "sendFileDesc" | i18n }} {{ "maxFileSize" | i18n }}
-  </div>
-</div>
+<bit-section [formGroup]="sendFileDetailsForm">
+  <bit-form-field *ngIf="editMode">
+    <bit-label for="file">{{ "fileToShare" | i18n }}</bit-label>
+    <bit-hint>
+      {{ originalSendView.file.fileName }} ({{ originalSendView.file.sizeName }})
+    </bit-hint>
+  </bit-form-field>
+  <bit-form-field *ngIf="showFileSelector">
+    <bit-label for="file">{{ "fileToShare" | i18n }}</bit-label>
+    <button bitButton type="button" buttonType="primary" (click)="fileSelector.click()">
+      {{ "chooseFile" | i18n }}
+    </button>
+    <span
+      class="tw-flex tw-items-center tw-pl-3"
+      [ngClass]="fileName ? 'tw-text-main' : 'tw-text-muted'"
+    >
+      {{ fileName || ("noFileChosen" | i18n) }}</span
+    >
+    <input
+      bitInput
+      #fileSelector
+      type="file"
+      formControlName="file"
+      hidden
+      (change)="onFileSelected($event)"
+    />
+    <bit-hint *ngIf="showFileSelector">
+      {{ "maxFileSize" | i18n }}
+    </bit-hint>
+  </bit-form-field>
+</bit-section>
