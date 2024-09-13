@@ -1,13 +1,14 @@
-use async_stream::stream;
-use futures::stream::{Stream, StreamExt};
+use bitwarden_russh::ssh_agent;
 pub mod namedpipelistenerstream;
 
 use std::{
     collections::HashMap,
     sync::{Arc, RwLock},
 };
-use tokio::{net::UnixListener, sync::Mutex};
+use tokio::sync::Mutex;
 use tokio_util::sync::CancellationToken;
+
+use super::BitwardenDesktopAgent;
 
 impl BitwardenDesktopAgent {
     pub async fn start_server(
