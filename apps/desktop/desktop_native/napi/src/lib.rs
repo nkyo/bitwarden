@@ -159,10 +159,7 @@ pub mod sshagent {
     use napi::{
         bindgen_prelude::Promise,
         threadsafe_function::{ErrorStrategy::CalleeHandled, ThreadsafeFunction},
-        Error,
     };
-    use rand_chacha::ChaCha8Rng;
-    use ssh_key::{rand_core::SeedableRng, Algorithm, HashAlg, LineEnding};
     use tokio::{self, sync::Mutex};
 
     #[napi]
