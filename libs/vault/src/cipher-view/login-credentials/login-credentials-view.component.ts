@@ -4,7 +4,6 @@ import { Observable, shareReplay } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
-import { PremiumUpgradePromptService } from "../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -18,6 +17,7 @@ import {
   ColorPasswordModule,
 } from "@bitwarden/components";
 
+import { PremiumUpgradePromptService } from "../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { BitTotpCountdownComponent } from "../../components/totp-countdown/totp-countdown.component";
 import { ReadOnlyCipherCardComponent } from "../read-only-cipher-card/read-only-cipher-card.component";
 
@@ -73,8 +73,6 @@ export class LoginCredentialsViewComponent {
   }
 
   async getPremium() {
-    // console.log("getPremium LoginCredentialsViewComponent");
-    // console.log(this.premiumUpgradeService);
     await this.premiumUpgradeService.promptForPremium();
   }
 

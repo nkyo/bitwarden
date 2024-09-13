@@ -3,6 +3,9 @@ import { Injectable } from "@angular/core";
 import { MessagingService } from "../../../../../../libs/common/src/platform/abstractions/messaging.service";
 import { PremiumUpgradePromptService } from "../../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 
+/**
+ * This service is used to prompt the user to upgrade to premium.
+ */
 @Injectable()
 export class WebVaultPremiumUpgradePromptService implements PremiumUpgradePromptService {
   constructor(
