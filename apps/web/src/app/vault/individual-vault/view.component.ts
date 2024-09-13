@@ -7,8 +7,6 @@ import { Subject } from "rxjs";
 import { OrganizationService } from "@bitwarden/common/admin-console/abstractions/organization/organization.service.abstraction";
 import { Organization } from "@bitwarden/common/admin-console/models/domain/organization";
 import { PremiumUpgradeService } from "@bitwarden/common/billing/abstractions/organizations/premium-upgrade.service.abstraction";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -23,8 +21,8 @@ import {
 } from "@bitwarden/components";
 
 import { CipherViewComponent } from "../../../../../../libs/vault/src/cipher-view/cipher-view.component";
-import { WebVaultPremiumUpgradeService } from "../services/web-premium-upgrade.service";
 import { SharedModule } from "../../shared/shared.module";
+import { WebVaultPremiumUpgradeService } from "../services/web-premium-upgrade.service";
 
 export interface ViewCipherDialogParams {
   cipher: CipherView;
