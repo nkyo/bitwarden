@@ -21,7 +21,7 @@ import { VaultTimeoutService } from "@bitwarden/common/services/vault-timeout/va
 import { UserId } from "@bitwarden/common/types/guid";
 
 import { I18nRendererService } from "../../platform/services/i18n.renderer.service";
-import { SshAgentService } from "../../platform/services/renderer-ssh-agent.service";
+import { SshAgentService } from "../../platform/services/ssh-agent.service";
 import { NativeMessagingService } from "../../services/native-messaging.service";
 
 @Injectable()
