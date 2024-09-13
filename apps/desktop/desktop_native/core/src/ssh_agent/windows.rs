@@ -1,5 +1,5 @@
 use bitwarden_russh::ssh_agent;
-pub mod namedpipelistenerstream;
+pub mod named_pipe_listener_stream;
 
 use std::{
     collections::HashMap,
@@ -21,7 +21,7 @@ impl BitwardenDesktopAgent {
             get_ui_response_rx: auth_response_rx,
             cancellation_token: CancellationToken::new(),
         };
-        let stream = namedpipelistenerstream::NamedPipeServerStream::new(
+        let stream = named_pipe_listener_stream::NamedPipeServerStream::new(
             agent_state.cancellation_token.clone(),
         );
 
