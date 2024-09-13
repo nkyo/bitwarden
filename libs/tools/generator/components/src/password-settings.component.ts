@@ -1,6 +1,6 @@
 import { OnInit, Input, Output, EventEmitter, Component, OnDestroy } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
-import { BehaviorSubject, skip, takeUntil, Subject, map } from "rxjs";
+import { BehaviorSubject, skip, takeUntil, Subject, map, filter, tap } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -73,6 +73,22 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     [Controls.avoidAmbiguous]: [!Generators.Password.settings.initial.ambiguous],
   });
 
+  private get numbers() {
+    return this.settings.get(Controls.numbers);
+  }
+
+  private get special() {
+    return this.settings.get(Controls.special);
+  }
+
+  private get minNumber() {
+    return this.settings.get(Controls.minNumber);
+  }
+
+  private get minSpecial() {
+    return this.settings.get(Controls.minSpecial);
+  }
+
   async ngOnInit() {
     const singleUserId$ = this.singleUserId$();
     const settings = await this.generatorService.settings(Generators.Password, { singleUserId$ });
@@ -104,13 +120,13 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
           .get(Controls.length)
           .setValidators(toValidators(Controls.length, Generators.Password, constraints));
 
-        this.settings
-          .get(Controls.minNumber)
-          .setValidators(toValidators(Controls.minNumber, Generators.Password, constraints));
+        this.minNumber.setValidators(
+          toValidators(Controls.minNumber, Generators.Password, constraints),
+        );
 
-        this.settings
-          .get(Controls.minSpecial)
-          .setValidators(toValidators(Controls.minSpecial, Generators.Password, constraints));
+        this.minSpecial.setValidators(
+          toValidators(Controls.minSpecial, Generators.Password, constraints),
+        );
 
         // forward word boundaries to the template (can't do it through the rx form)
         this.minLength =
@@ -136,6 +152,42 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
           this.toggleEnabled(control, enabled);
         }
       });
+
+    // cascade selections between checkboxes and spinboxes
+    // before the group saves their values
+    let lastMinNumber = 1;
+    this.numbers.valueChanges
+      .pipe(
+        filter((checked) => !(checked && this.minNumber.value > 0)),
+        map((checked) => (checked ? lastMinNumber : 0)),
+        takeUntil(this.destroyed$),
+      )
+      .subscribe((value) => this.minNumber.setValue(value, { emitEvent: false }));
+
+    this.minNumber.valueChanges
+      .pipe(
+        map((value) => [value, value > 0] as const),
+        tap(([value]) => (lastMinNumber = this.numbers.value ? value : lastMinNumber)),
+        takeUntil(this.destroyed$),
+      )
+      .subscribe(([, checked]) => this.numbers.setValue(checked, { emitEvent: false }));
+
+    let lastMinSpecial = 1;
+    this.special.valueChanges
+      .pipe(
+        filter((checked) => !(checked && this.minSpecial.value > 0)),
+        map((checked) => (checked ? lastMinSpecial : 0)),
+        takeUntil(this.destroyed$),
+      )
+      .subscribe((value) => this.minSpecial.setValue(value, { emitEvent: false }));
+
+    this.minSpecial.valueChanges
+      .pipe(
+        map((value) => [value, value > 0] as const),
+        tap(([value]) => (lastMinSpecial = this.special.value ? value : lastMinSpecial)),
+        takeUntil(this.destroyed$),
+      )
+      .subscribe(([, checked]) => this.special.setValue(checked, { emitEvent: false }));
 
     // now that outputs are set up, connect inputs
     this.settings.valueChanges
