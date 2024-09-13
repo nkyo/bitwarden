@@ -17,7 +17,7 @@ const Controls = Object.freeze({
   length: "length",
   uppercase: "uppercase",
   lowercase: "lowercase",
-  numbers: "numbers",
+  number: "number",
   special: "special",
   minNumber: "minNumber",
   minSpecial: "minSpecial",
@@ -66,7 +66,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     [Controls.length]: [Generators.Password.settings.initial.length],
     [Controls.uppercase]: [Generators.Password.settings.initial.uppercase],
     [Controls.lowercase]: [Generators.Password.settings.initial.lowercase],
-    [Controls.numbers]: [Generators.Password.settings.initial.number],
+    [Controls.number]: [Generators.Password.settings.initial.number],
     [Controls.special]: [Generators.Password.settings.initial.special],
     [Controls.minNumber]: [Generators.Password.settings.initial.minNumber],
     [Controls.minSpecial]: [Generators.Password.settings.initial.minSpecial],
@@ -74,7 +74,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
   });
 
   private get numbers() {
-    return this.settings.get(Controls.numbers);
+    return this.settings.get(Controls.number);
   }
 
   private get special() {
@@ -129,10 +129,8 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
         );
 
         // forward word boundaries to the template (can't do it through the rx form)
-        this.minLength =
-          constraints.length?.min ?? Generators.Password.settings.constraints.length.min;
-        this.maxLength =
-          constraints.length?.max ?? Generators.Password.settings.constraints.length.max;
+        this.minLength = constraints.length.min;
+        this.maxLength = constraints.length.max;
         this.minMinNumber = constraints.minNumber.min;
         this.maxMinNumber = constraints.minNumber.max;
         this.minMinSpecial = constraints.minSpecial.min;
@@ -142,7 +140,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
           [Controls.length, constraints.length.min < constraints.length.max],
           [Controls.uppercase, !constraints.uppercase?.readonly],
           [Controls.lowercase, !constraints.lowercase?.readonly],
-          [Controls.numbers, !constraints.number?.readonly],
+          [Controls.number, !constraints.number?.readonly],
           [Controls.special, !constraints.special?.readonly],
           [Controls.minNumber, constraints.minNumber.min < constraints.minNumber.max],
           [Controls.minSpecial, constraints.minSpecial.min < constraints.minSpecial.max],

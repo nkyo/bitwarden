@@ -34,10 +34,12 @@ function maybe<T>(enabled: boolean, constraint: Constraint<T>): Constraint<T> {
 
 // copies `constraint`; ensures both bounds >= value
 function atLeast(minimum: number, constraint?: Constraint<number>): Constraint<number> {
-  const atLeast: Constraint<number> = {
-    ...(constraint ?? {}),
-    min: Math.max(constraint?.min ?? -Infinity, minimum),
-  };
+  if (minimum === undefined || minimum === null) {
+    return constraint;
+  }
+
+  const atLeast = { ...(constraint ?? {}) };
+  atLeast.min = Math.max(atLeast.min ?? -Infinity, minimum);
 
   if ("max" in atLeast) {
     atLeast.max = Math.max(atLeast.max, minimum);

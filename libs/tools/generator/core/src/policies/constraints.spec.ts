@@ -19,6 +19,13 @@ describe("password generator constraint utilities", () => {
       expect(result).toEqual({ min: 1 });
     });
 
+    it("returns the constraint when minimum is undefined", () => {
+      const constraint = {};
+      const result = atLeast(undefined, constraint);
+
+      expect(result).toBe(constraint);
+    });
+
     it("adds a minimum member to a constraint", () => {
       const result = atLeast(1, {});
 
