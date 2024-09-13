@@ -12,7 +12,6 @@ import { AUTOFILL_ID, SHOW_AUTOFILL_BUTTON } from "@bitwarden/common/autofill/co
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
-import { PremiumUpgradePromptService } from "@bitwarden/common/vault/abstractions/premium-upgrade-prompt.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
@@ -27,15 +26,15 @@ import {
 } from "@bitwarden/components";
 import { TotpCaptureService } from "@bitwarden/vault";
 
+import { PremiumUpgradePromptService } from "../../../../../../../../libs/common/src/vault/abstractions/premium-upgrade-prompt.service";
 import { CipherViewComponent } from "../../../../../../../../libs/vault/src/cipher-view";
 import { PopOutComponent } from "../../../../../platform/popup/components/pop-out.component";
+import { PopupFooterComponent } from "../../../../../platform/popup/layout/popup-footer.component";
+import { PopupHeaderComponent } from "../../../../../platform/popup/layout/popup-header.component";
+import { PopupPageComponent } from "../../../../../platform/popup/layout/popup-page.component";
 import { BrowserPremiumUpgradePromptService } from "../../../services/browser-premium-upgrade-prompt.service";
 import { BrowserTotpCaptureService } from "../../../services/browser-totp-capture.service";
-
-import { PopupFooterComponent } from "./../../../../../platform/popup/layout/popup-footer.component";
-import { PopupHeaderComponent } from "./../../../../../platform/popup/layout/popup-header.component";
-import { PopupPageComponent } from "./../../../../../platform/popup/layout/popup-page.component";
-import { VaultPopupAutofillService } from "./../../../services/vault-popup-autofill.service";
+import { VaultPopupAutofillService } from "../../../services/vault-popup-autofill.service";
 
 @Component({
   selector: "app-view-v2",
