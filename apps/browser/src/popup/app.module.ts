@@ -101,7 +101,7 @@ import "../platform/popup/locales";
       maxOpened: 2,
       autoDismiss: true,
       closeButton: true,
-      positionClass: "toast-bottom-full-width",
+      positionClass: "toast-top-full-width",
     }),
     BrowserAnimationsModule,
     BrowserModule,
