@@ -136,6 +136,8 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
         this.minMinSpecial = constraints.minSpecial.min;
         this.maxMinSpecial = constraints.minSpecial.max;
 
+        this.policyInEffect = constraints.policyInEffect;
+
         const toggles = [
           [Controls.length, constraints.length.min < constraints.length.max],
           [Controls.uppercase, !constraints.uppercase?.readonly],
@@ -219,6 +221,9 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
 
   /** attribute binding for minSpecial[max] */
   protected maxMinSpecial: number;
+
+  /** display binding for enterprise policy notice */
+  protected policyInEffect: boolean;
 
   private toggleEnabled(setting: keyof typeof Controls, enabled: boolean) {
     if (enabled) {

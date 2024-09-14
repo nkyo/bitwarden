@@ -462,6 +462,10 @@
     "message": "Avoid ambiguous characters",
     "description": "Label for the avoid ambiguous characters checkbox."
   },
+  "generatorPolicyInEffect": {
+    "message": "Enterprise policy requirements have been applied to your generator options.",
+    "description": "Help text displayed when a policy limits the password generator's options."
+  },
   "searchVault": {
     "message": "Search vault"
   },
@@ -4308,7 +4312,7 @@
   },
   "enterprisePolicyRequirementsApplied": {
     "message": "Enterprise policy requirements have been applied to this setting"
-  }, 
+  },
   "fileSavedToDevice": {
     "message": "File saved to device. Manage from your device downloads."
   },
