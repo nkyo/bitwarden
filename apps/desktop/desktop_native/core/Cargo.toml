@@ -42,6 +42,9 @@ tokio-stream = { version = "0.1.15", features = ["net"] }
 tokio-util = "0.7.11"
 typenum = "=1.17.0"
 rand_chacha = "0.3.1"
+pkcs8 = { version = "0.10.2", features = ["alloc", "encryption", "pem"] }
+rsa = "0.9.6"
+ed25519 = { version = "2.2.3", features = ["pkcs8"] }
 
 [target.'cfg(windows)'.dependencies]
 widestring = "=1.1.0"

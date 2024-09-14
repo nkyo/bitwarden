@@ -40,7 +40,6 @@ pub async fn generate_keypair(key_algorithm: String) -> Result<SshKey, anyhow::E
     Ok(SshKey {
         private_key: private_key_openssh.to_string(),
         public_key: key.public_key().to_string(),
-        key_algorithm: key_algorithm.to_string(),
         key_fingerprint: key.fingerprint(HashAlg::Sha256).to_string(),
     })
 }

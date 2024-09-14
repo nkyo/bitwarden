@@ -178,7 +178,6 @@ pub mod sshagent {
     pub struct SshKey {
         pub private_key: String,
         pub public_key: String,
-        pub key_algorithm: String,
         pub key_fingerprint: String,
     }
 
@@ -187,7 +186,6 @@ pub mod sshagent {
             SshKey {
                 private_key: key.private_key,
                 public_key: key.public_key,
-                key_algorithm: key.key_algorithm,
                 key_fingerprint: key.key_fingerprint,
             }
         }
