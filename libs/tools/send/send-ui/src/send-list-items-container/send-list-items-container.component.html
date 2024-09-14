@@ -43,7 +43,7 @@
           <bit-item-action>
             <button
               type="button"
-              (click)="deleteSend(send)"
+              (click)="deleteSend($event, send)"
               appA11yTitle="{{ 'delete' | i18n }} - {{ send.name }}"
             >
               <i class="bwi tw-text-lg bwi-trash"></i>

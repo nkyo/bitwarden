@@ -1,0 +1,19 @@
+<bit-simple-dialog dialogSize="default">
+  <ng-container bitDialogContent>
+    <p>
+      {{ "sendFilePopoutDialogText" | i18n }}
+    </p>
+    <p>
+      <strong>{{ "sendFilePopoutDialogDesc" | i18n }}</strong>
+    </p>
+  </ng-container>
+  <ng-container bitDialogFooter>
+    <button buttonType="primary" bitButton type="button" (click)="onPopOutClick()">
+      {{ "popOut" | i18n }}
+      <i class="bwi bwi-external-link" aria-hidden="true"></i>
+    </button>
+    <button bitButton buttonType="secondary" type="button" (click)="close()">
+      {{ "cancel" | i18n }}
+    </button>
+  </ng-container>
+</bit-simple-dialog>

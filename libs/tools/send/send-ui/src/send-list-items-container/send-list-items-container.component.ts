@@ -61,7 +61,8 @@ export class SendListItemsContainerComponent {
     protected toastService: ToastService,
   ) {}
 
-  async deleteSend(s: SendView): Promise<boolean> {
+  async deleteSend(e: Event, s: SendView): Promise<boolean> {
+    e.stopPropagation();
     const confirmed = await this.dialogService.openSimpleDialog({
       title: { key: "deleteSend" },
       content: { key: "deleteSendConfirmation" },
