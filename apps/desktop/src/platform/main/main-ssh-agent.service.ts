@@ -1,4 +1,5 @@
 import { ipcMain } from "electron";
+import { concatMap, delay, filter, firstValueFrom, from, race, take, timer } from "rxjs";
 
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
@@ -12,6 +13,7 @@ class AgentResponse {
 
 export class MainSshAgentService {
   SIGN_TIMEOUT = 60_000;
+  REQUEST_POLL_INTERVAL = 50;
 
   private requestResponses: AgentResponse[] = [];
   private request_id = 0;
@@ -38,15 +40,22 @@ export class MainSshAgentService {
           requestId: id_for_this_request,
         });
 
-        const start = Date.now();
-        while (
-          this.requestResponses.filter((response) => response.requestId == id_for_this_request)
-            .length == 0
-        ) {
-          await new Promise((res) => setTimeout(res, 100));
-          if (Date.now() - start > this.SIGN_TIMEOUT) {
-            return false;
-          }
+        const result = await firstValueFrom(
+          race(
+            from([false]).pipe(delay(this.SIGN_TIMEOUT)),
+
+            //poll for response
+            timer(0, this.REQUEST_POLL_INTERVAL).pipe(
+              concatMap(() => from(this.requestResponses)),
+              filter((response) => response.requestId == id_for_this_request),
+              take(1),
+              concatMap(() => from([true])),
+            ),
+          ),
+        );
+
+        if (!result) {
+          return false;
         }
 
         const response = this.requestResponses.find(
@@ -56,6 +65,7 @@ export class MainSshAgentService {
         this.requestResponses = this.requestResponses.filter(
           (response) => response.requestId != id_for_this_request,
         );
+
         return response.accepted;
       })
       .then((agentState: sshagent.SshAgentState) => {

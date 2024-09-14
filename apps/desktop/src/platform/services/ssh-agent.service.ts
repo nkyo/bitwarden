@@ -2,8 +2,12 @@ import { Injectable, OnDestroy } from "@angular/core";
 import {
   combineLatest,
   concatMap,
+  delay,
   filter,
   firstValueFrom,
+  map,
+  of,
+  race,
   Subject,
   switchMap,
   takeUntil,
@@ -23,6 +27,12 @@ import { DialogService, ToastService } from "@bitwarden/components";
 import { ApproveSshRequestComponent } from "../components/approve-ssh-request";
 
 import { DesktopSettingsService } from "./desktop-settings.service";
+
+type SshRequest = {
+  cipherId: string;
+  requestId: number;
+  timeout: boolean;
+};
 
 @Injectable({
   providedIn: "root",
@@ -48,58 +58,65 @@ export class SshAgentService implements OnDestroy {
     this.messageListener
       .messages$(new CommandDefinition("sshagent.signrequest"))
       .pipe(
-        switchMap(async (message: any) => {
-          const cipherId = message.cipherId;
-          const messageId = message.messageId;
-
+        concatMap(async (message: any) => {
           ipc.platform.focusWindow();
-
-          const activeAccountId = (await firstValueFrom(this.accountService.activeAccount$)).id;
-          const isLocked =
-            (await firstValueFrom(this.authService.authStatusFor$(activeAccountId))) ===
-            AuthenticationStatus.Locked;
-          if (isLocked) {
+          if (
+            (await firstValueFrom(this.authService.activeAccountStatus$)) !==
+            AuthenticationStatus.Unlocked
+          ) {
             this.toastService.showToast({
               variant: "info",
               title: null,
               message: this.i18nService.t("sshAgentUnlockRequired"),
             });
-
-            const unlocked = firstValueFrom(
-              this.authService
-                .authStatusFor$(activeAccountId)
-                .pipe(filter((status) => status === AuthenticationStatus.Unlocked)),
-            );
-            const timeout = new Promise((_, reject) =>
-              setTimeout(reject, this.SSH_VAULT_UNLOCK_REQUEST_TIMEOUT),
-            );
-
-            try {
-              await Promise.race([unlocked, timeout]);
-            } catch (error) {
-              this.logService.error(error);
-              this.logService.error("[Ssh Agent] Timeout waiting for unlock");
-              this.toastService.showToast({
-                variant: "error",
-                title: null,
-                message: this.i18nService.t("sshAgentUnlockTimeout"),
-              });
-              await ipc.platform.sshAgent.signRequestResponse(messageId, false);
-              return;
-            }
           }
+          return message;
+        }),
+        switchMap(async (message: any) => {
+          const cipherId = message.cipherId;
+          const requestId = message.requestId;
 
-          const decryptedCiphers = await this.cipherService.getAllDecrypted();
-          const cipher = decryptedCiphers.find((cipher) => cipher.id == cipherId);
+          const ret = race([
+            of({ cipherId, requestId, timeout: true } as SshRequest).pipe(
+              delay(this.SSH_VAULT_UNLOCK_REQUEST_TIMEOUT),
+            ),
+            this.authService.activeAccountStatus$.pipe(
+              map((status) => {
+                return status;
+              }),
+              filter((status) => status === AuthenticationStatus.Unlocked),
+              map(() => {
+                return {
+                  cipherId,
+                  requestId,
+                  timeout: false,
+                } as SshRequest;
+              }),
+            ),
+          ]);
+          return await firstValueFrom(ret);
+        }),
+        concatMap(async (request: SshRequest) => {
+          if (request.timeout) {
+            this.toastService.showToast({
+              variant: "error",
+              title: null,
+              message: this.i18nService.t("sshAgentUnlockTimeout"),
+            });
+          } else {
+            const decryptedCiphers = await this.cipherService.getAllDecrypted();
+            const cipher = decryptedCiphers.find((cipher) => cipher.id == request.cipherId);
 
-          const dialogRef = ApproveSshRequestComponent.open(
-            this.dialogService,
-            cipher.name,
-            this.i18nService.t("unknownApplication"),
-          );
-          const result = await firstValueFrom(dialogRef.closed);
-          await ipc.platform.sshAgent.signRequestResponse(messageId, result);
-          ipc.platform.hideWindow();
+            const dialogRef = ApproveSshRequestComponent.open(
+              this.dialogService,
+              cipher.name,
+              this.i18nService.t("unknownApplication"),
+            );
+
+            const result = await firstValueFrom(dialogRef.closed);
+            await ipc.platform.sshAgent.signRequestResponse(request.requestId, result);
+            ipc.platform.hideWindow();
+          }
         }),
         takeUntil(this.destroy$),
       )
