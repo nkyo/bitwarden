@@ -26,7 +26,7 @@ pub fn import_key(
     match encoded_key.lines().next() {
         Some(PKCS1_HEADER) => {
             return Ok(SshKeyImportResult {
-                status: SshKeyImportStatus::ParsingError,
+                status: SshKeyImportStatus::UnsupportedKeyType,
                 ssh_key: None,
             });
         }
@@ -166,7 +166,7 @@ fn import_pkcs8_key(
         }
         _ => {
             return Ok(SshKeyImportResult {
-                status: SshKeyImportStatus::ParsingError,
+                status: SshKeyImportStatus::UnsupportedKeyType,
                 ssh_key: None,
             });
         }
@@ -180,7 +180,16 @@ fn import_openssh_key(
     let private_key = ssh_key::private::PrivateKey::from_openssh(&encoded_key);
     let private_key = match private_key {
         Ok(k) => k,
-        Err(_) => {
+        Err(err) => {
+            match err {
+                ssh_key::Error::AlgorithmUnknown | ssh_key::Error::AlgorithmUnsupported { algorithm: _ } => {
+                    return Ok(SshKeyImportResult {
+                        status: SshKeyImportStatus::UnsupportedKeyType,
+                        ssh_key: None,
+                    });
+                }
+                _ => {}
+            }
             return Ok(SshKeyImportResult {
                 status: SshKeyImportStatus::ParsingError,
                 ssh_key: None,
@@ -234,6 +243,8 @@ pub enum SshKeyImportStatus {
     WrongPassword,
     /// ssh key could not be parsed, either due to an incorrect / unsupported format (pkcs#8) or key type (ecdsa), or because the input is not an ssh key
     ParsingError,
+    /// ssh key type is not supported
+    UnsupportedKeyType,
 }
 
 pub enum SshKeyImportError {
@@ -362,6 +373,6 @@ mod tests {
     fn import_ecdsa_error() {
         let private_key = include_str!("./test_keys/ecdsa_openssh_unencrypted");
         let result = import_key(private_key.to_string(), "".to_string()).unwrap();
-        assert_eq!(result.status, SshKeyImportStatus::ParsingError);
+        assert_eq!(result.status, SshKeyImportStatus::UnsupportedKeyType);
     }
 }

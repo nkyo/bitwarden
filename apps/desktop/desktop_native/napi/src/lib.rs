@@ -201,6 +201,8 @@ pub mod sshagent {
         WrongPassword,
         /// ssh key could not be parsed, either due to an incorrect / unsupported format (pkcs#8) or key type (ecdsa), or because the input is not an ssh key
         ParsingError,
+        /// ssh key type is not supported (e.g. ecdsa)
+        UnsupportedKeyType,
     }
 
     impl From<desktop_core::ssh_agent::importer::SshKeyImportStatus> for SshKeyImportStatus {
@@ -217,6 +219,9 @@ pub mod sshagent {
                 }
                 desktop_core::ssh_agent::importer::SshKeyImportStatus::ParsingError => {
                     SshKeyImportStatus::ParsingError
+                }
+                desktop_core::ssh_agent::importer::SshKeyImportStatus::UnsupportedKeyType => {
+                    SshKeyImportStatus::UnsupportedKeyType
                 }
             }
         }
