@@ -18,6 +18,8 @@ import { TaxInfoComponent } from "./tax-info.component";
 import { UpdateLicenseDialogComponent } from "./update-license-dialog.component";
 import { UpdateLicenseComponent } from "./update-license.component";
 import { VerifyBankAccountComponent } from "./verify-bank-account/verify-bank-account.component";
+import { OrganizationSelfHostingLicenseUploaderComponent } from "@bitwarden/web-vault/app/billing/shared/self-hosting-license-uploader/organization-self-hosting-license-uploader.component";
+import { IndividualSelfHostingLicenseUploaderComponent } from "@bitwarden/web-vault/app/billing/shared/self-hosting-license-uploader/individual-self-hosting-license-uploader.component";
 
 @NgModule({
   imports: [
@@ -40,6 +42,8 @@ import { VerifyBankAccountComponent } from "./verify-bank-account/verify-bank-ac
     OffboardingSurveyComponent,
     AdjustPaymentDialogV2Component,
     AdjustStorageDialogV2Component,
+    IndividualSelfHostingLicenseUploaderComponent,
+    OrganizationSelfHostingLicenseUploaderComponent,
   ],
   exports: [
     SharedModule,
@@ -53,6 +57,8 @@ import { VerifyBankAccountComponent } from "./verify-bank-account/verify-bank-ac
     OffboardingSurveyComponent,
     VerifyBankAccountComponent,
     PaymentV2Component,
+    IndividualSelfHostingLicenseUploaderComponent,
+    OrganizationSelfHostingLicenseUploaderComponent,
   ],
 })
 export class BillingSharedModule {}
