@@ -775,10 +775,6 @@ export class VaultComponent implements OnInit, OnDestroy {
     });
   }
 
-  async navigateToCipher(cipher: CipherView) {
-    this.go({ itemId: cipher?.id });
-  }
-
   async editCipher(
     cipher: CipherView,
     additionalComponentParameters?: (comp: AddEditComponent) => void,
@@ -879,21 +875,25 @@ export class VaultComponent implements OnInit, OnDestroy {
 
     // Open the dialog.
     const dialogRef = openViewCipherDialog(this.dialogService, {
-      data: { cipher: cipherView },
+      data: { cipher: cipherView, disableEdit: !cipher.edit },
     });
 
     // Wait for the dialog to close.
     const result: ViewCipherDialogCloseResult = await lastValueFrom(dialogRef.closed);
+
+    // If the dialog was closed by clicking the edit button, navigate to open the edit dialog.
+    if (result.action === ViewCipherDialogResult.edited) {
+      this.go({ itemId: cipherView.id, action: "edit" });
+      return;
+    }
 
     // If the dialog was closed by deleting the cipher, refresh the vault.
     if (result.action === ViewCipherDialogResult.deleted) {
       this.refresh();
     }
 
-    // If the dialog was closed by any other action (close button, escape key, etc), navigate back to the vault.
-    if (!result.action) {
-      this.go({ cipherId: null, itemId: null, action: null });
-    }
+    // Clear the query params when the view dialog closes
+    this.go({ cipherId: null, itemId: null, action: null });
   }
 
   async cloneCipher(cipher: CipherView) {
