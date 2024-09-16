@@ -1,4 +1,4 @@
-import { Observable, combineLatest, map, skipWhile, tap } from "rxjs";
+import { Observable, combineLatest, map } from "rxjs";
 
 import { FeatureFlag } from "../../enums/feature-flag.enum";
 import { ConfigService } from "../abstractions/config/config.service";
@@ -29,18 +29,16 @@ export class DefaultThemeStateService implements ThemeStateService {
     this.selectedThemeState.state$,
     this.configService.getFeatureFlag$(FeatureFlag.ExtensionRefresh),
   ]).pipe(
-    tap(async ([theme, isExtensionRefresh]) => {
+    map(([theme, isExtensionRefresh]) => {
       // The extension refresh should not allow for Nord or SolarizedDark
-      // Update the theme to use the system theme
+      // Default the user to their system theme
       if (isExtensionRefresh && [ThemeType.Nord, ThemeType.SolarizedDark].includes(theme)) {
-        await this.setSelectedTheme(ThemeType.System);
+        return ThemeType.System;
       }
+
+      return theme;
     }),
-    skipWhile(
-      ([theme, isExtensionRefresh]) =>
-        isExtensionRefresh && [ThemeType.Nord, ThemeType.SolarizedDark].includes(theme),
-    ),
-    map(([theme]) => theme ?? this.defaultTheme),
+    map((theme) => theme ?? this.defaultTheme),
   );
 
   constructor(
