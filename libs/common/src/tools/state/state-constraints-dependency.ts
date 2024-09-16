@@ -18,6 +18,10 @@ export type StateConstraintsDependency<State> = {
   constraints$: Observable<StateConstraints<State> | DynamicStateConstraints<State>>;
 };
 
+/** Returns `true` if the input constraint is a `DynamicStateConstraints<T>`.
+ *  Otherwise, returns false.
+ *  @param constraints the constraint to evaluate.
+ * */
 export function isDynamic<State>(
   constraints: StateConstraints<State> | DynamicStateConstraints<State>,
 ): constraints is DynamicStateConstraints<State> {
