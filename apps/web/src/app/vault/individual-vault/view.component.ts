@@ -24,6 +24,10 @@ import { SharedModule } from "../../shared/shared.module";
 
 export interface ViewCipherDialogParams {
   cipher: CipherView;
+  /**
+   * If true, the edit button will be disabled in the dialog.
+   */
+  disableEdit?: boolean;
 }
 
 export enum ViewCipherDialogResult {
