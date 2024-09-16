@@ -564,6 +564,18 @@
   "settings": {
     "message": "Settings"
   },
+  "accountEmail": {
+    "message": "Account email"
+  },
+  "requestHint": {
+    "message": "Request hint"
+  },
+  "requestPasswordHint": {
+    "message": "Request password hint"
+  },
+  "enterYourAccountEmailAddressAndYourPasswordHintWillBeSentToYou": {
+    "message": "Enter your account email address and your password hint will be sent to you"
+  },
   "passwordHint": {
     "message": "Password hint"
   },
@@ -933,6 +945,9 @@
   },
   "vaultTimeout": {
     "message": "Vault timeout"
+  },
+  "vaultTimeout1": {
+    "message": "Timeout"
   },
   "vaultTimeoutDesc": {
     "message": "Choose when your vault will take the vault timeout action."
@@ -1559,7 +1574,7 @@
   "recommendedForSecurity": {
     "message": "Recommended for security."
   },
-  "lockWithMasterPassOnRestart": {
+  "lockWithMasterPassOnRestart1": {
     "message": "Lock with master password on restart"
   },
   "deleteAccount": {
@@ -1637,7 +1652,7 @@
   },
   "lock": {
     "message": "Lock",
-    "description": "Verb form: to make secure or inaccesible by"
+    "description": "Verb form: to make secure or inaccessible by"
   },
   "trash": {
     "message": "Trash",
@@ -2091,8 +2106,8 @@
   "minutes": {
     "message": "Minutes"
   },
-  "vaultTimeoutPolicyInEffect": {
-    "message": "Your organization policies have set your maximum allowed vault timeout to $HOURS$ hour(s) and $MINUTES$ minute(s).",
+  "vaultTimeoutPolicyInEffect1": {
+    "message": "$HOURS$ hour(s) and $MINUTES$ minute(s) maximum.",
     "placeholders": {
       "hours": {
         "content": "$1",
