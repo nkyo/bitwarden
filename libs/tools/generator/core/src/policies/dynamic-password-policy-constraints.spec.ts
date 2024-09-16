@@ -24,6 +24,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, useLowercase: true };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.lowercase.readonly).toEqual(true);
       expect(constraints.lowercase.requiredValue).toEqual(true);
       expect(constraints.minLowercase).toEqual({ min: 1 });
@@ -33,6 +34,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, useUppercase: true };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.uppercase.readonly).toEqual(true);
       expect(constraints.uppercase.requiredValue).toEqual(true);
       expect(constraints.minUppercase).toEqual({ min: 1 });
@@ -42,6 +44,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, useNumbers: true };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.number.readonly).toEqual(true);
       expect(constraints.number.requiredValue).toEqual(true);
       expect(constraints.minNumber).toEqual({ min: 1, max: 9 });
@@ -51,6 +54,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, useSpecial: true };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.special.readonly).toEqual(true);
       expect(constraints.special.requiredValue).toEqual(true);
       expect(constraints.minSpecial).toEqual({ min: 1, max: 9 });
@@ -60,6 +64,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, useNumbers: true, numberCount: 2 };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.number.readonly).toEqual(true);
       expect(constraints.number.requiredValue).toEqual(true);
       expect(constraints.minNumber).toEqual({ min: 2, max: 9 });
@@ -69,6 +74,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, useSpecial: true, specialCount: 2 };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.special.readonly).toEqual(true);
       expect(constraints.special.requiredValue).toEqual(true);
       expect(constraints.minSpecial).toEqual({ min: 2, max: 9 });
@@ -78,6 +84,7 @@ describe("DynamicPasswordPolicyConstraints", () => {
       const policy = { ...Policies.Password.disabledValue, minLength: 10 };
       const { constraints } = new DynamicPasswordPolicyConstraints(policy);
 
+      expect(constraints.policyInEffect).toBeTruthy();
       expect(constraints.length).toEqual({ min: 10, max: 128 });
     });
 

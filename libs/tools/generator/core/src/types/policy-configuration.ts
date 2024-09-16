@@ -18,6 +18,8 @@ export type PolicyConfiguration<Policy, Settings> = {
   combine: (acc: Policy, policy: AdminPolicy) => Policy;
 
   /** Converts policy service data into an actionable policy.
+   *  @deprecated provided only for backwards compatibility.
+   *   Use `toConstraints` instead.
    */
   createEvaluator: (policy: Policy) => PolicyEvaluator<Policy, Settings>;
 

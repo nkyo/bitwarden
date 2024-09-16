@@ -1,59 +1,40 @@
-import { Constraints } from "@bitwarden/common/tools/types";
+import { StateConstraints } from "@bitwarden/common/tools/types";
 
 import { PolicyEvaluator } from "../abstractions";
-import { DefaultPassphraseGenerationOptions, DefaultPassphraseBoundaries } from "../data";
 import { Boundary, PassphraseGenerationOptions, PassphraseGeneratorPolicy } from "../types";
 
+import { PassphrasePolicyConstraints } from "./passphrase-policy-constraints";
+
 /** Enforces policy for passphrase generation options.
+ *  @deprecated Use PassphrasePolicyConstraints instead.
  */
 export class PassphraseGeneratorOptionsEvaluator
-  implements
-    PolicyEvaluator<PassphraseGeneratorPolicy, PassphraseGenerationOptions>,
-    Constraints<PassphraseGenerationOptions>
+  implements PolicyEvaluator<PassphraseGeneratorPolicy, PassphraseGenerationOptions>
 {
-  // This design is not ideal, but it is a step towards a more robust passphrase
-  // generator. Ideally, `sanitize` would be implemented on an options class,
-  // and `applyPolicy` would be implemented on a policy class, "mise en place".
-  //
-  // The current design of the passphrase generator, unfortunately, would require
-  // a substantial rewrite to make this feasible. Hopefully this change can be
-  // applied when the passphrase generator is ported to rust.
-
   /** Policy applied by the evaluator.
    */
   readonly policy: PassphraseGeneratorPolicy;
 
   /** Boundaries for the number of words allowed in the password.
    */
-  readonly numWords: Boundary;
+  get numWords(): Boundary {
+    return this.constraints.constraints.numWords as Boundary;
+  }
 
   /** Instantiates the evaluator.
    * @param policy The policy applied by the evaluator. When this conflicts with
    *               the defaults, the policy takes precedence.
    */
   constructor(policy: PassphraseGeneratorPolicy) {
-    function createBoundary(value: number, defaultBoundary: Boundary): Boundary {
-      const boundary = {
-        min: Math.max(defaultBoundary.min, value),
-        max: Math.max(defaultBoundary.max, value),
-      };
-
-      return boundary;
-    }
-
     this.policy = structuredClone(policy);
-    this.numWords = createBoundary(policy.minNumberWords, DefaultPassphraseBoundaries.numWords);
+    this.constraints = new PassphrasePolicyConstraints(policy);
   }
+
+  private readonly constraints: PassphrasePolicyConstraints;
 
   /** {@link PolicyEvaluator.policyInEffect} */
   get policyInEffect(): boolean {
-    const policies = [
-      this.policy.capitalize,
-      this.policy.includeNumber,
-      this.policy.minNumberWords > DefaultPassphraseBoundaries.numWords.min,
-    ];
-
-    return policies.includes(true);
+    return this.constraints.constraints.policyInEffect;
   }
 
   /** Apply policy to the input options.
@@ -61,28 +42,7 @@ export class PassphraseGeneratorOptionsEvaluator
    *  @returns A new password generation request with policy applied.
    */
   applyPolicy(options: PassphraseGenerationOptions): PassphraseGenerationOptions {
-    function fitToBounds(value: number, boundaries: Boundary) {
-      const { min, max } = boundaries;
-
-      const withUpperBound = Math.min(value ?? boundaries.min, max);
-      const withLowerBound = Math.max(withUpperBound, min);
-
-      return withLowerBound;
-    }
-
-    // apply policy overrides
-    const capitalize = this.policy.capitalize || options.capitalize || false;
-    const includeNumber = this.policy.includeNumber || options.includeNumber || false;
-
-    // apply boundaries
-    const numWords = fitToBounds(options.numWords, this.numWords);
-
-    return {
-      ...options,
-      numWords,
-      capitalize,
-      includeNumber,
-    };
+    return evaluate(options, this.constraints);
   }
 
   /** Ensures internal options consistency.
@@ -90,15 +50,24 @@ export class PassphraseGeneratorOptionsEvaluator
    *  @returns A passphrase generation request with cascade applied.
    */
   sanitize(options: PassphraseGenerationOptions): PassphraseGenerationOptions {
-    // ensure words are separated by a single character or the empty string
-    const wordSeparator =
-      options.wordSeparator === ""
-        ? ""
-        : (options.wordSeparator?.[0] ?? DefaultPassphraseGenerationOptions.wordSeparator);
-
-    return {
-      ...options,
-      wordSeparator,
-    };
+    return evaluate(options, this.constraints);
   }
+}
+
+function evaluate(
+  options: PassphraseGenerationOptions,
+  constraints: StateConstraints<PassphraseGenerationOptions>,
+) {
+  const withDefaults = { ...options };
+
+  // compatibility - the evaluator fills nullish values; in practice
+  // this shouldn't happen, but there's a unit test for it.
+  withDefaults.capitalize ||= false;
+  withDefaults.includeNumber ||= false;
+  withDefaults.wordSeparator ??= "-";
+
+  return {
+    ...options,
+    ...constraints.adjust(withDefaults),
+  };
 }

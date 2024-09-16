@@ -61,12 +61,36 @@ function fitToBounds(value: number, constraint: Constraint<number>) {
   return withLowerBound;
 }
 
+function fitLength(
+  value: string,
+  constraint: Constraint<string>,
+  options?: { fillString?: string },
+) {
+  if (!constraint) {
+    return value;
+  }
+
+  const { minLength, maxLength } = constraint;
+  const { fillString } = options ?? { fillString: " " };
+
+  const trimmed = (value ?? "").slice(0, maxLength ?? Infinity);
+  const result = trimmed.padEnd(minLength ?? trimmed.length, fillString);
+
+  return result;
+}
+
 function enforceConstant(value: boolean, constraint: Constraint<boolean>) {
   if (constraint?.readonly) {
     return constraint.requiredValue;
   } else {
     return value;
   }
+}
+
+function readonlyTrueWhen(enabled: boolean) {
+  const readonlyValue = maybeReadonly(enabled, RequiresTrue);
+  const maybeReadonlyValue = maybe(enabled, readonlyValue);
+  return maybeReadonlyValue;
 }
 
 export {
@@ -76,6 +100,8 @@ export {
   maybeReadonly,
   fitToBounds,
   enforceConstant,
+  readonlyTrueWhen,
+  fitLength,
   AtLeastOne,
   RequiresTrue,
 };

@@ -1,5 +1,3 @@
-import { Constraints } from "@bitwarden/common/tools/types";
-
 import { PolicyEvaluator } from "../abstractions";
 import {
   Boundary,
@@ -11,11 +9,10 @@ import {
 import { DynamicPasswordPolicyConstraints } from "./dynamic-password-policy-constraints";
 
 /** Enforces policy for password generation.
+ *  @deprecated use `DynamicPasswordPolicyConstraints` instead.
  */
 export class PasswordGeneratorOptionsEvaluator
-  implements
-    PolicyEvaluator<PasswordGeneratorPolicy, PasswordGenerationOptions>,
-    Constraints<PasswordGenerationOptions>
+  implements PolicyEvaluator<PasswordGeneratorPolicy, PasswordGenerationOptions>
 {
   // Constraints<PasswordGenerationOptions> compatibility
   get minNumber() {

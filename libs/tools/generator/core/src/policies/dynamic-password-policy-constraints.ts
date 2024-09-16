@@ -7,7 +7,7 @@ import {
 import { DefaultPasswordBoundaries } from "../data";
 import { PasswordGeneratorPolicy, PasswordGeneratorSettings } from "../types";
 
-import { atLeast, atLeastSum, maybe, maybeReadonly, AtLeastOne, RequiresTrue } from "./constraints";
+import { atLeast, atLeastSum, maybe, readonlyTrueWhen, AtLeastOne } from "./constraints";
 import { PasswordPolicyConstraints } from "./password-policy-constraints";
 
 /** Creates state constraints by blending policy and password settings. */
@@ -19,12 +19,6 @@ export class DynamicPasswordPolicyConstraints
    *  `null` or `undefined`.
    */
   constructor(policy: PasswordGeneratorPolicy) {
-    function readOnlyTrueWhen(enabled: boolean) {
-      const readonlyValue = maybeReadonly(enabled, RequiresTrue);
-      const maybeReadonlyValue = maybe(enabled, readonlyValue);
-      return maybeReadonlyValue;
-    }
-
     const minLowercase = maybe(policy.useLowercase, AtLeastOne);
     const minUppercase = maybe(policy.useUppercase, AtLeastOne);
 
@@ -44,10 +38,10 @@ export class DynamicPasswordPolicyConstraints
 
     this.constraints = Object.freeze({
       policyInEffect: policyInEffect(policy),
-      lowercase: readOnlyTrueWhen(policy.useLowercase),
-      uppercase: readOnlyTrueWhen(policy.useUppercase),
-      number: readOnlyTrueWhen(policy.useNumbers),
-      special: readOnlyTrueWhen(policy.useSpecial),
+      lowercase: readonlyTrueWhen(policy.useLowercase),
+      uppercase: readonlyTrueWhen(policy.useUppercase),
+      number: readonlyTrueWhen(policy.useNumbers),
+      special: readonlyTrueWhen(policy.useSpecial),
       length,
       minLowercase,
       minUppercase,

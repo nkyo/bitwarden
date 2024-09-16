@@ -5,6 +5,7 @@ import {
   passphraseLeastPrivilege,
   passwordLeastPrivilege,
   PassphraseGeneratorOptionsEvaluator,
+  PassphrasePolicyConstraints,
   PasswordGeneratorOptionsEvaluator,
 } from "../policies";
 import {
@@ -24,9 +25,7 @@ const PASSPHRASE = Object.freeze({
   }),
   combine: passphraseLeastPrivilege,
   createEvaluator: (policy) => new PassphraseGeneratorOptionsEvaluator(policy),
-  toConstraints: (_policy) => {
-    throw new Error("TODO: Implement passphrase constraints");
-  },
+  toConstraints: (policy) => new PassphrasePolicyConstraints(policy),
 } as PolicyConfiguration<PassphraseGeneratorPolicy, PassphraseGenerationOptions>);
 
 const PASSWORD = Object.freeze({

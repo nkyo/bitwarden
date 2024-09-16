@@ -7,6 +7,9 @@ import {
   maybeReadonly,
   fitToBounds,
   enforceConstant,
+  fitLength,
+  readonlyTrueWhen,
+  RequiresTrue,
 } from "./constraints";
 
 const SomeBooleanConstraint: Constraint<boolean> = Object.freeze({});
@@ -187,6 +190,47 @@ describe("password generator constraint utilities", () => {
     });
   });
 
+  describe("fitLength", () => {
+    it("returns the value when the constraint is undefined", () => {
+      const result = fitLength("someValue", undefined);
+
+      expect(result).toEqual("someValue");
+    });
+
+    it.each([[null], [undefined]])(
+      "returns an empty string when the value is nullish (= %p)",
+      (value: string) => {
+        const result = fitLength(value, {});
+
+        expect(result).toEqual("");
+      },
+    );
+
+    it("applies the maxLength bound", () => {
+      const result = fitLength("some value", { maxLength: 4 });
+
+      expect(result).toEqual("some");
+    });
+
+    it("applies the minLength bound", () => {
+      const result = fitLength("some", { minLength: 5 });
+
+      expect(result).toEqual("some ");
+    });
+
+    it("fills characters from the fillString", () => {
+      const result = fitLength("some", { minLength: 10 }, { fillString: " value" });
+
+      expect(result).toEqual("some value");
+    });
+
+    it("repeats characters from the fillString", () => {
+      const result = fitLength("i", { minLength: 3 }, { fillString: "+" });
+
+      expect(result).toEqual("i++");
+    });
+  });
+
   describe("enforceConstant", () => {
     it("returns the requiredValue member from a readonly constraint", () => {
       const result = enforceConstant(false, { readonly: true, requiredValue: true });
@@ -213,6 +257,24 @@ describe("password generator constraint utilities", () => {
       const result = enforceConstant(false, undefined);
 
       expect(result).toBeFalsy();
+    });
+  });
+
+  describe("readonlyTrueWhen", () => {
+    it.each([[false], [null], [undefined]])(
+      "returns undefined when enabled is falsy (= %p)",
+      (value) => {
+        const result = readonlyTrueWhen(value);
+
+        expect(result).toBeUndefined();
+      },
+    );
+
+    it("returns a readonly RequiresTrue when enabled is true", () => {
+      const result = readonlyTrueWhen(true);
+
+      expect(result).toMatchObject({ readonly: true });
+      expect(result).toMatchObject(RequiresTrue);
     });
   });
 });

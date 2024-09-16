@@ -93,6 +93,7 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
         // forward word boundaries to the template (can't do it through the rx form)
         this.minNumWords = constraints.numWords.min;
         this.maxNumWords = constraints.numWords.max;
+        this.policyInEffect = constraints.policyInEffect;
 
         this.toggleEnabled(Controls.capitalize, !constraints.capitalize?.readonly);
         this.toggleEnabled(Controls.includeNumber, !constraints.includeNumber?.readonly);
@@ -107,6 +108,9 @@ export class PassphraseSettingsComponent implements OnInit, OnDestroy {
 
   /** attribute binding for numWords[max] */
   protected maxNumWords: number;
+
+  /** display binding for enterprise policy notice */
+  protected policyInEffect: boolean;
 
   private toggleEnabled(setting: keyof typeof Controls, enabled: boolean) {
     if (enabled) {

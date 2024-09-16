@@ -114,4 +114,14 @@ describe("PasswordPolicyConstraints", () => {
       },
     );
   });
+
+  describe("fix", () => {
+    it("returns its input", () => {
+      const policy = new PasswordPolicyConstraints({});
+
+      const result = policy.fix(EmptyState);
+
+      expect(result).toBe(EmptyState);
+    });
+  });
 });
