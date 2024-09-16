@@ -10,6 +10,7 @@ import {
   setElementStyles,
   setupExtensionDisconnectAction,
   setupAutofillInitDisconnectAction,
+  debounce,
 } from "./index";
 
 describe("buildSvgDomElement", () => {
@@ -38,14 +39,24 @@ describe("generateRandomCustomElementName", () => {
 
 describe("sendExtensionMessage", () => {
   it("sends a message to the extension", async () => {
-    chrome.runtime.sendMessage = jest.fn().mockResolvedValue("sendMessageResponse");
+    const extensionMessagePromise = sendExtensionMessage("some-extension-message");
 
-    const response = await sendExtensionMessage("some-extension-message", { value: "value" });
+    // Jest doesn't give anyway to select the typed overload of "sendMessage",
+    // a cast is needed to get the correct spy type.
+    const sendMessageSpy = jest.spyOn(chrome.runtime, "sendMessage") as unknown as jest.SpyInstance<
+      void,
+      [message: string, responseCallback: (response: string) => void],
+      unknown
+    >;
 
-    expect(chrome.runtime.sendMessage).toHaveBeenCalledWith({
-      command: "some-extension-message",
-      value: "value",
-    });
+    expect(sendMessageSpy).toHaveBeenCalled();
+
+    const [latestCall] = sendMessageSpy.mock.calls;
+    const responseCallback = latestCall[1];
+
+    responseCallback("sendMessageResponse");
+
+    const response = await extensionMessagePromise;
     expect(response).toEqual("sendMessageResponse");
   });
 });
@@ -199,5 +210,37 @@ describe("setupAutofillInitDisconnectAction", () => {
     expect(port.onDisconnect.addListener).toHaveBeenCalled();
     expect(autofillInitDestroy).toHaveBeenCalled();
     expect(window.bitwardenAutofillInit).toBeUndefined();
+  });
+});
+
+describe("debounce", () => {
+  const debouncedFunction = jest.fn();
+  const debounced = debounce(debouncedFunction, 100);
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+  });
+
+  afterEach(() => {
+    jest.clearAllTimers();
+  });
+
+  afterAll(() => {
+    jest.useRealTimers();
+  });
+
+  it("does not call the method until the delay is complete", () => {
+    debounced();
+    jest.advanceTimersByTime(50);
+    expect(debouncedFunction).not.toHaveBeenCalled();
+  });
+
+  it("calls the method a single time when the debounce is triggered multiple times", () => {
+    debounced();
+    debounced();
+    debounced();
+    jest.advanceTimersByTime(100);
+
+    expect(debouncedFunction).toHaveBeenCalledTimes(1);
   });
 });

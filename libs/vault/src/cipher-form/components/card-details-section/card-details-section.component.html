@@ -1,6 +1,6 @@
 <bit-section [formGroup]="cardDetailsForm">
   <bit-section-header>
-    <h2 bitTypography="h5">
+    <h2 bitTypography="h6">
       {{ getSectionHeading() }}
     </h2>
   </bit-section-header>
@@ -19,6 +19,7 @@
         bitSuffix
         bitPasswordInputToggle
         data-testid="visibility-for-card-number"
+        (toggledChange)="logCardEvent($event, EventType.Cipher_ClientToggledCardNumberVisible)"
       ></button>
     </bit-form-field>
 
@@ -60,6 +61,7 @@
         bitSuffix
         bitPasswordInputToggle
         data-testid="visibility-for-card-code"
+        (toggledChange)="logCardEvent($event, EventType.Cipher_ClientToggledCardCodeVisible)"
       ></button>
     </bit-form-field>
   </bit-card>

@@ -1,6 +1,6 @@
 <bit-section *ngIf="hasCustomFields">
   <bit-section-header>
-    <h2 bitTypography="h5">{{ "customFields" | i18n }}</h2>
+    <h2 bitTypography="h6">{{ "customFields" | i18n }}</h2>
   </bit-section-header>
   <form [formGroup]="customFieldsForm">
     <bit-card
@@ -46,6 +46,7 @@
             bitPasswordInputToggle
             data-testid="visibility-for-custom-hidden-field"
             [disabled]="!canViewPasswords(i)"
+            (toggledChange)="logHiddenEvent($event)"
           ></button>
         </bit-form-field>
 

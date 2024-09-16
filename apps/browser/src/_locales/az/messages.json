@@ -25,9 +25,6 @@
   "finishCreatingYourAccountBySettingAPassword": {
     "message": "Bir parol təyin edərək hesabınızı yaratmağı başa çatdırın"
   },
-  "login": {
-    "message": "Giriş et"
-  },
   "enterpriseSingleSignOn": {
     "message": "Müəssisə üçün tək daxil olma"
   },
@@ -115,6 +112,21 @@
   },
   "copySecurityCode": {
     "message": "Güvənlik kodunu kopyala"
+  },
+  "copyName": {
+    "message": "Adı kopyala"
+  },
+  "copyCompany": {
+    "message": "Şirkəti kopyala"
+  },
+  "copySSN": {
+    "message": "Sosial güvənlik nömrəsini kopyala"
+  },
+  "copyPassportNumber": {
+    "message": "Pasport nömrəsini kopyala"
+  },
+  "copyLicenseNumber": {
+    "message": "Lisenziya nömrəsini kopyala"
   },
   "autoFill": {
     "message": "Avto-doldurma"
@@ -289,6 +301,24 @@
   "editFolder": {
     "message": "Qovluğa düzəliş et"
   },
+  "newFolder": {
+    "message": "Yeni qovluq"
+  },
+  "folderName": {
+    "message": "Qovluq adı"
+  },
+  "folderHintText": {
+    "message": "Nest a folder by adding the parent folder's name followed by a “/”. Example: Social/Forums"
+  },
+  "noFoldersAdded": {
+    "message": "Heç bir qovluq əlavə edilmədi"
+  },
+  "createFoldersToOrganize": {
+    "message": "Anbar elementlərinizi təşkil etmək üçün qovluq yaradın"
+  },
+  "deleteFolderPermanently": {
+    "message": "Bu qovluğu həmişəlik silmək istədiyinizə əminsiniz?"
+  },
   "deleteFolder": {
     "message": "Qovluğu sil"
   },
@@ -354,16 +384,56 @@
     "message": "Minimal parol uzunluğu"
   },
   "uppercase": {
-    "message": "Böyük hərf (A-Z)"
+    "message": "Böyük hərf (A-Z)",
+    "description": "deprecated. Use uppercaseLabel instead."
   },
   "lowercase": {
-    "message": "Kiçik hərf (a-z)"
+    "message": "Kiçik hərf (a-z)",
+    "description": "deprecated. Use lowercaseLabel instead."
   },
   "numbers": {
-    "message": "Rəqəmlər (0-9)"
+    "message": "Rəqəmlər (0-9)",
+    "description": "deprecated. Use numbersLabel instead."
   },
   "specialCharacters": {
-    "message": "Xüsusi simvollar (!@#$%^&*)"
+    "message": "Xüsusi simvollar (!@#$%^&*)",
+    "description": "deprecated. Use specialCharactersLabel instead."
+  },
+  "include": {
+    "message": "Daxil et",
+    "description": "Card header for password generator include block"
+  },
+  "uppercaseDescription": {
+    "message": "Böyük hərf xarakterlərini daxil et",
+    "description": "Tooltip for the password generator uppercase character checkbox"
+  },
+  "uppercaseLabel": {
+    "message": "A-Z",
+    "description": "Label for the password generator uppercase character checkbox"
+  },
+  "lowercaseDescription": {
+    "message": "Kiçik hərf xarakterlərini daxil et",
+    "description": "Full description for the password generator lowercase character checkbox"
+  },
+  "lowercaseLabel": {
+    "message": "a-z",
+    "description": "Label for the password generator lowercase character checkbox"
+  },
+  "numbersDescription": {
+    "message": "Rəqəmləri daxil et",
+    "description": "Full description for the password generator numbers checkbox"
+  },
+  "numbersLabel": {
+    "message": "0-9",
+    "description": "Label for the password generator numbers checkbox"
+  },
+  "specialCharactersDescription": {
+    "message": "Xüsusi xarakterləri daxil et",
+    "description": "Full description for the password generator special characters checkbox"
+  },
+  "specialCharactersLabel": {
+    "message": "!@#$%^&*",
+    "description": "Label for the password generator special characters checkbox"
   },
   "numWords": {
     "message": "Söz sayı"
@@ -385,7 +455,12 @@
     "message": "Minimum simvol"
   },
   "avoidAmbChar": {
-    "message": "Anlaşılmaz simvollardan çəkinin"
+    "message": "Anlaşılmaz simvollardan çəkinin",
+    "description": "deprecated. Use avoidAmbiguous instead."
+  },
+  "avoidAmbiguous": {
+    "message": "Anlaşılmaz xarakterlərdən çəkin",
+    "description": "Label for the avoid ambiguous characters checkbox."
   },
   "searchVault": {
     "message": "Anbarda axtar"
@@ -608,6 +683,12 @@
   "newAccountCreated": {
     "message": "Yeni hesabınız yaradıldı! İndi giriş edə bilərsiniz."
   },
+  "newAccountCreated2": {
+    "message": "Yeni hesabınız yaradıldı!"
+  },
+  "youHaveBeenLoggedIn": {
+    "message": "Giriş etdiniz!"
+  },
   "youSuccessfullyLoggedIn": {
     "message": "Uğurla giriş etdiniz"
   },
@@ -656,6 +737,9 @@
   },
   "totpHelperWithCapture": {
     "message": "Bitwarden, 2 addımlı doğrulama kodlarını saxlaya və doldura bilər. Bu veb sayt kimlik doğrulayıcı QR kodunun ekran şəklini çəkmək üçün kamera ikonunu seçin, ya da açarı kopyalayıb bu xanaya yapışdırın."
+  },
+  "learnMoreAboutAuthenticators": {
+    "message": "Kimlik doğrulayıcılar haqqında daha ətraflı"
   },
   "copyTOTP": {
     "message": "Kimlik doğrulayıcı açarını kopyala (TOTP)"
@@ -871,7 +955,7 @@
   },
   "defaultUriMatchDetection": {
     "message": "İlkin URI uyuşma aşkarlaması",
-    "description": "Default URI match detection for auto-fill."
+    "description": "Default URI match detection for autofill."
   },
   "defaultUriMatchDetectionDesc": {
     "message": "Avto-doldurma kimi əməliyyatları icra edərkən giriş etmə prosesi üçün URI uyuşma aşkarlamasının idarə edliəcəyi ilkin yolu seçin."
@@ -1046,6 +1130,9 @@
   "ppremiumSignUpStorage": {
     "message": "Fayl qoşmaları üçün 1 GB şifrələnmiş saxlama sahəsi"
   },
+  "premiumSignUpEmergency": {
+    "message": "Fövqəladə hal müraciəti"
+  },
   "premiumSignUpTwoStepOptions": {
     "message": "YubiKey və Duo kimi mülkiyyətçi iki addımlı giriş seçimləri."
   },
@@ -1067,13 +1154,28 @@
   "premiumPurchaseAlert": {
     "message": "Premium üzvlüyü bitwarden.com veb anbarında satın ala bilərsiniz. İndi saytı ziyarət etmək istəyirsiniz?"
   },
+  "premiumPurchaseAlertV2": {
+    "message": "Bitwarden veb tətbiqindəki hesab ayarlarınızda Premium satın ala bilərsiniz."
+  },
   "premiumCurrentMember": {
     "message": "Premium üzvsünüz!"
   },
   "premiumCurrentMemberThanks": {
     "message": "Bitwarden-i dəstəklədiyiniz üçün təşəkkürlər!"
   },
+  "premiumFeatures": {
+    "message": "Premium-a yüksəlt və bunları əldə et:"
+  },
   "premiumPrice": {
+    "message": "Hamısı sadəcə ildə $PRICE$!",
+    "placeholders": {
+      "price": {
+        "content": "$1",
+        "example": "$10"
+      }
+    }
+  },
+  "premiumPriceV2": {
     "message": "Hamısı sadəcə ildə $PRICE$!",
     "placeholders": {
       "price": {
@@ -1240,7 +1342,7 @@
   },
   "showAutoFillMenuOnFormFields": {
     "message": "Form xanalarında avto-doldurma menyusunu göstər",
-    "description": "Represents the message for allowing the user to enable the auto-fill overlay"
+    "description": "Represents the message for allowing the user to enable the autofill overlay"
   },
   "autofillSuggestionsSectionTitle": {
     "message": "Avto-doldurma təklifləri"
@@ -1327,8 +1429,14 @@
   "commandOpenSidebar": {
     "message": "Anbarı yan çubuqda aç"
   },
-  "commandAutofillDesc": {
-    "message": "Hazırkı veb sayt üçün son istifadə edilən giriş məlumatlarını avto-doldur"
+  "commandAutofillLoginDesc": {
+    "message": "Hazırkı veb sayt üçün son istifadə edilən girişi avto-doldur"
+  },
+  "commandAutofillCardDesc": {
+    "message": "Hazırkı veb sayt üçün son istifadə edilən kartı avto-doldur"
+  },
+  "commandAutofillIdentityDesc": {
+    "message": "Hazırkı veb sayt üçün son istifadə edilən kimliyi avto-doldur"
   },
   "commandGeneratePasswordDesc": {
     "message": "Təsadüfi yeni bir parol yarat və lövhəyə kopyala"
@@ -1634,6 +1742,10 @@
     "message": "Baza domeni",
     "description": "Domain name. Ex. website.com"
   },
+  "baseDomainOptionRecommended": {
+    "message": "Baza domeni (tövsiyə edilən)",
+    "description": "Domain name. Ex. website.com"
+  },
   "domainName": {
     "message": "Domen adı",
     "description": "Domain name. Ex. website.com"
@@ -1654,11 +1766,11 @@
   },
   "matchDetection": {
     "message": "Uyuşmanı aşkarlama",
-    "description": "URI match detection for auto-fill."
+    "description": "URI match detection for autofill."
   },
   "defaultMatchDetection": {
     "message": "İlkin uyuşma aşkarlaması",
-    "description": "Default URI match detection for auto-fill."
+    "description": "Default URI match detection for autofill."
   },
   "toggleOptions": {
     "message": "Seçimləri aç/bağla"
@@ -1683,6 +1795,15 @@
   },
   "noPasswordsInList": {
     "message": "Sadalanacaq heç bir parol yoxdur."
+  },
+  "clearHistory": {
+    "message": "Clear history"
+  },
+  "noPasswordsToShow": {
+    "message": "No passwords to show"
+  },
+  "noRecentlyGeneratedPassword": {
+    "message": "You haven't generated a password recently"
   },
   "remove": {
     "message": "Çıxart"
@@ -1777,6 +1898,29 @@
   },
   "passwordGeneratorPolicyInEffect": {
     "message": "Bir və ya daha çox təşkilat siyasəti yaradıcı ayarlarınıza təsir edir."
+  },
+  "passwordGenerator": {
+    "message": "Parol yaradıcı"
+  },
+  "usernameGenerator": {
+    "message": "İstifadəçi adı yaradıcı"
+  },
+  "useThisPassword": {
+    "message": "Bu parolu istifadə et"
+  },
+  "useThisUsername": {
+    "message": "Bu istifadəçi adını istifadə et"
+  },
+  "securePasswordGenerated": {
+    "message": "Güvənli parol yaradıldı! Həmçinin veb saytdakı parolunuzu güncəlləməyi unutmayın."
+  },
+  "useGeneratorHelpTextPartOne": {
+    "message": "Yaradıcı istifadə et",
+    "description": "This will be used as part of a larger sentence, broken up to include the generator icon. The full sentence will read 'Use the generator [GENERATOR_ICON] to create a strong unique password'"
+  },
+  "useGeneratorHelpTextPartTwo": {
+    "message": "Daha unikal parollar yarat",
+    "description": "This will be used as part of a larger sentence, broken up to include the generator icon. The full sentence will read 'Use the generator [GENERATOR_ICON] to create a strong unique password'"
   },
   "vaultTimeoutAction": {
     "message": "Anbar vaxtının bitmə əməliyyatı"
@@ -1975,6 +2119,12 @@
   "nativeMessagingWrongUserTitle": {
     "message": "Hesablar uyuşmur"
   },
+  "nativeMessagingWrongUserKeyDesc": {
+    "message": "Biometrik kilidini açma uğursuz oldu. Biometrik sirr açarı anbarın kilidini aça bilmədi. Lütfən biometriki yenidən qurmağa çalışın."
+  },
+  "nativeMessagingWrongUserKeyTitle": {
+    "message": "Biometrik açarı uyuşmazlığı"
+  },
   "biometricsNotEnabledTitle": {
     "message": "Biometriklər qurulmayıb"
   },
@@ -1992,6 +2142,12 @@
   },
   "biometricsNotUnlockedDesc": {
     "message": "Lütfən bu istifadəçinin kilidini masaüstü tətbiqində açıb yenidən sınayın."
+  },
+  "biometricsNotAvailableTitle": {
+    "message": "Biometrik kilidi açma əlçatmazdır"
+  },
+  "biometricsNotAvailableDesc": {
+    "message": "Biometrik kilidi açma hazırda əlçatmazdır. Lütfən daha sonra yenidən sınayın."
   },
   "biometricsFailedTitle": {
     "message": "Biometrik uğursuzdur"
@@ -2223,6 +2379,24 @@
     "message": "Send yaradıldı",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
   },
+  "createdSendSuccessfully": {
+    "message": "Send uğurla yaradıldı!",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
+  "sendAvailability": {
+    "message": "Send, növbəti $DAYS$ ərzində keçidə sahib olan hər kəsə əlçatan olacaq.",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated.",
+    "placeholders": {
+      "days": {
+        "content": "$1",
+        "example": "5"
+      }
+    }
+  },
+  "sendLinkCopied": {
+    "message": "Send keçidi kopyalandı",
+    "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
+  },
   "editedSend": {
     "message": "\"Send\" saxlanıldı",
     "description": "'Send' is a noun and the name of a feature called 'Bitwarden Send'. It should not be translated."
@@ -2301,6 +2475,9 @@
   },
   "updateWeakMasterPasswordWarning": {
     "message": "Ana parolunuz təşkilatınızdakı siyasətlərdən birinə və ya bir neçəsinə uyğun gəlmir. Anbara müraciət üçün ana parolunuzu indi güncəlləməlisiniz. Davam etsəniz, hazırkı seansdan çıxış edəcəksiniz və təkrar giriş etməli olacaqsınız. Digər cihazlardakı aktiv seanslar bir saata qədər aktiv qalmağa davam edə bilər."
+  },
+  "tdeDisabledMasterPasswordRequired": {
+    "message": "Təşkilatınız, güvənli cihaz şifrələməsini sıradan çıxartdı. Anbarınıza müraciət etmək üçün lütfən ana parol təyin edin."
   },
   "resetPasswordPolicyAutoEnroll": {
     "message": "Avtomatik yazılma"
@@ -2758,14 +2935,17 @@
   "autofillKeyboardShortcutUpdateLabel": {
     "message": "Qısayolu dəyişdir"
   },
+  "autofillKeyboardManagerShortcutsLabel": {
+    "message": "Qısayolları idarə et"
+  },
   "autofillShortcut": {
     "message": "Avto-doldurma klaviatura qısayolu"
   },
-  "autofillShortcutNotSet": {
-    "message": "Avto-doldurma qısayolu ayarlanmayıb. Bunu brauzerin ayarlarında dəyişdirin."
+  "autofillLoginShortcutNotSet": {
+    "message": "Avto-doldurma giriş qısayolu ayarlanmayıb. Bunu brauzerin ayarlarında dəyişdirin."
   },
-  "autofillShortcutText": {
-    "message": "Avto-doldurma qısayolu: $COMMAND$. Bunu brauzerin ayarlarında dəyişdirin.",
+  "autofillLoginShortcutText": {
+    "message": "Girişin avto-doldurma qısayolu: $COMMAND$. Bütün qısayolları brauzerin ayarlarında idarə edin.",
     "placeholders": {
       "command": {
         "content": "$1",
@@ -2948,6 +3128,18 @@
       }
     }
   },
+  "singleFieldNeedsAttention": {
+    "message": "1 xananın diqqətinizə ehtiyacı var."
+  },
+  "multipleFieldsNeedAttention": {
+    "message": "$COUNT$ xananın diqqətinizə ehtiyacı var.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "2"
+      }
+    }
+  },
   "selectPlaceholder": {
     "message": "-- Seç --"
   },
@@ -3016,11 +3208,11 @@
   },
   "passwordRepromptDisabledAutofillOnPageLoad": {
     "message": "\"Ana parolu təkrar soruş\" özəlliyi olan elementlər səhifə yüklənəndə avto-doldurulmur. \"Səhifə yüklənəndə avto-doldurma\" özəlliyi söndürülüb.",
-    "description": "Toast message for describing that master password re-prompt cannot be auto-filled on page load."
+    "description": "Toast message for describing that master password re-prompt cannot be autofilled on page load."
   },
   "autofillOnPageLoadSetToDefault": {
     "message": "\"Səhifə yüklənəndə avto-doldurma\" özəlliyi ilkin ayarı istifadə etmək üzrə ayarlandı.",
-    "description": "Toast message for informing the user that auto-fill on page load has been set to the default setting."
+    "description": "Toast message for informing the user that autofill on page load has been set to the default setting."
   },
   "turnOffMasterPasswordPromptToEditField": {
     "message": "Bu xanaya düzəliş etmək üçün \"Ana parolu təkrar soruş\"u söndürün",
@@ -3294,7 +3486,7 @@
   "passkeyFeatureIsNotImplementedForAccountsWithoutMasterPassword": {
     "message": "Başladan saytın tələb etdiyi doğrulama. Bu özəllik, hələlik ana parolu olmayan hesablara tətbiq olunmur."
   },
-  "logInWithPasskey": {
+  "logInWithPasskeyQuestion": {
     "message": "Keçid açarı ilə giriş edilsin?"
   },
   "passkeyAlreadyExists": {
@@ -3306,6 +3498,9 @@
   "noMatchingPasskeyLogin": {
     "message": "Bu sayt üçün uyuşan bir giriş məlumatınız yoxdur."
   },
+  "noMatchingLoginsForSite": {
+    "message": "Bu sayt üçün uyuşan giriş məlumatı yoxdur"
+  },
   "confirm": {
     "message": "Təsdiqlə"
   },
@@ -3315,8 +3510,11 @@
   "savePasskeyNewLogin": {
     "message": "Keçid açarını yeni bir giriş olaraq saxla"
   },
-  "choosePasskey": {
+  "chooseCipherForPasskeySave": {
     "message": "Bu keçid açarını saxlayacaq bir giriş seçin"
+  },
+  "chooseCipherForPasskeyAuth": {
+    "message": "Giriş ediləcək keçid açarını seçin"
   },
   "passkeyItem": {
     "message": "Keçid açarı elementi"
@@ -3513,8 +3711,16 @@
     "message": "Kimlik məlumatları uğurla saxlanıldı!",
     "description": "Notification message for when saving credentials has succeeded."
   },
+  "passwordSaved": {
+    "message": "Parol saxlanıldı!",
+    "description": "Notification message for when saving credentials has succeeded."
+  },
   "updateCipherAttemptSuccess": {
     "message": "Kimlik məlumatları uğurla güncəlləndi!",
+    "description": "Notification message for when updating credentials has succeeded."
+  },
+  "passwordUpdated": {
+    "message": "Parol güncəlləndi!",
     "description": "Notification message for when updating credentials has succeeded."
   },
   "saveCipherAttemptFailed": {
@@ -3597,7 +3803,7 @@
   },
   "autofillTitle": {
     "message": "Avto-doldur - $ITEMNAME$",
-    "description": "Title for a button that auto-fills a login item.",
+    "description": "Title for a button that autofills a login item.",
     "placeholders": {
       "itemname": {
         "content": "$1",
@@ -3787,6 +3993,68 @@
   "authenticatorKey": {
     "message": "Kimlik doğrulayıcı açarı"
   },
+  "autofillOptions": {
+    "message": "Avto-doldurma seçimləri"
+  },
+  "websiteUri": {
+    "message": "Veb sayt (URI)"
+  },
+  "websiteUriCount": {
+    "message": "Veb sayt (URI) $COUNT$",
+    "description": "Label for an input field that contains a website URI. The input field is part of a list of fields, and the count indicates the position of the field in the list.",
+    "placeholders": {
+      "count": {
+        "content": "$1",
+        "example": "3"
+      }
+    }
+  },
+  "websiteAdded": {
+    "message": "Veb sayt əlavə edildi"
+  },
+  "addWebsite": {
+    "message": "Veb sayt əlavə et"
+  },
+  "deleteWebsite": {
+    "message": "Veb saytı sil"
+  },
+  "defaultLabel": {
+    "message": "İlkin ($VALUE$)",
+    "description": "A label that indicates the default value for a field with the current default value in parentheses.",
+    "placeholders": {
+      "value": {
+        "content": "$1",
+        "example": "Base domain"
+      }
+    }
+  },
+  "showMatchDetection": {
+    "message": "$WEBSITE$ ilə uyuşma aşkarlamasını göstər",
+    "placeholders": {
+      "website": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "hideMatchDetection": {
+    "message": "$WEBSITE$ ilə uyuşma aşkarlamasını gizlət",
+    "placeholders": {
+      "website": {
+        "content": "$1",
+        "example": "https://example.com"
+      }
+    }
+  },
+  "autoFillOnPageLoad": {
+    "message": "Səhifə yüklənəndə avto-doldurulsun?"
+  },
+  "cardExpiredTitle": {
+    "message": "Vaxtı bitmiş kart"
+  },
+  "cardExpiredMessage": {
+    "message": "Yeniləmisinizsə, kart məlumatlarınızı güncəlləyin"
+  },
   "cardDetails": {
     "message": "Kart detalları"
   },
@@ -3799,6 +4067,9 @@
       }
     }
   },
+  "enableAnimations": {
+    "message": "Animasiyaları fəallaşdır"
+  },
   "addAccount": {
     "message": "Hesab əlavə et"
   },
@@ -3807,6 +4078,18 @@
   },
   "data": {
     "message": "Data"
+  },
+  "passkeys": {
+    "message": "Keçid açarı",
+    "description": "A section header for a list of passkeys."
+  },
+  "passwords": {
+    "message": "Parollar",
+    "description": "A section header for a list of passwords."
+  },
+  "logInWithPasskeyAriaLabel": {
+    "message": "Keçid açarı ilə giriş et",
+    "description": "ARIA label for the inline menu button that logs in with a passkey."
   },
   "assign": {
     "message": "Təyin et"
@@ -4001,5 +4284,59 @@
   },
   "itemLocation": {
     "message": "Element yeri"
+  },
+  "fileSends": {
+    "message": "Fayl \"Send\"ləri"
+  },
+  "textSends": {
+    "message": "Mətn \"Send\"ləri"
+  },
+  "bitwardenNewLook": {
+    "message": "Bitwarden-in yeni bir görünüşü var!"
+  },
+  "bitwardenNewLookDesc": {
+    "message": "Anbar vərəqindən avto-doldurma və axtarış etmə artıq daha asan və intuitivdir. Nəzər salın!"
+  },
+  "accountActions": {
+    "message": "Hesab fəaliyyətləri"
+  },
+  "showNumberOfAutofillSuggestions": {
+    "message": "Uzantı ikonunda giriş üçün avto-doldurma təklif sayını göstər"
+  },
+  "systemDefault": {
+    "message": "İlkin sistem"
+  },
+  "enterprisePolicyRequirementsApplied": {
+    "message": "Müəssisə siyasət tələbləri bu ayara tətbiq edildi"
+  },
+  "fileSavedToDevice": {
+    "message": "File saved to device. Manage from your device downloads."
+  },
+  "showCharacterCount": {
+    "message": "Xarakter sayını göstər"
+  },
+  "hideCharacterCount": {
+    "message": "Xarakter sayını gizlət"
+  },
+  "itemsInTrash": {
+    "message": "Tullantıdakı elementlər"
+  },
+  "noItemsInTrash": {
+    "message": "Tullantıda element yoxdur"
+  },
+  "noItemsInTrashDesc": {
+    "message": "Sildiyiniz elementlər burada görünəcək və 30 gün sonra birdəfəlik silinəcək"
+  },
+  "trashWarning": {
+    "message": "Tullantıda 30 gündən çox qalan elementlər avtomatik silinəcək"
+  },
+  "restore": {
+    "message": "Bərpa et"
+  },
+  "deleteForever": {
+    "message": "Həmişəlik sil"
+  },
+  "noEditPermissions": {
+    "message": "Bu elementə düzəliş etmə icazəniz yoxdur"
   }
 }

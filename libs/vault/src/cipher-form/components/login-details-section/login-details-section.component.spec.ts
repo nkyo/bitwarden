@@ -1,19 +1,33 @@
 import { DatePipe } from "@angular/common";
+import { Component } from "@angular/core";
 import { ComponentFixture, fakeAsync, TestBed, tick } from "@angular/core/testing";
+import { By } from "@angular/platform-browser";
 import { mock, MockProxy } from "jest-mock-extended";
 
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
+import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
+import { EventType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
+import { Cipher } from "@bitwarden/common/vault/models/domain/cipher";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { Fido2CredentialView } from "@bitwarden/common/vault/models/view/fido2-credential.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
 import { ToastService } from "@bitwarden/components";
+import { BitPasswordInputToggleDirective } from "@bitwarden/components/src/form-field/password-input-toggle.directive";
 
 import { CipherFormGenerationService } from "../../abstractions/cipher-form-generation.service";
 import { TotpCaptureService } from "../../abstractions/totp-capture.service";
 import { CipherFormContainer } from "../../cipher-form-container";
+import { AutofillOptionsComponent } from "../autofill-options/autofill-options.component";
 
 import { LoginDetailsSectionComponent } from "./login-details-section.component";
+
+@Component({
+  standalone: true,
+  selector: "vault-autofill-options",
+  template: "",
+})
+class MockAutoFillOptionsComponent {}
 
 describe("LoginDetailsSectionComponent", () => {
   let component: LoginDetailsSectionComponent;
@@ -25,6 +39,7 @@ describe("LoginDetailsSectionComponent", () => {
   let toastService: MockProxy<ToastService>;
   let totpCaptureService: MockProxy<TotpCaptureService>;
   let i18nService: MockProxy<I18nService>;
+  const collect = jest.fn().mockResolvedValue(null);
 
   beforeEach(async () => {
     cipherFormContainer = mock<CipherFormContainer>();
@@ -34,6 +49,7 @@ describe("LoginDetailsSectionComponent", () => {
     toastService = mock<ToastService>();
     totpCaptureService = mock<TotpCaptureService>();
     i18nService = mock<I18nService>();
+    collect.mockClear();
 
     await TestBed.configureTestingModule({
       imports: [LoginDetailsSectionComponent],
@@ -44,8 +60,18 @@ describe("LoginDetailsSectionComponent", () => {
         { provide: ToastService, useValue: toastService },
         { provide: TotpCaptureService, useValue: totpCaptureService },
         { provide: I18nService, useValue: i18nService },
+        { provide: EventCollectionService, useValue: { collect } },
       ],
-    }).compileComponents();
+    })
+      .overrideComponent(LoginDetailsSectionComponent, {
+        remove: {
+          imports: [AutofillOptionsComponent],
+        },
+        add: {
+          imports: [MockAutoFillOptionsComponent],
+        },
+      })
+      .compileComponents();
 
     fixture = TestBed.createComponent(LoginDetailsSectionComponent);
     component = fixture.componentInstance;
@@ -107,12 +133,27 @@ describe("LoginDetailsSectionComponent", () => {
     });
   });
 
-  it("initializes 'loginDetailsForm' with generated password when creating a new cipher", async () => {
-    generationService.generateInitialPassword.mockResolvedValue("generated-password");
+  it("initializes 'loginDetailsForm' with initialValues that override any original cipher view values", async () => {
+    (cipherFormContainer.originalCipherView as CipherView) = {
+      viewPassword: true,
+      login: {
+        password: "original-password",
+        username: "original-username",
+        totp: "original-totp",
+      } as LoginView,
+    } as CipherView;
+    cipherFormContainer.config.initialValues = {
+      username: "new-username",
+      password: "new-password",
+    };
 
     await component.ngOnInit();
 
-    expect(component.loginDetailsForm.controls.password.value).toBe("generated-password");
+    expect(component.loginDetailsForm.value).toEqual({
+      username: "new-username",
+      password: "new-password",
+      totp: "original-totp",
+    });
   });
 
   describe("viewHiddenFields", () => {
@@ -220,6 +261,32 @@ describe("LoginDetailsSectionComponent", () => {
       jest.spyOn(component, "viewHiddenFields", "get").mockReturnValue(false);
       fixture.detectChanges();
       expect(getTogglePasswordVisibilityBtn()).toBeNull();
+    });
+
+    it("logs password viewed event when toggledChange is true", async () => {
+      cipherFormContainer.config.mode = "edit";
+      cipherFormContainer.config.originalCipher = {
+        id: "111-222-333",
+        organizationId: "333-444-555",
+      } as Cipher;
+      jest.spyOn(component, "viewHiddenFields", "get").mockReturnValue(true);
+      fixture.detectChanges();
+
+      const passwordToggle = fixture.debugElement.query(
+        By.directive(BitPasswordInputToggleDirective),
+      );
+      await passwordToggle.triggerEventHandler("toggledChange", true);
+
+      expect(collect).toHaveBeenCalledWith(
+        EventType.Cipher_ClientToggledPasswordVisible,
+        "111-222-333",
+        false,
+        "333-444-555",
+      );
+
+      await passwordToggle.triggerEventHandler("toggledChange", false);
+
+      expect(collect).toHaveBeenCalledTimes(1);
     });
 
     describe("password generation", () => {

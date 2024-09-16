@@ -6,6 +6,8 @@ import { map } from "rxjs";
 
 import { JslibModule } from "@bitwarden/angular/jslib.module";
 import { AuditService } from "@bitwarden/common/abstractions/audit.service";
+import { EventCollectionService } from "@bitwarden/common/abstractions/event/event-collection.service";
+import { EventType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { Fido2CredentialView } from "@bitwarden/common/vault/models/view/fido2-credential.view";
 import { LoginView } from "@bitwarden/common/vault/models/view/login.view";
@@ -14,6 +16,7 @@ import {
   CardComponent,
   FormFieldModule,
   IconButtonModule,
+  LinkModule,
   PopoverModule,
   SectionComponent,
   SectionHeaderComponent,
@@ -24,6 +27,7 @@ import {
 import { CipherFormGenerationService } from "../../abstractions/cipher-form-generation.service";
 import { TotpCaptureService } from "../../abstractions/totp-capture.service";
 import { CipherFormContainer } from "../../cipher-form-container";
+import { AutofillOptionsComponent } from "../autofill-options/autofill-options.component";
 
 @Component({
   selector: "vault-login-details-section",
@@ -41,14 +45,22 @@ import { CipherFormContainer } from "../../cipher-form-container";
     AsyncActionsModule,
     NgIf,
     PopoverModule,
+    AutofillOptionsComponent,
+    LinkModule,
   ],
 })
 export class LoginDetailsSectionComponent implements OnInit {
+  EventType = EventType;
   loginDetailsForm = this.formBuilder.group({
     username: [""],
     password: [""],
     totp: [""],
   });
+
+  /**
+   * Flag indicating whether a new password has been generated for the current form.
+   */
+  newPasswordGenerated: boolean;
 
   /**
    * Whether the TOTP field can be captured from the current tab. Only available in the browser extension.
@@ -86,6 +98,10 @@ export class LoginDetailsSectionComponent implements OnInit {
     return true;
   }
 
+  get initialValues() {
+    return this.cipherFormContainer.config.initialValues;
+  }
+
   constructor(
     private cipherFormContainer: CipherFormContainer,
     private formBuilder: FormBuilder,
@@ -93,6 +109,7 @@ export class LoginDetailsSectionComponent implements OnInit {
     private generationService: CipherFormGenerationService,
     private auditService: AuditService,
     private toastService: ToastService,
+    private eventCollectionService: EventCollectionService,
     @Optional() private totpCaptureService?: TotpCaptureService,
   ) {
     this.cipherFormContainer.registerChildForm("loginDetails", this.loginDetailsForm);
@@ -130,8 +147,8 @@ export class LoginDetailsSectionComponent implements OnInit {
 
   private initFromExistingCipher(existingLogin: LoginView) {
     this.loginDetailsForm.patchValue({
-      username: existingLogin.username,
-      password: existingLogin.password,
+      username: this.initialValues?.username ?? existingLogin.username,
+      password: this.initialValues?.password ?? existingLogin.password,
       totp: existingLogin.totp,
     });
 
@@ -145,10 +162,28 @@ export class LoginDetailsSectionComponent implements OnInit {
 
   private async initNewCipher() {
     this.loginDetailsForm.patchValue({
-      username: this.cipherFormContainer.config.initialValues?.username || "",
-      password: await this.generationService.generateInitialPassword(),
+      username: this.initialValues?.username || "",
+      password: this.initialValues?.password || "",
     });
   }
+
+  /** Logs the givin event when in edit mode */
+  logVisibleEvent = async (passwordVisible: boolean, event: EventType) => {
+    const { mode, originalCipher } = this.cipherFormContainer.config;
+
+    const isEdit = ["edit", "partial-edit"].includes(mode);
+
+    if (!passwordVisible || !isEdit || !originalCipher) {
+      return;
+    }
+
+    await this.eventCollectionService.collect(
+      event,
+      originalCipher.id,
+      false,
+      originalCipher.organizationId,
+    );
+  };
 
   captureTotp = async () => {
     if (!this.canCaptureTotp) {
@@ -191,6 +226,7 @@ export class LoginDetailsSectionComponent implements OnInit {
 
     if (newPassword) {
       this.loginDetailsForm.controls.password.patchValue(newPassword);
+      this.newPasswordGenerated = true;
     }
   };
 
