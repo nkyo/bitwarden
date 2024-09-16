@@ -9,6 +9,7 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { ToastService } from "@bitwarden/components";
 
 import { AbstractSelfHostingLicenseUploaderComponent } from "../../shared/self-hosting-license-uploader/abstract-self-hosting-license-uploader.component";
+import { LicenseUploadedEvent } from "../../shared/self-hosting-license-uploader/license-uploaded-event";
 
 /**
  * Processes license file uploads for individual plans.
@@ -42,6 +43,15 @@ export class IndividualSelfHostingLicenseUploaderComponent extends AbstractSelfH
     await this.apiService.refreshIdentityToken();
     await this.syncService.fullSync(true);
 
-    this.onLicenseFileUploaded.emit(this.formValue);
+    const event = new LicenseUploadedEvent();
+    this.onLicenseFileUploaded.emit(event);
+  }
+
+  get description(): string {
+    return "uploadLicenseFilePremium";
+  }
+
+  get hintFileName(): string {
+    return "bitwarden_premium_license.json";
   }
 }

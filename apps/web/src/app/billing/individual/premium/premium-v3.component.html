@@ -67,8 +67,6 @@
 </bit-section>
 <bit-section *ngIf="isSelfHost">
   <individual-self-hosting-license-uploader
-    [description]="licenseUploaderDescription"
-    [hint]="licenseUploaderHint"
     (onLicenseFileUploaded)="onLicenseFileSelectedChanged($event)"
   />
 </bit-section>

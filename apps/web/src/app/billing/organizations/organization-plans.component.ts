@@ -46,6 +46,7 @@ import { BillingSharedModule, secretsManagerSubscribeFormFactory } from "../shar
 import { PaymentV2Component } from "../shared/payment/payment-v2.component";
 import { PaymentComponent } from "../shared/payment/payment.component";
 import { TaxInfoComponent } from "../shared/tax-info.component";
+import { LicenseUploadedEvent } from "../shared/self-hosting-license-uploader/license-uploaded-event";
 
 interface OnSuccessArgs {
   organizationId: string;
@@ -113,6 +114,8 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
   isInTrialFlow = false;
   discount = 0;
   deprecateStripeSourcesAPI: boolean;
+
+  useSelfHostingLicenseUploaderFeature = false;
 
   secretsManagerSubscription = secretsManagerSubscribeFormFactory(this.formBuilder);
 
@@ -184,6 +187,10 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
       ) {
         this.formGroup.controls.businessOwned.setValue(true);
       }
+    } else {
+      this.useSelfHostingLicenseUploaderFeature = await this.configService.getFeatureFlag(
+        FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader,
+      );
     }
 
     if (this.currentPlan && this.currentPlan.productTier !== ProductTierType.Enterprise) {
@@ -845,5 +852,31 @@ export class OrganizationPlansComponent implements OnInit, OnDestroy {
 
   private planIsEnabled(plan: PlanResponse) {
     return !plan.disabled && !plan.legacyYear;
+  }
+
+  protected async onLicenseFileUploaded(event: LicenseUploadedEvent): Promise<void> {
+    this.toastService.showToast({
+      variant: "success",
+      title: this.i18nService.t("organizationCreated"),
+      message: this.i18nService.t("organizationReadyToGo"),
+    });
+
+    if (!this.acceptingSponsorship && !this.isInTrialFlow) {
+      // FIXME: Verify that this floating promise is intentional. If it is, add an explanatory comment and ensure there is proper error handling.
+      // eslint-disable-next-line @typescript-eslint/no-floating-promises
+      this.router.navigate(["/organizations/" + event.organizationId]);
+    }
+
+    if (this.isInTrialFlow) {
+      this.onTrialBillingSuccess.emit({
+        orgId: event.organizationId,
+        subLabelText: this.billingSubLabelText(),
+      });
+    }
+
+    this.onSuccess.emit({ organizationId: event.organizationId });
+
+    // TODO: No one actually listening to this message?
+    this.messagingService.send("organizationCreated", { organizationId: event.organizationId });
   }
 }

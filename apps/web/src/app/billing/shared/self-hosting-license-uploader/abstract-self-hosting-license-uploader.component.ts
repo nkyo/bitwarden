@@ -1,4 +1,4 @@
-import { EventEmitter, Input, Output } from "@angular/core";
+import { EventEmitter, Output } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 
 import { ControlsOf } from "@bitwarden/angular/types/controls-of";
@@ -6,6 +6,8 @@ import { TokenService } from "@bitwarden/common/auth/abstractions/token.service"
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ToastService } from "@bitwarden/components";
+
+import { LicenseUploadedEvent } from "../../shared/self-hosting-license-uploader/license-uploaded-event";
 
 import { LicenseUploaderFormModel } from "./license-uploader-form-model";
 
@@ -15,19 +17,9 @@ import { LicenseUploaderFormModel } from "./license-uploader-form-model";
  */
 export abstract class AbstractSelfHostingLicenseUploaderComponent {
   /**
-   * The license file description.
-   */
-  @Input() description: string;
-
-  /**
-   * The file name hint.
-   */
-  @Input() hint: string;
-
-  /**
    * Emitted when a license file has been successfully uploaded & processed.
    */
-  @Output() onLicenseFileUploaded = new EventEmitter<LicenseUploaderFormModel>();
+  @Output() onLicenseFileUploaded = new EventEmitter<LicenseUploadedEvent>();
 
   protected form: FormGroup<ControlsOf<LicenseUploaderFormModel>>;
 
@@ -90,4 +82,8 @@ export abstract class AbstractSelfHostingLicenseUploaderComponent {
       });
     }
   }
+
+  abstract get description(): string;
+
+  abstract get hintFileName(): string;
 }

@@ -13,7 +13,7 @@ import { SyncService } from "@bitwarden/common/platform/sync";
 import { ToastService } from "@bitwarden/components";
 
 import { PaymentV2Component } from "../../shared/payment/payment-v2.component";
-import { LicenseUploaderFormModel } from "../../shared/self-hosting-license-uploader/license-uploader-form-model";
+import { LicenseUploadedEvent } from "../../shared/self-hosting-license-uploader/license-uploaded-event";
 import { TaxInfoComponent } from "../../shared/tax-info.component";
 
 @Component({
@@ -22,9 +22,6 @@ import { TaxInfoComponent } from "../../shared/tax-info.component";
 export class PremiumV3Component {
   @ViewChild(PaymentV2Component) paymentComponent: PaymentV2Component;
   @ViewChild(TaxInfoComponent) taxInfoComponent: TaxInfoComponent;
-
-  readonly licenseUploaderDescription: string = "uploadLicenseFilePremium";
-  readonly licenseUploaderHint: string = "bitwarden_premium_license.json";
 
   protected hasPremiumFromAnyOrganization$: Observable<boolean>;
 
@@ -132,9 +129,7 @@ export class PremiumV3Component {
     return this.subtotal + this.estimatedTax;
   }
 
-  protected async onLicenseFileSelectedChanged(
-    LicenseUploaderFormModel: LicenseUploaderFormModel,
-  ): Promise<void> {
+  protected async onLicenseFileSelectedChanged(event: LicenseUploadedEvent): Promise<void> {
     await this.postFinalizeUpgrade();
   }
 }
