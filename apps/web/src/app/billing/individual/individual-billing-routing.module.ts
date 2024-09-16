@@ -8,6 +8,7 @@ import { PaymentMethodComponent } from "../shared";
 
 import { BillingHistoryViewComponent } from "./billing-history-view.component";
 import { PremiumV2Component } from "./premium/premium-v2.component";
+import { PremiumV3Component } from "./premium/premium-v3.component";
 import { PremiumComponent } from "./premium/premium.component";
 import { SubscriptionComponent } from "./subscription.component";
 import { UserSubscriptionComponent } from "./user-subscription.component";
@@ -28,6 +29,15 @@ const routes: Routes = [
         defaultComponent: PremiumComponent,
         flaggedComponent: PremiumV2Component,
         featureFlag: FeatureFlag.AC2476_DeprecateStripeSourcesAPI,
+        routeOptions: {
+          path: "premium",
+          data: { titleId: "goPremium" },
+        },
+      }),
+      ...featureFlaggedRoute({
+        defaultComponent: PremiumComponent,
+        flaggedComponent: PremiumV3Component,
+        featureFlag: FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader,
         routeOptions: {
           path: "premium",
           data: { titleId: "goPremium" },
