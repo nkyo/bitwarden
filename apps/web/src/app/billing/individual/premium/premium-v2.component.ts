@@ -7,6 +7,8 @@ import { combineLatest, concatMap, from, Observable, of } from "rxjs";
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { BillingAccountProfileStateService } from "@bitwarden/common/billing/abstractions";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
 import { EnvironmentService } from "@bitwarden/common/platform/abstractions/environment.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
@@ -15,9 +17,6 @@ import { ToastService } from "@bitwarden/components";
 
 import { PaymentV2Component } from "../../shared/payment/payment-v2.component";
 import { TaxInfoComponent } from "../../shared/tax-info.component";
-import { LicenseUploadedEvent } from "@bitwarden/web-vault/app/billing/shared/self-hosting-license-uploader/license-uploaded-event";
-import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
-import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
 @Component({
   templateUrl: "./premium-v2.component.html",
