@@ -43,6 +43,7 @@ export type AllowedFeatureFlagTypes = boolean | number | string;
 
 // Helper to ensure the value is treated as a boolean.
 const FALSE = false as boolean;
+const TRUE = true as boolean;
 
 /**
  * Default value for feature flags.
@@ -81,9 +82,9 @@ export const DefaultFeatureFlagValue = {
   [FeatureFlag.StorageReseedRefactor]: FALSE,
   [FeatureFlag.AccountDeprovisioning]: FALSE,
   [FeatureFlag.NotificationBarAddLoginImprovements]: FALSE,
-  [FeatureFlag.AC2476_DeprecateStripeSourcesAPI]: FALSE,
+  [FeatureFlag.AC2476_DeprecateStripeSourcesAPI]: TRUE,
   [FeatureFlag.CipherKeyEncryption]: FALSE,
-  [FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader]: FALSE,
+  [FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader]: TRUE,
 } satisfies Record<FeatureFlag, AllowedFeatureFlagTypes>;
 
 export type DefaultFeatureFlagValueType = typeof DefaultFeatureFlagValue;

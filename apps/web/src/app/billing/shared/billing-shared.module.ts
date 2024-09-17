@@ -13,13 +13,13 @@ import { OffboardingSurveyComponent } from "./offboarding-survey.component";
 import { PaymentV2Component } from "./payment/payment-v2.component";
 import { PaymentComponent } from "./payment/payment.component";
 import { PaymentMethodComponent } from "./payment-method.component";
+import { IndividualSelfHostingLicenseUploaderComponent } from "./self-hosting-license-uploader/individual-self-hosting-license-uploader.component";
+import { OrganizationSelfHostingLicenseUploaderComponent } from "./self-hosting-license-uploader/organization-self-hosting-license-uploader.component";
 import { SecretsManagerSubscribeComponent } from "./sm-subscribe.component";
 import { TaxInfoComponent } from "./tax-info.component";
 import { UpdateLicenseDialogComponent } from "./update-license-dialog.component";
 import { UpdateLicenseComponent } from "./update-license.component";
 import { VerifyBankAccountComponent } from "./verify-bank-account/verify-bank-account.component";
-import { OrganizationSelfHostingLicenseUploaderComponent } from "@bitwarden/web-vault/app/billing/shared/self-hosting-license-uploader/organization-self-hosting-license-uploader.component";
-import { IndividualSelfHostingLicenseUploaderComponent } from "@bitwarden/web-vault/app/billing/shared/self-hosting-license-uploader/individual-self-hosting-license-uploader.component";
 
 @NgModule({
   imports: [
