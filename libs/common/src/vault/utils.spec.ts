@@ -206,6 +206,16 @@ describe("parseYearMonthExpiry", () => {
     expect(parseYearMonthExpiry("1/2/3/4")).toStrictEqual(["2002", "1"]);
   });
 
+  it('returns valid expiration year and month values when a value of "198" is passed', () => {
+    const testValue = "198";
+    const parsedValue = parseYearMonthExpiry(testValue);
+
+    expect(parsedValue[0]).toHaveLength(4);
+    expect(parsedValue[1]).toMatch(/^[\d]{1,2}$/);
+
+    expect(parsedValue).toStrictEqual(["2098", "1"]);
+  });
+
   // Ambiguous input cases: we use try/catch for these cases as a workaround to accept either
   // outcome (both are valid interpretations) in the event of any future code changes.
   describe("ambiguous input cases", () => {

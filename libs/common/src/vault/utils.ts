@@ -204,11 +204,14 @@ export function parseYearMonthExpiry(combinedExpiryValue: string): [Year | null,
 
         const currentYear = new Date().getFullYear();
         const normalizedParsedYear = parseInt(normalizeExpiryYearFormat(parsedYear), 10);
-        const normalizedParsedYearAlternative = parseInt(sanitizedFirstPart.slice(-2), 10);
+        const normalizedParsedYearAlternative = parseInt(
+          normalizeExpiryYearFormat(sanitizedFirstPart.slice(-2)),
+          10,
+        );
 
         if (normalizedParsedYear < currentYear && normalizedParsedYearAlternative >= currentYear) {
-          parsedYear = sanitizedFirstPart.slice(-1);
-          parsedMonth = sanitizedFirstPart.slice(0, 2);
+          parsedYear = sanitizedFirstPart.slice(-2);
+          parsedMonth = sanitizedFirstPart.slice(0, 1);
         }
       }
     }
