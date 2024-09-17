@@ -45,8 +45,8 @@ import { OrganizationCreateModule } from "../../admin-console/organizations/crea
 import { BillingSharedModule, secretsManagerSubscribeFormFactory } from "../shared";
 import { PaymentV2Component } from "../shared/payment/payment-v2.component";
 import { PaymentComponent } from "../shared/payment/payment.component";
-import { TaxInfoComponent } from "../shared/tax-info.component";
 import { LicenseUploadedEvent } from "../shared/self-hosting-license-uploader/license-uploaded-event";
+import { TaxInfoComponent } from "../shared/tax-info.component";
 
 interface OnSuccessArgs {
   organizationId: string;
