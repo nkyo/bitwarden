@@ -52,10 +52,12 @@
         type="button"
         bitMenuItem
         (click)="viewOption(parent, $event)"
-        [title]="parent.label ? ('backTo' | i18n: parent.label) : ('back' | i18n)"
+        [title]="
+          parent.label ? ('backTo' | i18n: parent.label) : ('backTo' | i18n: placeholderText)
+        "
       >
         <i slot="start" class="bwi bwi-angle-left" aria-hidden="true"></i>
-        {{ parent.label ? ("backTo" | i18n: parent.label) : ("back" | i18n) }}
+        {{ parent.label ? ("backTo" | i18n: parent.label) : ("backTo" | i18n: placeholderText) }}
       </button>
 
       <button
@@ -76,6 +78,7 @@
       (click)="option.children?.length ? viewOption(option, $event) : selectOption(option, $event)"
       [disabled]="option.disabled"
       [title]="option.label"
+      [attr.aria-haspopup]="option.children?.length ? 'menu' : null"
     >
       <i
         *ngIf="option.icon"

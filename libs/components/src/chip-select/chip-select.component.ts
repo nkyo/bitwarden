@@ -1,10 +1,21 @@
-import { Component, HostListener, Input, booleanAttribute, signal } from "@angular/core";
+import {
+  AfterViewInit,
+  Component,
+  HostListener,
+  Input,
+  OnDestroy,
+  QueryList,
+  ViewChildren,
+  booleanAttribute,
+  signal,
+} from "@angular/core";
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from "@angular/forms";
+import { Subject, takeUntil } from "rxjs";
 
 import { compareValues } from "../../../common/src/platform/misc/compare-values";
 import { ButtonModule } from "../button";
 import { IconButtonModule } from "../icon-button";
-import { MenuModule } from "../menu";
+import { MenuItemDirective, MenuModule } from "../menu";
 import { Option } from "../select/option";
 import { SharedModule } from "../shared";
 import { TypographyModule } from "../typography";
@@ -28,7 +39,11 @@ export type ChipSelectOption<T> = Option<T> & {
     },
   ],
 })
-export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
+export class ChipSelectComponent<T = unknown>
+  implements ControlValueAccessor, AfterViewInit, OnDestroy
+{
+  @ViewChildren(MenuItemDirective) menuItems: QueryList<MenuItemDirective>;
+
   /** Text to show when there is no selected option */
   @Input({ required: true }) placeholderText: string;
 
@@ -61,6 +76,8 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
   onFocusOut() {
     this.focusVisibleWithin.set(false);
   }
+
+  private destroyed$: Subject<void> = new Subject();
 
   /** Tree constructed from `this.options` */
   private rootTree: ChipSelectOption<T>;
@@ -146,6 +163,19 @@ export class ChipSelectComponent<T = unknown> implements ControlValueAccessor {
     this.markParents(root);
     this.rootTree = root;
     this.renderedOptions = this.rootTree;
+  }
+
+  ngAfterViewInit() {
+    this.menuItems.changes
+      .pipe(takeUntil(this.destroyed$))
+      .subscribe((next: QueryList<MenuItemDirective>) => {
+        next.first.focus();
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.destroyed$.next();
+    this.destroyed$.complete();
   }
 
   /** Control Value Accessor */
