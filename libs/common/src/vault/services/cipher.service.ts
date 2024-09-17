@@ -207,11 +207,11 @@ export class CipherService implements CipherServiceAbstraction {
         keyForCipherKeyDecryption,
       );
     } else {
-      const userOrOrgKey = await this.getKeyForCipherKeyDecryption(cipher, userId);
+      keyForCipherEncryption ||= await this.getKeyForCipherKeyDecryption(cipher, userId);
       // We want to ensure that the cipher key is null if cipher key encryption is disabled
       // so that decryption uses the proper key.
       cipher.key = null;
-      return this.encryptCipher(model, cipher, userOrOrgKey);
+      return this.encryptCipher(model, cipher, keyForCipherEncryption);
     }
   }
 
