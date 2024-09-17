@@ -95,6 +95,7 @@ export class EncryptServiceImplementation implements EncryptService {
       const macsEqual = await this.cryptoFunctionService.compareFast(fastParams.mac, computedMac);
       if (!macsEqual) {
         this.logMacFailed("MAC comparison failed. Key or payload has changed.");
+        this.logService.info("key", key.keyB64);
         return null;
       }
     }
