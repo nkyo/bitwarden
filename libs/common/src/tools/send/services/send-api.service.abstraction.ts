@@ -8,7 +8,6 @@ import { SendFileDownloadDataResponse } from "../models/response/send-file-downl
 import { SendFileUploadDataResponse } from "../models/response/send-file-upload-data.response";
 import { SendResponse } from "../models/response/send.response";
 import { SendAccessView } from "../models/view/send-access.view";
-import { SendView } from "../models/view/send.view";
 
 export abstract class SendApiService {
   getSend: (id: string) => Promise<SendResponse>;
@@ -37,5 +36,5 @@ export abstract class SendApiService {
   renewSendFileUploadUrl: (sendId: string, fileId: string) => Promise<SendFileUploadDataResponse>;
   removePassword: (id: string) => Promise<any>;
   delete: (id: string) => Promise<any>;
-  save: (sendData: [Send, EncArrayBuffer]) => Promise<SendView>;
+  save: (sendData: [Send, EncArrayBuffer]) => Promise<any>;
 }
