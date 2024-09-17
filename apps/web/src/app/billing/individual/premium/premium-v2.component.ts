@@ -1,4 +1,4 @@
-import { Component, ViewChild } from "@angular/core";
+import { Component, OnInit, ViewChild } from "@angular/core";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { ActivatedRoute, Router } from "@angular/router";
@@ -15,11 +15,14 @@ import { ToastService } from "@bitwarden/components";
 
 import { PaymentV2Component } from "../../shared/payment/payment-v2.component";
 import { TaxInfoComponent } from "../../shared/tax-info.component";
+import { LicenseUploadedEvent } from "@bitwarden/web-vault/app/billing/shared/self-hosting-license-uploader/license-uploaded-event";
+import { ConfigService } from "@bitwarden/common/platform/abstractions/config/config.service";
+import { FeatureFlag } from "@bitwarden/common/enums/feature-flag.enum";
 
 @Component({
   templateUrl: "./premium-v2.component.html",
 })
-export class PremiumV2Component {
+export class PremiumV2Component implements OnInit {
   @ViewChild(PaymentV2Component) paymentComponent: PaymentV2Component;
   @ViewChild(TaxInfoComponent) taxInfoComponent: TaxInfoComponent;
 
@@ -36,6 +39,8 @@ export class PremiumV2Component {
   protected cloudWebVaultURL: string;
   protected isSelfHost = false;
 
+  protected useLicenseUploaderComponent = false;
+
   protected readonly familyPlanMaxUserCount = 6;
   protected readonly premiumPrice = 10;
   protected readonly storageGBPrice = 4;
@@ -44,6 +49,7 @@ export class PremiumV2Component {
     private activatedRoute: ActivatedRoute,
     private apiService: ApiService,
     private billingAccountProfileStateService: BillingAccountProfileStateService,
+    private configService: ConfigService,
     private environmentService: EnvironmentService,
     private i18nService: I18nService,
     private platformUtilsService: PlatformUtilsService,
@@ -75,9 +81,18 @@ export class PremiumV2Component {
       .subscribe();
   }
 
+  async ngOnInit(): Promise<void> {
+    this.useLicenseUploaderComponent = await this.configService.getFeatureFlag(
+      FeatureFlag.PM11901_RefactorSelfHostingLicenseUploader,
+    );
+  }
+
   finalizeUpgrade = async () => {
     await this.apiService.refreshIdentityToken();
     await this.syncService.fullSync(true);
+  };
+
+  postFinalizeUpgrade = async () => {
     this.toastService.showToast({
       variant: "success",
       title: null,
@@ -119,6 +134,7 @@ export class PremiumV2Component {
 
     await this.apiService.postAccountLicense(formData);
     await this.finalizeUpgrade();
+    await this.postFinalizeUpgrade();
   };
 
   submitPayment = async (): Promise<void> => {
@@ -138,6 +154,7 @@ export class PremiumV2Component {
 
     await this.apiService.postPremium(formData);
     await this.finalizeUpgrade();
+    await this.postFinalizeUpgrade();
   };
 
   protected get additionalStorageCost(): number {
@@ -160,5 +177,9 @@ export class PremiumV2Component {
 
   protected get total(): number {
     return this.subtotal + this.estimatedTax;
+  }
+
+  protected async onLicenseFileSelectedChanged(): Promise<void> {
+    await this.postFinalizeUpgrade();
   }
 }
