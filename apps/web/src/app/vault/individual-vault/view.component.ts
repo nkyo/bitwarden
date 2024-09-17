@@ -120,6 +120,7 @@ export class ViewComponent implements OnInit, OnDestroy {
     }
 
     this.dialogRef.close({ action: ViewCipherDialogResult.deleted });
+    await this.router.navigate(["/vault"]);
   };
 
   /**
