@@ -201,12 +201,12 @@ describe("LegacyPasswordGenerationService", () => {
       expect(result).toEqual({
         type: "passphrase",
         length: 29,
-        minLength: 6,
+        minLength: 5,
         ambiguous: false,
         uppercase: true,
         minUppercase: 1,
-        lowercase: true,
-        minLowercase: 2,
+        lowercase: false,
+        minLowercase: 0,
         number: true,
         minNumber: 3,
         special: false,
@@ -317,16 +317,6 @@ describe("LegacyPasswordGenerationService", () => {
       const navigation = createNavigationGenerator();
       const options = {
         type: "password" as const,
-        length: 0,
-        ambiguous: false,
-        lowercase: false,
-        uppercase: false,
-        number: false,
-        special: false,
-        minUppercase: 0,
-        minLowercase: 0,
-        minNumber: 0,
-        minSpecial: 0,
       };
       const generator = new LegacyPasswordGenerationService(
         accountService,
