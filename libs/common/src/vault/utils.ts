@@ -101,7 +101,9 @@ function splitCombinedDateValues(combinedExpiryValue: string): string[] {
   // Do this after initial value replace to avoid identifying leading whitespace as delimiter
   const parsedDelimiter = sanitizedValue.match(DelimiterPatternExpression)?.[0] || null;
 
-  if (parsedDelimiter) {
+  let dateParts = [sanitizedValue];
+
+  if (parsedDelimiter?.length) {
     // If the parsed delimiter is a whitespace character, assign 's' (character class) instead
     const delimiterPattern = /\s/.test(parsedDelimiter) ? "\\s" : "\\" + parsedDelimiter;
 
@@ -110,15 +112,15 @@ function splitCombinedDateValues(combinedExpiryValue: string): string[] {
       .replace(new RegExp(`[^\\d${delimiterPattern}]`, "g"), "")
       // Also de-dupe the delimiter character
       .replace(new RegExp(`[${delimiterPattern}]{2,}`, "g"), parsedDelimiter);
-  }
 
-  let dateParts = [sanitizedValue];
-
-  if (parsedDelimiter?.length) {
     dateParts = sanitizedValue.split(parsedDelimiter);
   }
 
-  return dateParts;
+  return (
+    dateParts
+      // remove values that have no length
+      .filter((splitValue) => splitValue?.length)
+  );
 }
 
 /**

@@ -188,6 +188,10 @@ describe("parseYearMonthExpiry", () => {
     expect(parseYearMonthExpiry("")).toStrictEqual([null, null]);
   });
 
+  it('returns "null" expiration year and month values when a value of "/" is passed', () => {
+    expect(parseYearMonthExpiry("/")).toStrictEqual([null, null]);
+  });
+
   combinedDateTestValues.forEach((combinedDate) => {
     it(`returns an expiration year value of "${expectedParsedValue[0]}" and month value of "${expectedParsedValue[1]}" when a value of "${combinedDate}" is passed`, () => {
       expect(parseYearMonthExpiry(combinedDate)).toStrictEqual(expectedParsedValue);
@@ -207,6 +211,7 @@ describe("parseYearMonthExpiry", () => {
   });
 
   it('returns valid expiration year and month values when a value of "198" is passed', () => {
+    // This static value will cause the test to fail in 2098
     const testValue = "198";
     const parsedValue = parseYearMonthExpiry(testValue);
 
