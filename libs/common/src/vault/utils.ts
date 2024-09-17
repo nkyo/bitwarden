@@ -70,10 +70,12 @@ export function isCardExpired(cipherCard: CardView): boolean {
 
     if (normalizedYear && expMonth) {
       // `Date` months are zero-indexed
-      const parsedMonth =
-        parseInt(expMonth) - 1 ||
-        // Add a month floor of 0 to protect against an invalid low month value of "0"
-        0;
+      let parsedMonth = parseInt(expMonth) - 1;
+
+      // Add a month floor of 0 to protect against an invalid low month value of "0" or negative integers
+      if (parsedMonth < 1) {
+        parsedMonth = 0;
+      }
 
       const parsedYear = parseInt(normalizedYear);
 
