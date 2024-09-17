@@ -81,9 +81,14 @@ describe("PasswordPolicyConstraints", () => {
       expect(result).toEqual({ ...EmptyState, [property]: true });
     });
 
-    it.each([["lowercase"], ["uppercase"], ["number"], ["special"]] as [
-      keyof PasswordGeneratorSettings,
-    ][])(
+    it("sets `lowercase` and `uppercase` to `true` when no flags are defined", () => {
+      const constraint = new PasswordPolicyConstraints({});
+      const result = constraint.adjust(EmptyState);
+
+      expect(result).toMatchObject({ lowercase: true, uppercase: true });
+    });
+
+    it.each([["number"], ["special"]] as [keyof PasswordGeneratorSettings][])(
       "returns a consistent state.%s = undefined when the matching readonly constraint is active without a required value",
       (property) => {
         const constraint = new PasswordPolicyConstraints({ [property]: { readonly: true } });
@@ -94,13 +99,11 @@ describe("PasswordPolicyConstraints", () => {
 
         const result = constraint.adjust(state);
 
-        expect(result).toEqual({ ...EmptyState, [property]: false });
+        expect(result).toMatchObject({ [property]: false });
       },
     );
 
-    it.each([["lowercase"], ["uppercase"], ["number"], ["special"]] as [
-      keyof PasswordGeneratorSettings,
-    ][])(
+    it.each([["number"], ["special"]] as [keyof PasswordGeneratorSettings][])(
       "returns state.%s = requiredValue when matching constraint is active with a required value",
       (property) => {
         const constraint = new PasswordPolicyConstraints({
@@ -110,7 +113,7 @@ describe("PasswordPolicyConstraints", () => {
 
         const result = constraint.adjust(state);
 
-        expect(result).toEqual({ ...EmptyState, [property]: false });
+        expect(result).toMatchObject({ [property]: false });
       },
     );
   });
