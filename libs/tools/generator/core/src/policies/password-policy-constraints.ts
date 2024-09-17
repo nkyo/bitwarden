@@ -32,6 +32,15 @@ export class PasswordPolicyConstraints implements StateConstraints<PasswordGener
     result.number ||= state.minNumber > 0;
     result.special ||= state.minSpecial > 0;
 
+    // when all flags are disabled, enable a few
+    const anyEnabled = [result.lowercase, result.uppercase, result.number, result.special].some(
+      (flag) => flag,
+    );
+    if (!anyEnabled) {
+      result.lowercase = true;
+      result.uppercase = true;
+    }
+
     return result;
   }
 

@@ -1,6 +1,6 @@
 import { OnInit, Input, Output, EventEmitter, Component, OnDestroy } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
-import { BehaviorSubject, skip, takeUntil, Subject, map, filter, tap } from "rxjs";
+import { BehaviorSubject, takeUntil, Subject, map, filter, tap, debounceTime, skip } from "rxjs";
 
 import { AccountService } from "@bitwarden/common/auth/abstractions/account.service";
 import { UserId } from "@bitwarden/common/types/guid";
@@ -54,6 +54,10 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
   @Input()
   showHeader: boolean = true;
 
+  /** Number of milliseconds to wait before accepting user input. */
+  @Input()
+  waitMs: number = 100;
+
   /** Emits settings updates and completes if the settings become unavailable.
    * @remarks this does not emit the initial settings. If you would like
    *   to receive live settings updates including the initial update,
@@ -93,6 +97,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
     const singleUserId$ = this.singleUserId$();
     const settings = await this.generatorService.settings(Generators.Password, { singleUserId$ });
 
+    // bind settings to the UI
     settings
       .pipe(
         map((settings) => {
@@ -109,9 +114,7 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
         this.settings.patchValue(s, { emitEvent: false });
       });
 
-    // the first emission is the current value; subsequent emissions are updates
-    settings.pipe(skip(1), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
-
+    // bind policy to the template
     this.generatorService
       .policy$(Generators.Password, { userId$: singleUserId$ })
       .pipe(takeUntil(this.destroyed$))
@@ -189,9 +192,17 @@ export class PasswordSettingsComponent implements OnInit, OnDestroy {
       )
       .subscribe(([, checked]) => this.special.setValue(checked, { emitEvent: false }));
 
+    // `onUpdated` depends on `settings` because the UserStateSubject is asynchronous;
+    // subscribing directly to `this.settings.valueChanges` introduces a race condition.
+    // skip the first emission because it's the initial value, not an update.
+    settings.pipe(skip(1), takeUntil(this.destroyed$)).subscribe(this.onUpdated);
+
     // now that outputs are set up, connect inputs
     this.settings.valueChanges
       .pipe(
+        // debounce ensures rapid edits to a field, such as partial edits to a
+        // spinbox or rapid button clicks don't emit spurious generator updates
+        debounceTime(this.waitMs),
         map((settings) => {
           // interface is "avoid" while storage is "include"
           const s: any = { ...settings };
