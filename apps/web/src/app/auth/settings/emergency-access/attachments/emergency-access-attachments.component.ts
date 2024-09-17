@@ -13,7 +13,7 @@ import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/pl
 import { StateService } from "@bitwarden/common/platform/abstractions/state.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
 import { AttachmentView } from "@bitwarden/common/vault/models/view/attachment.view";
-import { DialogService } from "@bitwarden/components";
+import { DialogService, ToastService } from "@bitwarden/components";
 
 @Component({
   selector: "emergency-access-attachments",
@@ -36,6 +36,7 @@ export class EmergencyAccessAttachmentsComponent extends BaseAttachmentsComponen
     dialogService: DialogService,
     billingAccountProfileStateService: BillingAccountProfileStateService,
     accountService: AccountService,
+    toastService: ToastService,
   ) {
     super(
       cipherService,
@@ -51,6 +52,7 @@ export class EmergencyAccessAttachmentsComponent extends BaseAttachmentsComponen
       dialogService,
       billingAccountProfileStateService,
       accountService,
+      toastService,
     );
   }
 
