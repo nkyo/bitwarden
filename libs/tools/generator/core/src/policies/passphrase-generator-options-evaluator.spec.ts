@@ -213,18 +213,14 @@ describe("Password generator options builder", () => {
   describe("sanitize(options)", () => {
     // All tests should freeze the options to ensure they are not modified
 
-    it("should fill default values for undefined properties", () => {
+    it("should return the input options without altering them", () => {
       const policy = Object.assign({}, Policies.Passphrase.disabledValue);
       const builder = new PassphraseGeneratorOptionsEvaluator(policy);
       const options = Object.freeze({ wordSeparator: "%" });
 
       const sanitizedOptions = builder.sanitize(options);
 
-      expect(sanitizedOptions).toMatchObject({
-        capitalize: false,
-        includeNumber: false,
-        numWords: 3,
-      });
+      expect(sanitizedOptions).toEqual(options);
     });
 
     it("should set `wordSeparator` to '-' when it isn't supplied and there is no policy override", () => {

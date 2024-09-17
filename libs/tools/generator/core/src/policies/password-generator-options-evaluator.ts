@@ -1,75 +1,137 @@
-import { PolicyEvaluator } from "../abstractions";
-import {
-  Boundary,
-  PasswordGeneratorPolicy,
-  PasswordGenerationOptions,
-  PasswordGeneratorSettings,
-} from "../types";
+import { Constraints } from "@bitwarden/common/tools/types";
 
-import { DynamicPasswordPolicyConstraints } from "./dynamic-password-policy-constraints";
+import { PolicyEvaluator } from "../abstractions";
+import { DefaultPasswordBoundaries } from "../data";
+import { Boundary, PasswordGeneratorPolicy, PasswordGenerationOptions } from "../types";
 
 /** Enforces policy for password generation.
- *  @deprecated use `DynamicPasswordPolicyConstraints` instead.
  */
 export class PasswordGeneratorOptionsEvaluator
-  implements PolicyEvaluator<PasswordGeneratorPolicy, PasswordGenerationOptions>
+  implements
+    PolicyEvaluator<PasswordGeneratorPolicy, PasswordGenerationOptions>,
+    Constraints<PasswordGenerationOptions>
 {
   // Constraints<PasswordGenerationOptions> compatibility
   get minNumber() {
-    return this.constraints.constraints.minNumber;
+    return this.minDigits;
   }
 
   get minSpecial() {
-    return this.constraints.constraints.minSpecial;
+    return this.minSpecialCharacters;
   }
+
+  // This design is not ideal, but it is a step towards a more robust password
+  // generator. Ideally, `sanitize` would be implemented on an options class,
+  // and `applyPolicy` would be implemented on a policy class, "mise en place".
+  //
+  // The current design of the password generator, unfortunately, would require
+  // a substantial rewrite to make this feasible. Hopefully this change can be
+  // applied when the password generator is ported to rust.
 
   /** Boundaries for the password length. This is always large enough
    * to accommodate the minimum number of digits and special characters.
    */
-  get length(): Boundary {
-    return this.constraints.constraints.length as Boundary;
-  }
+  readonly length: Boundary;
 
   /** Boundaries for the minimum number of digits allowed in the password.
    */
-  get minDigits(): Boundary {
-    return this.constraints.constraints.minNumber as Boundary;
-  }
+  readonly minDigits: Boundary;
 
   /** Boundaries for the minimum number of special characters allowed
    *  in the password.
    */
-  get minSpecialCharacters(): Boundary {
-    return this.constraints.constraints.minSpecial as Boundary;
-  }
+  readonly minSpecialCharacters: Boundary;
 
   /** Policy applied by the evaluator.
    */
   readonly policy: PasswordGeneratorPolicy;
-
-  private readonly constraints: DynamicPasswordPolicyConstraints;
 
   /** Instantiates the evaluator.
    * @param policy The policy applied by the evaluator. When this conflicts with
    *               the defaults, the policy takes precedence.
    */
   constructor(policy: PasswordGeneratorPolicy) {
+    function createBoundary(value: number, defaultBoundary: Boundary): Boundary {
+      const boundary = {
+        min: Math.max(defaultBoundary.min, value),
+        max: Math.max(defaultBoundary.max, value),
+      };
+
+      return boundary;
+    }
+
     this.policy = structuredClone(policy);
-    this.constraints = new DynamicPasswordPolicyConstraints(policy);
+    this.minDigits = createBoundary(policy.numberCount, DefaultPasswordBoundaries.minDigits);
+    this.minSpecialCharacters = createBoundary(
+      policy.specialCount,
+      DefaultPasswordBoundaries.minSpecialCharacters,
+    );
+
+    // the overall length should be at least as long as the sum of the minimums
+    const minConsistentLength = this.minDigits.min + this.minSpecialCharacters.min;
+    const minPolicyLength =
+      policy.minLength > 0 ? policy.minLength : DefaultPasswordBoundaries.length.min;
+    const minLength = Math.max(
+      minPolicyLength,
+      minConsistentLength,
+      DefaultPasswordBoundaries.length.min,
+    );
+
+    this.length = {
+      min: minLength,
+      max: Math.max(DefaultPasswordBoundaries.length.max, minLength),
+    };
   }
 
   /** {@link PolicyEvaluator.policyInEffect} */
   get policyInEffect(): boolean {
-    return this.constraints.constraints.policyInEffect ?? false;
+    const policies = [
+      this.policy.useUppercase,
+      this.policy.useLowercase,
+      this.policy.useNumbers,
+      this.policy.useSpecial,
+      this.policy.minLength > DefaultPasswordBoundaries.length.min,
+      this.policy.numberCount > DefaultPasswordBoundaries.minDigits.min,
+      this.policy.specialCount > DefaultPasswordBoundaries.minSpecialCharacters.min,
+    ];
+
+    return policies.includes(true);
   }
 
   /** {@link PolicyEvaluator.applyPolicy} */
   applyPolicy(options: PasswordGenerationOptions): PasswordGenerationOptions {
-    const settings = options as PasswordGeneratorSettings;
-    const calibration = this.constraints.calibrate(settings);
-    const adjusted: PasswordGenerationOptions = calibration.adjust(settings);
+    function fitToBounds(value: number, boundaries: Boundary) {
+      const { min, max } = boundaries;
 
-    return adjusted;
+      const withUpperBound = Math.min(value || 0, max);
+      const withLowerBound = Math.max(withUpperBound, min);
+
+      return withLowerBound;
+    }
+
+    // apply policy overrides
+    const uppercase = this.policy.useUppercase || options.uppercase || false;
+    const lowercase = this.policy.useLowercase || options.lowercase || false;
+
+    // these overrides can cascade numeric fields to boolean fields
+    const number = this.policy.useNumbers || options.number || options.minNumber > 0;
+    const special = this.policy.useSpecial || options.special || options.minSpecial > 0;
+
+    // apply boundaries; the boundaries can cascade boolean fields to numeric fields
+    const length = fitToBounds(options.length, this.length);
+    const minNumber = fitToBounds(options.minNumber, this.minDigits);
+    const minSpecial = fitToBounds(options.minSpecial, this.minSpecialCharacters);
+
+    return {
+      ...options,
+      length,
+      uppercase,
+      lowercase,
+      number,
+      minNumber,
+      special,
+      minSpecial,
+    };
   }
 
   /** {@link PolicyEvaluator.sanitize} */
@@ -81,23 +143,28 @@ export class PasswordGeneratorOptionsEvaluator
       return [enabledResult, valueResult];
     }
 
-    const settings = options as PasswordGeneratorSettings;
-    const calibration = this.constraints.calibrate(settings);
-    const adjusted: PasswordGenerationOptions = calibration.adjust(settings);
-    adjusted.minLength = calibration.constraints.length.min;
-
-    // The legacy UI uses nullish values to communicate that the evaluator should
-    // perform a cascade.
+    const [lowercase, minLowercase] = cascade(options.lowercase, options.minLowercase);
+    const [uppercase, minUppercase] = cascade(options.uppercase, options.minUppercase);
     const [number, minNumber] = cascade(options.number, options.minNumber);
     const [special, minSpecial] = cascade(options.special, options.minSpecial);
-    if (number) {
-      adjusted.minNumber = minNumber;
-    }
 
-    if (special) {
-      adjusted.minSpecial = minSpecial;
-    }
+    // minimums can only increase the length
+    const minConsistentLength = minLowercase + minUppercase + minNumber + minSpecial;
+    const minLength = Math.max(minConsistentLength, this.length.min);
+    const length = Math.max(options.length ?? minLength, minLength);
 
-    return adjusted;
+    return {
+      ...options,
+      length,
+      minLength,
+      lowercase,
+      minLowercase,
+      uppercase,
+      minUppercase,
+      number,
+      minNumber,
+      special,
+      minSpecial,
+    };
   }
 }
