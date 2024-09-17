@@ -1,4 +1,4 @@
-import { Component } from "@angular/core";
+import { Component, EventEmitter, Output } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
@@ -20,6 +20,12 @@ import { LicenseUploadedEvent } from "../../shared/self-hosting-license-uploader
   templateUrl: "./self-hosting-license-uploader.component.html",
 })
 export class IndividualSelfHostingLicenseUploaderComponent extends AbstractSelfHostingLicenseUploaderComponent {
+  /**
+   * Emitted when a license file has been successfully uploaded & processed.
+   */
+  @Output() onLicenseFileUploaded: EventEmitter<LicenseUploadedEvent> =
+    new EventEmitter<LicenseUploadedEvent>();
+
   constructor(
     protected readonly apiService: ApiService,
     protected readonly formBuilder: FormBuilder,
@@ -32,7 +38,7 @@ export class IndividualSelfHostingLicenseUploaderComponent extends AbstractSelfH
     super(formBuilder, i18nService, platformUtilsService, toastService, tokenService);
   }
 
-  protected async submit() {
+  protected async submit(): Promise<void> {
     await super.submit();
 
     const formData = new FormData();

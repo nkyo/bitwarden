@@ -1,13 +1,9 @@
-import { EventEmitter, Output } from "@angular/core";
 import { FormBuilder, FormGroup, Validators } from "@angular/forms";
 
-import { ControlsOf } from "@bitwarden/angular/types/controls-of";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { PlatformUtilsService } from "@bitwarden/common/platform/abstractions/platform-utils.service";
 import { ToastService } from "@bitwarden/components";
-
-import { LicenseUploadedEvent } from "../../shared/self-hosting-license-uploader/license-uploaded-event";
 
 import { LicenseUploaderFormModel } from "./license-uploader-form-model";
 
@@ -16,12 +12,7 @@ import { LicenseUploaderFormModel } from "./license-uploader-form-model";
  * @remarks Requires self-hosting.
  */
 export abstract class AbstractSelfHostingLicenseUploaderComponent {
-  /**
-   * Emitted when a license file has been successfully uploaded & processed.
-   */
-  @Output() onLicenseFileUploaded = new EventEmitter<LicenseUploadedEvent>();
-
-  protected form: FormGroup<ControlsOf<LicenseUploaderFormModel>>;
+  protected form: FormGroup;
 
   protected constructor(
     protected readonly formBuilder: FormBuilder,
@@ -36,9 +27,10 @@ export abstract class AbstractSelfHostingLicenseUploaderComponent {
       throw new Error("This component should only be used in self-hosted environments");
     }
 
-    this.formBuilder.group({
+    this.form = this.formBuilder.group({
       file: [null, [Validators.required]],
     });
+    this.submit = this.submit.bind(this);
   }
 
   /**
@@ -62,7 +54,7 @@ export abstract class AbstractSelfHostingLicenseUploaderComponent {
    * Submits the license upload form.
    * @protected
    */
-  protected async submit() {
+  protected async submit(): Promise<void> {
     this.form.markAllAsTouched();
 
     if (this.form.invalid) {

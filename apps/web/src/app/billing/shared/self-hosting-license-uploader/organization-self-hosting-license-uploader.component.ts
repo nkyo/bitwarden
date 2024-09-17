@@ -1,9 +1,9 @@
-import { Component } from "@angular/core";
+import { Component, EventEmitter, Output } from "@angular/core";
 import { FormBuilder } from "@angular/forms";
 
 import { ApiService } from "@bitwarden/common/abstractions/api.service";
+import { OrganizationApiServiceAbstraction } from "@bitwarden/common/admin-console/abstractions/organization/organization-api.service.abstraction";
 import { OrganizationKeysRequest } from "@bitwarden/common/admin-console/models/request/organization-keys.request";
-import { OrganizationApiService } from "@bitwarden/common/admin-console/services/organization/organization-api.service";
 import { TokenService } from "@bitwarden/common/auth/abstractions/token.service";
 import { CryptoService } from "@bitwarden/common/platform/abstractions/crypto.service";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
@@ -24,6 +24,12 @@ import { LicenseUploadedEvent } from "../../shared/self-hosting-license-uploader
   templateUrl: "./self-hosting-license-uploader.component.html",
 })
 export class OrganizationSelfHostingLicenseUploaderComponent extends AbstractSelfHostingLicenseUploaderComponent {
+  /**
+   * Emitted when a license file has been successfully uploaded & processed.
+   */
+  @Output() onLicenseFileUploaded: EventEmitter<LicenseUploadedEvent> =
+    new EventEmitter<LicenseUploadedEvent>();
+
   constructor(
     protected readonly formBuilder: FormBuilder,
     protected readonly i18nService: I18nService,
@@ -32,13 +38,13 @@ export class OrganizationSelfHostingLicenseUploaderComponent extends AbstractSel
     protected readonly tokenService: TokenService,
     private readonly apiService: ApiService,
     private readonly cryptoService: CryptoService,
-    private readonly organizationApiService: OrganizationApiService,
+    private readonly organizationApiService: OrganizationApiServiceAbstraction,
     private readonly syncService: SyncService,
   ) {
     super(formBuilder, i18nService, platformUtilsService, toastService, tokenService);
   }
 
-  protected async submit() {
+  protected async submit(): Promise<void> {
     await super.submit();
 
     const orgKey = await this.cryptoService.makeOrgKey<OrgKey>();

@@ -36,6 +36,7 @@
     </form>
   </ng-container>
   <organization-self-hosting-license-uploader
+    *ngIf="useSelfHostingLicenseUploaderFeature"
     (onLicenseFileUploaded)="onLicenseFileUploaded($event)"
   />
 </ng-container>

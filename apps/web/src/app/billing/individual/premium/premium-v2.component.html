@@ -97,7 +97,7 @@
   </ng-container>
   <individual-self-hosting-license-uploader
     *ngIf="useLicenseUploaderComponent"
-    (onLicenseFileUploaded)="onLicenseFileSelectedChanged($event)"
+    (onLicenseFileUploaded)="(onLicenseFileSelectedChanged)"
   />
 </bit-section>
 <form *ngIf="!isSelfHost" [formGroup]="addOnFormGroup" [bitSubmit]="submitPayment">
