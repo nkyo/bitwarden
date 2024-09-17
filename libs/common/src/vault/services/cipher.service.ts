@@ -167,7 +167,7 @@ export class CipherService implements CipherServiceAbstraction {
   async encrypt(
     model: CipherView,
     userId: UserId,
-    keyForEncryption?: SymmetricCryptoKey,
+    keyForCipherEncryption?: SymmetricCryptoKey,
     keyForCipherKeyDecryption?: SymmetricCryptoKey,
     originalCipher: Cipher = null,
   ): Promise<Cipher> {
@@ -197,26 +197,21 @@ export class CipherService implements CipherServiceAbstraction {
       const userOrOrgKey = await this.getKeyForCipherKeyDecryption(cipher, userId);
       // The keyForEncryption is only used for encrypting the cipher key, not the cipher itself, since cipher key encryption is enabled.
       // If the caller has provided a key for cipher key encryption, use it. Otherwise, use the user or org key.
-      keyForEncryption ||= userOrOrgKey;
+      keyForCipherEncryption ||= userOrOrgKey;
       // If the caller has provided a key for cipher key decryption, use it. Otherwise, use the user or org key.
       keyForCipherKeyDecryption ||= userOrOrgKey;
       return this.encryptCipherWithCipherKey(
         model,
         cipher,
-        keyForEncryption,
+        keyForCipherEncryption,
         keyForCipherKeyDecryption,
       );
     } else {
-      if (keyForEncryption == null && cipher.organizationId != null) {
-        keyForEncryption = await this.cryptoService.getOrgKey(cipher.organizationId);
-        if (keyForEncryption == null) {
-          throw new Error("Cannot encrypt cipher for organization. No key.");
-        }
-      }
+      const userOrOrgKey = await this.getKeyForCipherKeyDecryption(cipher, userId);
       // We want to ensure that the cipher key is null if cipher key encryption is disabled
       // so that decryption uses the proper key.
       cipher.key = null;
-      return this.encryptCipher(model, cipher, keyForEncryption);
+      return this.encryptCipher(model, cipher, userOrOrgKey);
     }
   }
 
@@ -1609,11 +1604,23 @@ export class CipherService implements CipherServiceAbstraction {
     this.sortedCiphersCache.clear();
   }
 
+  /**
+   * Encrypts a cipher object.
+   * @param model The cipher view model.
+   * @param cipher The cipher object.
+   * @param key The encryption key to encrypt with. This can be the org key, user key or cipher key, but must never be null
+   */
   private async encryptCipher(
     model: CipherView,
     cipher: Cipher,
     key: SymmetricCryptoKey,
   ): Promise<Cipher> {
+    if (key == null) {
+      throw new Error(
+        "Key to encrypt cipher must not be null. Use the org key, user key or cipher key.",
+      );
+    }
+
     await Promise.all([
       this.encryptObjProperty(
         model,
