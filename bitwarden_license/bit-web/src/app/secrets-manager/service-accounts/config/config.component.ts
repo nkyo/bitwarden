@@ -77,24 +77,14 @@ export class ServiceAccountConfigComponent implements OnInit, OnDestroy {
       (policy) => policy.accessPolicy.grantedProjectId,
     );
 
-    const projects = allProjects.filter((project) =>
-      ids.some((projectId) => projectId === project.id),
-    );
-
-    // The machine account may have access to projects that the user does not have access to.
-    // We show these on the Project tab. so add these projects to this list too.
-    if (allProjects.length < policies.grantedProjectPolicies.length) {
-      for (const policy of policies.grantedProjectPolicies) {
-        if (!projects.some((project) => project.id === policy.accessPolicy.grantedProjectId)) {
-          projects.push({
+    const projects = policies.grantedProjectPolicies.map((policy) => {
+        return {
             id: policy.accessPolicy.grantedProjectId,
             name: policy.accessPolicy.grantedProjectName,
             organizationId: organizationId,
-            linkable: false,
-          } as ProjectListView);
-        }
-      }
-    }
+            linkable: allProjects.some((project) => project.id === policy.accessPolicy.grantedProjectId),
+          } as ProjectListView;
+    });
 
     return {
       organizationId: organizationId,
