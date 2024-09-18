@@ -10,6 +10,7 @@ import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.servic
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { MessagingService } from "@bitwarden/common/platform/abstractions/messaging.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { ViewPasswordHistoryService } from "@bitwarden/common/vault/abstractions/view-password-history.service";
 import { CipherType } from "@bitwarden/common/vault/enums/cipher-type";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import {
@@ -21,6 +22,7 @@ import {
 
 import { CipherViewComponent } from "../../../../../../libs/vault/src/cipher-view/cipher-view.component";
 import { SharedModule } from "../../shared/shared.module";
+import { WebViewPasswordHistoryService } from "../services/web-view-password-history.service";
 
 export interface ViewCipherDialogParams {
   cipher: CipherView;
@@ -43,6 +45,7 @@ export interface ViewCipherDialogCloseResult {
   templateUrl: "view.component.html",
   standalone: true,
   imports: [CipherViewComponent, CommonModule, AsyncActionsModule, DialogModule, SharedModule],
+  providers: [{ provide: ViewPasswordHistoryService, useClass: WebViewPasswordHistoryService }],
 })
 export class ViewComponent implements OnInit, OnDestroy {
   cipher: CipherView;

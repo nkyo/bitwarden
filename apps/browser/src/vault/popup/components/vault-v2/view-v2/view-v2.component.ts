@@ -14,6 +14,7 @@ import { EventType } from "@bitwarden/common/enums";
 import { I18nService } from "@bitwarden/common/platform/abstractions/i18n.service";
 import { LogService } from "@bitwarden/common/platform/abstractions/log.service";
 import { CipherService } from "@bitwarden/common/vault/abstractions/cipher.service";
+import { ViewPasswordHistoryService } from "@bitwarden/common/vault/abstractions/view-password-history.service";
 import { CipherType } from "@bitwarden/common/vault/enums";
 import { CipherView } from "@bitwarden/common/vault/models/view/cipher.view";
 import { CollectionView } from "@bitwarden/common/vault/models/view/collection.view";
@@ -29,6 +30,7 @@ import {
 
 import { CipherViewComponent } from "../../../../../../../../libs/vault/src/cipher-view";
 import { PopOutComponent } from "../../../../../platform/popup/components/pop-out.component";
+import { BrowserViewPasswordHistoryService } from "../../../services/browser-view-password-history.service";
 
 import { PopupFooterComponent } from "./../../../../../platform/popup/layout/popup-footer.component";
 import { PopupHeaderComponent } from "./../../../../../platform/popup/layout/popup-header.component";
@@ -53,6 +55,7 @@ import { VaultPopupAutofillService } from "./../../../services/vault-popup-autof
     AsyncActionsModule,
     PopOutComponent,
   ],
+  providers: [{ provide: ViewPasswordHistoryService, useClass: BrowserViewPasswordHistoryService }],
 })
 export class ViewV2Component {
   headerText: string;
